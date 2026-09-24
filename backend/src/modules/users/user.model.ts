@@ -23,6 +23,10 @@ export interface IUser extends Document {
   districtId?: string;
   cityId?: string;
   areaId?: string;
+  locationCoordinates?: {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
+  };
   privacySettings: IPrivacySettings;
 }
 
@@ -50,6 +54,10 @@ const userSchema = new Schema<IUser>(
     districtId: { type: String },
     cityId: { type: String },
     areaId: { type: String },
+    locationCoordinates: {
+      type: { type: String, enum: ['Point'] },
+      coordinates: { type: [Number] },
+    },
     privacySettings: { type: privacySettingsSchema, default: () => ({}) },
   },
   { timestamps: true }
@@ -58,5 +66,7 @@ const userSchema = new Schema<IUser>(
 userSchema.index({ email: 1 }, { unique: true, sparse: true });
 userSchema.index({ phone: 1 }, { unique: true, sparse: true });
 userSchema.index({ role: 1, status: 1, createdAt: -1 });
+userSchema.index({ locationCoordinates: '2dsphere' });
+userSchema.index({ provinceId: 1, districtId: 1, cityId: 1 });
 
 export const User = mongoose.model<IUser>('User', userSchema);
