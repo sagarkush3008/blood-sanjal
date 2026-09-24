@@ -3,6 +3,7 @@ import { DonorProfile } from './donorProfile.model';
 import { User } from '../users/user.model';
 import { AppError } from '../../core/errors/appError';
 import { AuditLog } from '../audit/auditLog.model';
+import { SystemConfig } from '../admin/systemConfig.model';
 
 export class DonationService {
   static async submitDonation(userId: string, data: any) {
@@ -60,8 +61,17 @@ export class DonationService {
         
         if (!profile.lastDonationDate || new Date(record.donationDate) > profile.lastDonationDate) {
           profile.lastDonationDate = record.donationDate;
+          
+          let offset = 90;
+          try {
+            const config = await SystemConfig.findOne({ key: 'REMINDER_POLICY' });
+            if (config && config.value && config.value.daysAfterDonation) {
+              offset = config.value.daysAfterDonation;
+            }
+          } catch(e) {}
+          
           const reminder = new Date(record.donationDate);
-          reminder.setDate(reminder.getDate() + 90);
+          reminder.setDate(reminder.getDate() + offset);
           profile.reminderDate = reminder;
         }
         await profile.save();
