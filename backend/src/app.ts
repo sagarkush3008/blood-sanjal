@@ -13,6 +13,7 @@ import donorRoutes from './modules/donors/donor.routes';
 import requestRoutes from './modules/requests/bloodRequest.routes';
 import contactRequestRoutes from './modules/requests/contactRequest.routes';
 import paymentRoutes from './modules/payments/payment.routes';
+import donationRoutes from './modules/donors/donation.routes';
 import adminRoutes from './modules/admin/admin.routes';
 import locationRoutes from './modules/locations/location.routes';
 import { SuccessResponse } from './core/http/result';
@@ -66,6 +67,7 @@ app.get('/ready', (req, res) => {
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/me', userRoutes);
 app.use('/api/v1/donors', donorRoutes);
+app.use('/api/v1/donations', donationRoutes);
 app.use('/api/v1/requests', requestRoutes);
 app.use('/api/v1/contact-requests', contactRequestRoutes);
 app.use('/api/v1/payments', paymentRoutes);

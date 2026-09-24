@@ -24,28 +24,7 @@ export class DonorService {
     return profile;
   }
 
-  static async logDonation(userId: string, data: any) {
-    const profile = await DonorProfile.findOne({ userId });
-    if (!profile) throw new AppError(404, 'NOT_FOUND', 'Donor profile not found');
 
-    const record = await DonationRecord.create({
-      donorProfileId: profile._id,
-      donationDate: data.donationDate,
-      hospitalName: data.hospitalName,
-      verified: true // In production this would require admin/hospital verification flow
-    });
-
-    const total = await DonationRecord.countDocuments({ donorProfileId: profile._id, verified: true });
-    
-    // Simple logic for lastDonationDate, ideally find max date
-    profile.totalDonations = total;
-    if (!profile.lastDonationDate || new Date(data.donationDate) > profile.lastDonationDate) {
-      profile.lastDonationDate = data.donationDate;
-    }
-    await profile.save();
-
-    return record;
-  }
 
   static async searchPublicDonors(filters: any) {
     const profileQuery: any = { donorStatus: 'ACTIVE' };

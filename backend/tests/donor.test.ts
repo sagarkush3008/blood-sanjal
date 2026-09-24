@@ -73,21 +73,7 @@ describe('Donor Profile & Availability', () => {
     });
   });
 
-  describe('POST /api/v1/donors/me/donations', () => {
-    it('should calculate summary counts properly from verified donations', async () => {
-      (DonorProfile.findOne as jest.Mock).mockResolvedValue({ _id: 'donor1', save: jest.fn() });
-      (DonationRecord.create as jest.Mock).mockResolvedValue({});
-      (DonationRecord.countDocuments as jest.Mock).mockResolvedValue(5);
 
-      const res = await request(app)
-        .post('/api/v1/donors/me/donations')
-        .set('Authorization', `Bearer ${generateToken('user1')}`)
-        .send({ donationDate: new Date(), hospitalName: 'General Hospital' });
-
-      expect(res.status).toBe(201);
-      expect(DonationRecord.countDocuments).toHaveBeenCalledWith({ donorProfileId: 'donor1', verified: true });
-    });
-  });
 
   describe('POST /api/v1/donors/me/profile', () => {
     it('should ignore forced updates to totalDonations', async () => {

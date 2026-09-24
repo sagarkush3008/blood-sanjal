@@ -21,13 +21,7 @@ export class DonorController {
     } catch (error) { next(error); }
   }
 
-  static async logDonation(req: Request, res: Response, next: NextFunction) {
-    try {
-      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
-      const result = await DonorService.logDonation(req.user.userId, req.body);
-      res.status(201).json(SuccessResponse(result, req.id));
-    } catch (error) { next(error); }
-  }
+
 
   static async search(req: Request, res: Response, next: NextFunction) {
     try {
