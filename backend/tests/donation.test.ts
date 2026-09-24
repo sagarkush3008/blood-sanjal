@@ -10,6 +10,7 @@ jest.mock('../src/modules/donors/donorProfile.model');
 jest.mock('../src/modules/audit/auditLog.model');
 jest.mock('../src/modules/payments/payment.service');
 jest.mock('../src/modules/admin/systemConfig.model');
+jest.mock('../src/modules/rewards/reward.service');
 
 describe('Donation Records & Verification', () => {
   afterEach(() => {
