@@ -27,7 +27,6 @@
     "mongoose": "^9.10.2",
     "morgan": "^1.12.1",
     "nodemailer": "^10.0.10",
-    "uuid": "^14.0.2",
     "winston": "^3.19.0",
     "zod": "^4.6.5"
   },
@@ -41,7 +40,6 @@
     "@types/node": "^26.6.2",
     "@types/nodemailer": "^8.0.2",
     "@types/supertest": "^7.2.1",
-    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.70.1",
     "@typescript-eslint/parser": "^8.70.1",
     "eslint": "^10.11.0",
