@@ -16,11 +16,14 @@ const DEFAULT_MILESTONES = [
 export class RewardService {
   static async getConfig() {
     let config = await SystemConfig.findOne({ key: 'REWARD_MILESTONES' });
-    if (!config) {
-      config = await SystemConfig.create({
-        key: 'REWARD_MILESTONES',
-        value: DEFAULT_MILESTONES
-      });
+    if (!config || !Array.isArray(config.value)) {
+      if (!config) {
+        config = await SystemConfig.create({
+          key: 'REWARD_MILESTONES',
+          value: DEFAULT_MILESTONES
+        });
+      }
+      return DEFAULT_MILESTONES;
     }
     return config.value;
   }
