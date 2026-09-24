@@ -15,7 +15,7 @@ export class CertificateController {
   static async revoke(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user) throw new AppError(401, 'UNAUTHORIZED', 'Missing user context');
-      const cert = await CertificateService.revokeCertificate(req.user.userId, req.params.id, req.body.reason || 'Admin revoked');
+      const cert = await CertificateService.revokeCertificate(req.user.userId, req.params.id as string, req.body.reason || 'Admin revoked');
       res.status(200).json(SuccessResponse(cert, req.id));
     } catch (error) { next(error); }
   }
