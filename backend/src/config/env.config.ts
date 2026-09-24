@@ -5,7 +5,7 @@ dotenv.config();
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.string().transform(Number).default('3000'),
+  PORT: z.string().default('3000').transform(Number),
   MONGODB_URI: z.string().url().default('mongodb://localhost:27017/blood-sanjal-test'),
   CORS_ORIGINS: z.string().default('*'),
   LOG_LEVEL: z.string().default('info'),
