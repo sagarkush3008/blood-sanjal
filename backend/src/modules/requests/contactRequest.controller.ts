@@ -16,7 +16,7 @@ export class ContactRequestController {
   static async accept(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
-      const result = await ContactRequestService.acceptRequest(req.params.id, req.user.userId);
+      const result = await ContactRequestService.acceptRequest(req.params.id as string, req.user.userId);
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }
@@ -24,7 +24,7 @@ export class ContactRequestController {
   static async decline(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
-      const result = await ContactRequestService.declineRequest(req.params.id, req.user.userId);
+      const result = await ContactRequestService.declineRequest(req.params.id as string, req.user.userId);
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }
