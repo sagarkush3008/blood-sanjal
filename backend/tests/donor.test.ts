@@ -8,6 +8,8 @@ import { PaymentService } from '../src/modules/payments/payment.service';
 
 jest.mock('../src/modules/donors/donorProfile.model');
 jest.mock('../src/modules/donors/donationRecord.model');
+jest.mock('../src/modules/payments/payment.service');
+jest.mock('../src/modules/users/user.model');
 
 describe('Donor Profile & Availability', () => {
   afterEach(() => {
