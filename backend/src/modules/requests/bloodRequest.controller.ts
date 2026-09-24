@@ -58,4 +58,12 @@ export class BloodRequestController {
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }
+
+  static async broadcast(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const result = await BloodRequestService.broadcastEmergency(req.params.id as string, req.user.userId);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
 }

@@ -21,6 +21,7 @@ export interface IBloodRequest extends Document {
   };
   additionalInfo?: string;
   evidenceAssetId?: string;
+  broadcastedAt?: Date;
   status: 'DRAFT' | 'PENDING_VERIFICATION' | 'VERIFIED' | 'ACTIVE' | 'PARTIALLY_FULFILLED' | 'FULFILLED' | 'CANCELLED' | 'EXPIRED';
 }
 
@@ -46,6 +47,7 @@ const bloodRequestSchema = new Schema<IBloodRequest>(
     },
     additionalInfo: { type: String },
     evidenceAssetId: { type: String },
+    broadcastedAt: { type: Date },
     status: {
       type: String,
       enum: ['DRAFT', 'PENDING_VERIFICATION', 'VERIFIED', 'ACTIVE', 'PARTIALLY_FULFILLED', 'FULFILLED', 'CANCELLED', 'EXPIRED'],

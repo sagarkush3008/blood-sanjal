@@ -15,5 +15,6 @@ router.post('/:id/fulfill', requireAuth, BloodRequestController.fulfill);
 
 // Admin routes
 router.post('/:id/verify', requireAuth, requireAdmin, BloodRequestController.verify);
+router.post('/:id/broadcast', requireAuth, requireAdmin, BloodRequestController.broadcast);
 
 export default router;

@@ -1,6 +1,8 @@
 import { BloodRequest, IBloodRequest } from './bloodRequest.model';
 import { AuditLog } from '../audit/auditLog.model';
 import { AppError } from '../../core/errors/appError';
+import { DonorProfile } from '../donors/donorProfile.model';
+import { NotificationJob } from '../notifications/notificationQueue.model';
 
 export class BloodRequestService {
   static async createRequest(userId: string, data: any) {
@@ -114,6 +116,66 @@ export class BloodRequestService {
     request.status = 'CANCELLED';
     await request.save();
 
+    await NotificationJob.updateMany(
+      { bloodRequestId: requestId, status: 'PENDING' },
+      { $set: { status: 'CANCELLED' } }
+    );
+
     return request;
+  }
+
+  static async broadcastEmergency(requestId: string, adminId: string) {
+    const request = await BloodRequest.findById(requestId);
+    if (!request) throw new AppError(404, 'NOT_FOUND', 'Request not found');
+
+    if (request.urgency !== 'EMERGENCY') {
+      throw new AppError(400, 'BAD_REQUEST', 'Only EMERGENCY requests can be broadcasted');
+    }
+
+    if (request.status !== 'ACTIVE') {
+      throw new AppError(400, 'BAD_REQUEST', 'Request must be ACTIVE (verified) before broadcast');
+    }
+
+    if (request.broadcastedAt) {
+      throw new AppError(409, 'CONFLICT', 'Request has already been broadcasted');
+    }
+
+    request.broadcastedAt = new Date();
+    await request.save();
+
+    const donors = await DonorProfile.find({
+      donorStatus: 'ACTIVE',
+      bloodGroup: request.bloodGroup,
+      notificationPreference: { $in: ['ALL', 'EMERGENCY_ONLY'] }
+    }).populate('userId');
+
+    const jobs = [];
+    for (const donor of donors) {
+      const user = (donor as any).userId;
+      if (!user || !user.email) continue;
+      if (user.privacySettings?.donorSearchVisibility === false) continue;
+
+      jobs.push({
+        recipientId: user._id,
+        recipientEmail: user.email,
+        subject: `EMERGENCY BLOOD REQUEST: ${request.bloodGroup} needed at ${request.hospitalName}`,
+        content: `An emergency request for ${request.unitsRequired} units of ${request.bloodGroup} has been verified at ${request.hospitalName}. Please check the app for more details. (No patient PII is included in this email for privacy).`,
+        bloodRequestId: request._id
+      });
+    }
+
+    if (jobs.length > 0) {
+      await NotificationJob.insertMany(jobs);
+    }
+
+    await AuditLog.create({
+      actorId: adminId,
+      action: 'BLOOD_REQUEST_BROADCASTED',
+      entityType: 'BloodRequest',
+      entityId: requestId,
+      metadata: { matchedDonors: jobs.length }
+    });
+
+    return { matched: jobs.length };
   }
 }
