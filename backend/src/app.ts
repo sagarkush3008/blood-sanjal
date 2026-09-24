@@ -9,6 +9,7 @@ import { errorMiddleware } from './core/middleware/error.middleware';
 import { notFoundMiddleware } from './core/middleware/notFound.middleware';
 import authRoutes from './modules/auth/auth.routes';
 import userRoutes from './modules/users/user.routes';
+import donorRoutes from './modules/donors/donor.routes';
 import adminRoutes from './modules/admin/admin.routes';
 import locationRoutes from './modules/locations/location.routes';
 import { SuccessResponse } from './core/http/result';
@@ -61,6 +62,7 @@ app.get('/ready', (req, res) => {
 // Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/me', userRoutes);
+app.use('/api/v1/donors', donorRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/locations', locationRoutes);
 
