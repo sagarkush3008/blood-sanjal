@@ -40,7 +40,7 @@ export class AuthService {
   }
 
   static async verifyOtp(userId: string, code: string, purpose: string) {
-    const otp = await OtpCode.findOne({ userId, purpose, consumedAt: null, expiresAt: { $gt: new Date() } });
+    const otp = await OtpCode.findOne({ userId, purpose, consumedAt: null, expiresAt: { $gt: new Date() } }) as IOtpCode | null;
     if (!otp) throw new AppError(400, 'INVALID_OTP', 'OTP is invalid or expired');
 
     if (otp.attemptCount >= 3) throw new AppError(429, 'RATE_LIMIT', 'Too many attempts');
@@ -78,7 +78,7 @@ export class AuthService {
 
     if (user.status === 'SUSPENDED') throw new AppError(403, 'FORBIDDEN', 'Account suspended');
 
-    const accessToken = jwt.sign({ userId: user._id, role: user.role }, env.JWT_ACCESS_SECRET, { expiresIn: env.ACCESS_TOKEN_TTL });
+    const accessToken = jwt.sign({ userId: user._id, role: user.role }, env.JWT_ACCESS_SECRET, { expiresIn: env.ACCESS_TOKEN_TTL as any });
     const refreshToken = crypto.randomBytes(40).toString('hex');
     const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
 
@@ -115,7 +115,7 @@ export class AuthService {
     const user = await User.findById(userId);
     if (!user || user.status === 'SUSPENDED') throw new AppError(401, 'UNAUTHENTICATED', 'User inactive');
 
-    const accessToken = jwt.sign({ userId: user._id, role: user.role }, env.JWT_ACCESS_SECRET, { expiresIn: env.ACCESS_TOKEN_TTL });
+    const accessToken = jwt.sign({ userId: user._id, role: user.role }, env.JWT_ACCESS_SECRET, { expiresIn: env.ACCESS_TOKEN_TTL as any });
     return { accessToken };
   }
 
