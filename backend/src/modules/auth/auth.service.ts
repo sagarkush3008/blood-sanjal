@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { User } from '../users/user.model';
-import { OtpCode } from './models/otpCode.model';
+import { OtpCode, IOtpCode } from './models/otpCode.model';
 import { Session } from './models/session.model';
 import { PasswordReset } from './models/passwordReset.model';
 import { env } from '../../config/env.config';
@@ -40,7 +40,7 @@ export class AuthService {
   }
 
   static async verifyOtp(userId: string, code: string, purpose: string) {
-    const otp = await OtpCode.findOne({ userId, purpose, consumedAt: null, expiresAt: { $gt: new Date() } }) as IOtpCode | null;
+    const otp = await OtpCode.findOne({ userId, purpose: purpose as any, consumedAt: null, expiresAt: { $gt: new Date() } }) as IOtpCode | null;
     if (!otp) throw new AppError(400, 'INVALID_OTP', 'OTP is invalid or expired');
 
     if (otp.attemptCount >= 3) throw new AppError(429, 'RATE_LIMIT', 'Too many attempts');
