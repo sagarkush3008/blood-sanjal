@@ -18,6 +18,7 @@ import reminderRoutes from './modules/reminders/reminder.routes';
 import campaignRoutes from './modules/campaigns/campaign.routes';
 import notificationRoutes from './modules/notifications/notification.routes';
 import rewardRoutes from './modules/rewards/reward.routes';
+import certificateRoutes from './modules/certificates/certificate.routes';
 import adminRoutes from './modules/admin/admin.routes';
 import locationRoutes from './modules/locations/location.routes';
 import { SuccessResponse } from './core/http/result';
@@ -79,6 +80,7 @@ app.use('/api/v1/reminders', reminderRoutes);
 app.use('/api/v1/campaigns', campaignRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/rewards', rewardRoutes);
+app.use('/api/v1/certificates', certificateRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/locations', locationRoutes);
 
