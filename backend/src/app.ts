@@ -15,6 +15,7 @@ import contactRequestRoutes from './modules/requests/contactRequest.routes';
 import paymentRoutes from './modules/payments/payment.routes';
 import donationRoutes from './modules/donors/donation.routes';
 import reminderRoutes from './modules/reminders/reminder.routes';
+import campaignRoutes from './modules/campaigns/campaign.routes';
 import adminRoutes from './modules/admin/admin.routes';
 import locationRoutes from './modules/locations/location.routes';
 import { SuccessResponse } from './core/http/result';
@@ -73,6 +74,7 @@ app.use('/api/v1/requests', requestRoutes);
 app.use('/api/v1/contact-requests', contactRequestRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/reminders', reminderRoutes);
+app.use('/api/v1/campaigns', campaignRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/locations', locationRoutes);
 
