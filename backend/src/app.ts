@@ -8,6 +8,8 @@ import { requestIdMiddleware } from './core/middleware/requestId.middleware';
 import { errorMiddleware } from './core/middleware/error.middleware';
 import { notFoundMiddleware } from './core/middleware/notFound.middleware';
 import authRoutes from './modules/auth/auth.routes';
+import userRoutes from './modules/users/user.routes';
+import adminRoutes from './modules/admin/admin.routes';
 import { SuccessResponse } from './core/http/result';
 import { logger } from './config/logger.config';
 
@@ -57,6 +59,8 @@ app.get('/ready', (req, res) => {
 
 // Routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/me', userRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 // 404 Handler
 app.use(notFoundMiddleware);
