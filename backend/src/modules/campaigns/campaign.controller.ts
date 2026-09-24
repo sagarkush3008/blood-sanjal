@@ -17,7 +17,7 @@ export class CampaignController {
     try {
       if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
       const { status } = req.body;
-      const result = await CampaignService.updateCampaignStatus(req.params.id, req.user.userId, status);
+      const result = await CampaignService.updateCampaignStatus(req.params.id as string, req.user.userId, status);
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }
@@ -25,14 +25,14 @@ export class CampaignController {
   static async notifyUsers(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
-      const result = await CampaignService.notifyTargetUsers(req.params.id, req.user.userId);
+      const result = await CampaignService.notifyTargetUsers(req.params.id as string, req.user.userId);
       res.status(200).json(SuccessResponse({ notifiedCount: result }, req.id));
     } catch (error) { next(error); }
   }
 
   static async delete(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await CampaignService.deleteCampaign(req.params.id);
+      const result = await CampaignService.deleteCampaign(req.params.id as string);
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }
@@ -47,7 +47,7 @@ export class CampaignController {
 
   static async get(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await CampaignService.getCampaignDetails(req.params.id);
+      const result = await CampaignService.getCampaignDetails(req.params.id as string);
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }
@@ -55,7 +55,7 @@ export class CampaignController {
   static async register(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
-      const result = await CampaignService.registerForCampaign(req.params.id, req.user.userId);
+      const result = await CampaignService.registerForCampaign(req.params.id as string, req.user.userId);
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }
