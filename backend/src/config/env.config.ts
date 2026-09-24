@@ -14,9 +14,9 @@ const envSchema = z.object({
   ACCESS_TOKEN_TTL: z.string().default('15m'),
   REFRESH_TOKEN_TTL: z.string().default('7d'),
   COOKIE_DOMAIN: z.string().optional(),
-  COOKIE_SECURE: z.string().transform(v => v === 'true').default('false'),
-  OTP_EXPIRY_MINUTES: z.string().transform(Number).default('10'),
-  PASSWORD_RESET_EXPIRY_MINUTES: z.string().transform(Number).default('30'),
+  COOKIE_SECURE: z.string().default('false').transform(v => v === 'true'),
+  OTP_EXPIRY_MINUTES: z.string().default('10').transform(Number),
+  PASSWORD_RESET_EXPIRY_MINUTES: z.string().default('30').transform(Number),
 });
 
 const parsed = envSchema.safeParse(process.env);
