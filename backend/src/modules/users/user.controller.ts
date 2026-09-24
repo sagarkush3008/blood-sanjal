@@ -19,7 +19,7 @@ export class UserController {
       
       const parsedData = updateProfileSchema.safeParse(req.body);
       if (!parsedData.success) {
-        throw new AppError(422, 'VALIDATION_ERROR', 'Invalid data', parsedData.error.errors);
+        throw new AppError(422, 'VALIDATION_ERROR', 'Invalid data', parsedData.error.issues);
       }
 
       const updated = await UserService.updateProfile(req.user.userId, parsedData.data as any);
