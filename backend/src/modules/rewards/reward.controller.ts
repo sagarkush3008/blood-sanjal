@@ -18,7 +18,7 @@ export class RewardController {
 
   static async getUserRewards(req: Request, res: Response, next: NextFunction) {
     try {
-      const rewards = await RewardService.getUserRewards(req.params.profileId);
+      const rewards = await RewardService.getUserRewards(req.params.profileId as string);
       res.status(200).json(SuccessResponse(rewards, req.id));
     } catch (error) { next(error); }
   }
