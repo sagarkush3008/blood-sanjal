@@ -4,6 +4,7 @@ import { DonorProfile } from '../src/modules/donors/donorProfile.model';
 import { DonationRecord } from '../src/modules/donors/donationRecord.model';
 import jwt from 'jsonwebtoken';
 import { env } from '../src/config/env.config';
+import { PaymentService } from '../src/modules/payments/payment.service';
 
 jest.mock('../src/modules/donors/donorProfile.model');
 jest.mock('../src/modules/donors/donationRecord.model');
@@ -44,15 +45,25 @@ describe('Donor Profile & Availability', () => {
       ];
 
       (DonorProfile.find as jest.Mock).mockReturnValue({
-        populate: jest.fn().mockResolvedValue(mockDonors)
+        skip: jest.fn().mockReturnValue({
+          limit: jest.fn().mockReturnValue({
+            populate: jest.fn().mockResolvedValue(mockDonors)
+          })
+        })
       });
 
-      const res = await request(app).get('/api/v1/donors/search?bloodGroup=A+');
+      (PaymentService.hasValidSearchFee as jest.Mock).mockResolvedValue(true);
+      const { User } = require('../src/modules/users/user.model');
+      User.find = jest.fn().mockReturnValue({ select: jest.fn().mockResolvedValue([{ _id: 'user1' }, { _id: 'user2' }]) });
+
+      const res = await request(app)
+        .get('/api/v1/donors/search?bloodGroup=A+')
+        .set('Authorization', `Bearer ${generateToken('user1')}`);
 
       expect(res.status).toBe(200);
-      expect(res.body.data.length).toBe(1);
+      expect(res.body.data.results.length).toBe(1);
       
-      const safeDonor = res.body.data[0];
+      const safeDonor = res.body.data.results[0];
       expect(safeDonor.name).toBe('John Safe');
       expect(safeDonor.email).toBeUndefined();
       expect(safeDonor.phone).toBeUndefined();

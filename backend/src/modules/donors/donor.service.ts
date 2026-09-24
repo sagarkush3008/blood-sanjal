@@ -48,24 +48,44 @@ export class DonorService {
   }
 
   static async searchPublicDonors(filters: any) {
-    // Always restrict to ACTIVE profiles
     const profileQuery: any = { donorStatus: 'ACTIVE' };
-    if (filters.bloodGroup) {
-      profileQuery.bloodGroup = filters.bloodGroup;
+    if (filters.bloodGroup) profileQuery.bloodGroup = filters.bloodGroup;
+
+    const userQuery: any = { status: 'ACTIVE', 'privacySettings.donorSearchVisibility': true };
+    if (filters.provinceId) userQuery.provinceId = filters.provinceId;
+    if (filters.districtId) userQuery.districtId = filters.districtId;
+    if (filters.cityId) userQuery.cityId = filters.cityId;
+    if (filters.areaId) userQuery.areaId = filters.areaId;
+
+    if (filters.lon && filters.lat) {
+       userQuery.locationCoordinates = {
+         $near: {
+           $geometry: { type: 'Point', coordinates: [parseFloat(filters.lon), parseFloat(filters.lat)] },
+           $maxDistance: parseInt(filters.distance) || 5000,
+         }
+       };
     }
 
-    const donors = await DonorProfile.find(profileQuery).populate('userId');
+    const page = parseInt(filters.page) || 1;
+    const limit = parseInt(filters.limit) || 20;
+    const skip = (page - 1) * limit;
 
-    return donors.map(donor => {
+    const users = await User.find(userQuery).select('_id name provinceId districtId cityId areaId email phone locationCoordinates privacySettings');
+    const userIds = users.map(u => u._id);
+
+    profileQuery.userId = { $in: userIds };
+
+    const donors = await DonorProfile.find(profileQuery)
+      .skip(skip)
+      .limit(limit)
+      .populate('userId');
+
+    const results = donors.map(donor => {
       const user = (donor as any).userId;
       if (!user) return null;
-
-      // Honor user's base privacy settings
-      if (user.privacySettings?.donorSearchVisibility === false) {
-        return null;
-      }
-
       return toPublicDonorDTO(donor, user);
     }).filter(Boolean);
+
+    return { results, pagination: { page, limit, count: results.length } };
   }
 }

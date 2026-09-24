@@ -2,6 +2,8 @@ import { Location, ILocation } from './location.model';
 import { User } from '../users/user.model';
 import { AppError } from '../../core/errors/appError';
 
+const locationCache = new Map<string, { data: any, expiresAt: number }>();
+
 export class LocationService {
   static async createLocation(data: Partial<ILocation>) {
     if (data.parentId) {
@@ -26,10 +28,20 @@ export class LocationService {
   }
 
   static async getHierarchy(parentId?: string) {
+    const cacheKey = `loc_${parentId || 'root'}`;
+    const cached = locationCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.data;
+    }
+
     const query: any = { status: 'ACTIVE' };
     if (parentId) query.parentId = parentId;
     else query.type = 'PROVINCE';
-    return Location.find(query).sort({ name: 1 });
+    
+    const results = await Location.find(query).sort({ name: 1 });
+    
+    locationCache.set(cacheKey, { data: results, expiresAt: Date.now() + 3600 * 1000 });
+    return results;
   }
 
   static async searchDonorsByProximity(lon: number, lat: number, maxDistanceMeters: number) {
