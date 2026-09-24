@@ -9,6 +9,7 @@ jest.mock('../src/modules/donors/donationRecord.model');
 jest.mock('../src/modules/donors/donorProfile.model');
 jest.mock('../src/modules/audit/auditLog.model');
 jest.mock('../src/modules/payments/payment.service');
+jest.mock('../src/modules/admin/systemConfig.model');
 
 describe('Donation Records & Verification', () => {
   afterEach(() => {
@@ -81,6 +82,9 @@ describe('Donation Records & Verification', () => {
         _id: 'profile1',
         save: jest.fn()
       };
+
+      const { SystemConfig } = require('../src/modules/admin/systemConfig.model');
+      SystemConfig.findOne.mockResolvedValue({ value: { daysAfterDonation: 90 } });
 
       (DonationRecord.findById as jest.Mock).mockResolvedValue(mockRecord);
       (DonorProfile.findById as jest.Mock).mockResolvedValue(mockProfile);
