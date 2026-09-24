@@ -77,7 +77,7 @@ describe('Donation Records & Verification', () => {
         verificationStatus: 'PENDING',
         save: jest.fn()
       };
-      const mockProfile = {
+      const mockProfile: any = {
         _id: 'profile1',
         save: jest.fn()
       };
