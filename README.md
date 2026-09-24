@@ -1,107 +1,71 @@
-Blood Sanjal
+# Blood Sanjal
 
-Connecting People. Saving Lives.
+**Connecting People. Saving Lives.**
 
 Blood Sanjal is a Nepal-focused blood donation and blood request platform designed to connect blood donors with people who need blood.
 
 The project includes a React Native mobile application and a Node.js backend using MongoDB, Cloudinary, and Nodemailer.
 
-Repository
+## Repository
 
-Recommended GitHub repository name:
+**Recommended GitHub repository name:**
 
-blood-sanjal
+`blood-sanjal`
 
-GitHub Description
+### GitHub Description
 
-Blood Sanjal is a Nepal-focused blood donation platform connecting blood donors and recipients with blood search, requests, emergency support, donations, campaigns, notifications, rewards, and certificates.
+> Blood Sanjal is a Nepal-focused blood donation platform connecting blood donors and recipients with blood search, requests, emergency support, donations, campaigns, notifications, rewards, and certificates.
 
-Main Features
+## Main Features
 
-User registration and login
+- User registration and login
+- OTP/email verification
+- Donor profiles
+- Blood group management
+- Blood donor search
+- Location-based search
+- Blood requests
+- Emergency blood requests
+- Donor contact request and consent
+- Donation records
+- Donation reminders
+- Blood donation campaigns/camps
+- Notifications
+- Rewards and donor milestones
+- Donation certificates
+- Certificate verification
+- Platform/search payments
+- Cloudinary image/file uploads
+- Email notifications with Nodemailer
+- Admin dashboard and management
+- Reports and analytics
+- Audit logs
+- Role-based access control
+- Secure API architecture
 
-OTP/email verification
+## Technology Stack
 
-Donor profiles
+### Mobile App
+- React Native
+- TypeScript
+- React Navigation
+- TanStack Query
+- React Hook Form
+- Zod
+- Zustand
 
-Blood group management
+### Backend
+- Node.js
+- Express.js
+- TypeScript
+- MongoDB
+- Mongoose
+- Cloudinary
+- Nodemailer
 
-Blood donor search
+## Project Structure
 
-Location-based search
-
-Blood requests
-
-Emergency blood requests
-
-Donor contact request and consent
-
-Donation records
-
-Donation reminders
-
-Blood donation campaigns/camps
-
-Notifications
-
-Rewards and donor milestones
-
-Donation certificates
-
-Certificate verification
-
-Platform/search payments
-
-Cloudinary image/file uploads
-
-Email notifications with Nodemailer
-
-Admin dashboard and management
-
-Reports and analytics
-
-Audit logs
-
-Role-based access control
-
-Secure API architecture
-
-Technology Stack
-
-Mobile App
-
-React Native
-
-TypeScript
-
-React Navigation
-
-TanStack Query
-
-React Hook Form
-
-Zod
-
-Zustand
-
-Backend
-
-Node.js
-
-Express.js
-
-TypeScript
-
-MongoDB
-
-Mongoose
-
-Cloudinary
-
-Nodemailer
-
-Project Structure
-
+```text
 blood-sanjal/
 │
 ├── mobile/
@@ -122,9 +86,11 @@ blood-sanjal/
 │
 ├── .gitignore
 └── README.md
+```
 
-Core Workflow
+## Core Workflow
 
+```text
 User Registration
        ↓
 OTP / Email Verification
@@ -144,9 +110,11 @@ Donation
 Verification
        ↓
 Rewards / Certificate
+```
 
 Emergency workflow:
 
+```text
 Emergency Blood Request
        ↓
 Backend Verification
@@ -162,114 +130,90 @@ Donor Response
 Contact / Fulfillment
        ↓
 Close Request
+```
 
-Design
+## Design
 
 The mobile application uses a professional:
 
-White-first interface
+- White-first interface
+- Light red blood/health accent
+- Clean cards
+- Rounded components
+- Simple navigation
+- Accessible typography
+- Mobile-first layouts
 
-Light red blood/health accent
-
-Clean cards
-
-Rounded components
-
-Simple navigation
-
-Accessible typography
-
-Mobile-first layouts
-
-Backend Integration
+## Backend Integration
 
 The mobile application connects to the real Blood Sanjal backend.
 
 The backend API is the source of truth for:
 
-Authentication
-
-Users
-
-Donors
-
-Blood requests
-
-Emergency requests
-
-Contact requests
-
-Donations
-
-Campaigns
-
-Notifications
-
-Rewards
-
-Certificates
-
-Payments
-
-Files
-
-Admin operations
-
-Reports
-
-Audit
+- Authentication
+- Users
+- Donors
+- Blood requests
+- Emergency requests
+- Contact requests
+- Donations
+- Campaigns
+- Notifications
+- Rewards
+- Certificates
+- Payments
+- Files
+- Admin operations
+- Reports
+- Audit
 
 No production feature should use fake/mock data instead of the real API.
 
-Security
+## Security
 
-Role-based access control
+- Role-based access control
+- Secure authentication
+- Protected API routes
+- User/object authorization
+- Donor privacy protection
+- Consent-based contact reveal
+- Secure Cloudinary access
+- No secrets inside the mobile application
+- Rate limiting
+- Input validation
+- Audit logging
+- Secure payment verification
 
-Secure authentication
-
-Protected API routes
-
-User/object authorization
-
-Donor privacy protection
-
-Consent-based contact reveal
-
-Secure Cloudinary access
-
-No secrets inside the mobile application
-
-Rate limiting
-
-Input validation
-
-Audit logging
-
-Secure payment verification
-
-Development
+## Development
 
 Clone the repository:
 
+```bash
 git clone https://github.com/YOUR_USERNAME/blood-sanjal.git
 cd blood-sanjal
+```
 
 Install mobile dependencies:
 
+```bash
 cd mobile
 npm install
+```
 
 Install backend dependencies:
 
+```bash
 cd ../backend
 npm install
+```
 
 Create the required environment files before running the application.
 
-Environment
+## Environment
 
 Backend configuration should include values for:
 
+```env
 PORT=
 MONGODB_URI=
 JWT_SECRET=
@@ -283,51 +227,39 @@ SMTP_PORT=
 SMTP_USER=
 SMTP_PASSWORD=
 SMTP_FROM=
+```
 
 Never commit real secrets to GitHub.
 
-Testing
+## Testing
 
 The project should test:
 
-Authentication
+- Authentication
+- Donor search
+- Blood requests
+- Emergency requests
+- Contact consent
+- Donations
+- Campaigns
+- Notifications
+- Rewards
+- Certificates
+- Payments
+- Cloudinary uploads
+- Authorization
+- Privacy
+- API integration
+- Mobile E2E workflows
 
-Donor search
-
-Blood requests
-
-Emergency requests
-
-Contact consent
-
-Donations
-
-Campaigns
-
-Notifications
-
-Rewards
-
-Certificates
-
-Payments
-
-Cloudinary uploads
-
-Authorization
-
-Privacy
-
-API integration
-
-Mobile E2E workflows
-
-Project Goal
+## Project Goal
 
 Blood Sanjal aims to make blood discovery and donor connection easier, faster, and more organized while protecting donor privacy and maintaining a reliable digital record of requests and donations.
 
-License
+## License
 
 Add the project's chosen license before public release.
 
-Blood Sanjal — Connecting People. Saving Lives.
+---
+
+**Blood Sanjal — Connecting People. Saving Lives.**
