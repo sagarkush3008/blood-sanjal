@@ -4,6 +4,7 @@ import { User } from '../users/user.model';
 import { AppError } from '../../core/errors/appError';
 import { AuditLog } from '../audit/auditLog.model';
 import { SystemConfig } from '../admin/systemConfig.model';
+import { RewardService } from '../rewards/reward.service';
 
 export class DonationService {
   static async submitDonation(userId: string, data: any) {
@@ -75,6 +76,9 @@ export class DonationService {
           profile.reminderDate = reminder;
         }
         await profile.save();
+
+        // Check for new reward badges
+        await RewardService.checkAndIssueRewards(profile._id.toString());
       }
     }
 
