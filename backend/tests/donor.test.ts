@@ -54,7 +54,7 @@ describe('Donor Profile & Availability', () => {
         })
       });
 
-      (PaymentService.hasValidSearchFee as jest.Mock).mockResolvedValue(true);
+      PaymentService.hasValidSearchFee = jest.fn().mockResolvedValue(true);
       const { User } = require('../src/modules/users/user.model');
       User.find = jest.fn().mockReturnValue({ select: jest.fn().mockResolvedValue([{ _id: 'user1' }, { _id: 'user2' }]) });
 

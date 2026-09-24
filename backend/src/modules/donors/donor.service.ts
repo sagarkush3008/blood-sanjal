@@ -83,6 +83,7 @@ export class DonorService {
     const results = donors.map(donor => {
       const user = (donor as any).userId;
       if (!user) return null;
+      if (user.privacySettings?.donorSearchVisibility === false) return null;
       return toPublicDonorDTO(donor, user);
     }).filter(Boolean);
 
