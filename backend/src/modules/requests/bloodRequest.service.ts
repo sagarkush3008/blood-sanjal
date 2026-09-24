@@ -172,8 +172,7 @@ export class BloodRequestService {
       actorId: adminId,
       action: 'BLOOD_REQUEST_BROADCASTED',
       entityType: 'BloodRequest',
-      entityId: requestId,
-      metadata: { matchedDonors: jobs.length }
+      entityId: requestId
     });
 
     return { matched: jobs.length };
