@@ -53,7 +53,7 @@ export class NotificationService {
       }
 
       if (prefersEmail && notification.emailStatus !== 'SENT') {
-         this.sendEmail(notification._id as string, user.email, opts.title, opts.message).catch(e => {
+         this.sendEmail(notification._id.toString(), user.email, opts.title, opts.message).catch(e => {
             logger.error(`Background email dispatch failed for ${notification?._id}`, e);
          });
       }
