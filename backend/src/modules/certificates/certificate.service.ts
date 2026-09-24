@@ -27,9 +27,8 @@ export class CertificateService {
     await AuditLog.create({
       actorId: adminId,
       action: 'CERTIFICATE_ISSUED',
-      targetResource: 'Certificate',
-      targetId: cert._id.toString(),
-      details: { certificateNumber, certificateType: data.certificateType }
+      entityType: 'Certificate',
+      entityId: cert._id.toString()
     });
 
     await NotificationService.dispatch({
@@ -56,9 +55,8 @@ export class CertificateService {
     await AuditLog.create({
       actorId: adminId,
       action: 'CERTIFICATE_REVOKED',
-      targetResource: 'Certificate',
-      targetId: cert._id.toString(),
-      details: { reason }
+      entityType: 'Certificate',
+      entityId: cert._id.toString()
     });
 
     return cert;
