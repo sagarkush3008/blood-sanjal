@@ -1,11 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env.config';
 import { requestIdMiddleware } from './core/middleware/requestId.middleware';
 import { errorMiddleware } from './core/middleware/error.middleware';
 import { notFoundMiddleware } from './core/middleware/notFound.middleware';
+import authRoutes from './modules/auth/auth.routes';
 import { SuccessResponse } from './core/http/result';
 import { logger } from './config/logger.config';
 
@@ -33,6 +35,7 @@ app.use((req, res, next) => {
 // Body parsing with size limit
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(cookieParser());
 
 // Rate Limiting
 const limiter = rateLimit({
@@ -51,6 +54,9 @@ app.get('/health', (req, res) => {
 app.get('/ready', (req, res) => {
   res.status(200).json(SuccessResponse({ status: 'READY' }, req.id));
 });
+
+// Routes
+app.use('/api/v1/auth', authRoutes);
 
 // 404 Handler
 app.use(notFoundMiddleware);

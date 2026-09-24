@@ -9,6 +9,14 @@ const envSchema = z.object({
   MONGODB_URI: z.string().url().default('mongodb://localhost:27017/blood-sanjal-test'),
   CORS_ORIGINS: z.string().default('*'),
   LOG_LEVEL: z.string().default('info'),
+  JWT_ACCESS_SECRET: z.string().default('supersecret_access'),
+  JWT_REFRESH_SECRET: z.string().default('supersecret_refresh'),
+  ACCESS_TOKEN_TTL: z.string().default('15m'),
+  REFRESH_TOKEN_TTL: z.string().default('7d'),
+  COOKIE_DOMAIN: z.string().optional(),
+  COOKIE_SECURE: z.string().transform(v => v === 'true').default('false'),
+  OTP_EXPIRY_MINUTES: z.string().transform(Number).default('10'),
+  PASSWORD_RESET_EXPIRY_MINUTES: z.string().transform(Number).default('30'),
 });
 
 const parsed = envSchema.safeParse(process.env);
