@@ -63,7 +63,7 @@ export class AuthService {
       expiresAt: new Date(Date.now() + env.OTP_EXPIRY_MINUTES * 60000)
     });
 
-    await sendOtp(data.email || data.phone, rawCode);
+    sendOtp(data.email || data.phone, rawCode).catch(console.error);
 
     return { userId: user._id.toString(), message: 'OTP sent' };
   }

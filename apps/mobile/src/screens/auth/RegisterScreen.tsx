@@ -40,7 +40,7 @@ export const RegisterScreen = () => {
       }
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || 'Failed to register.';
+      const message = error.response?.data?.error?.message || error.response?.data?.message || 'Failed to register.';
       setApiError(message);
     }
   });

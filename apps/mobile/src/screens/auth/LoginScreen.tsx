@@ -41,7 +41,7 @@ export const LoginScreen = () => {
       }
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || 'Failed to login. Please check credentials.';
+      const message = error.response?.data?.error?.message || error.response?.data?.message || 'Failed to login. Please check credentials.';
       setApiError(message);
     }
   });
