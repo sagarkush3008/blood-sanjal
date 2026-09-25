@@ -2,8 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
-import rateLimit from 'express-rate-limit';
 import { env } from './config/env.config';
+import { globalLimiter } from './core/middleware/rateLimit.middleware';
 import { requestIdMiddleware } from './core/middleware/requestId.middleware';
 import { errorMiddleware } from './core/middleware/error.middleware';
 import { notFoundMiddleware } from './core/middleware/notFound.middleware';
@@ -51,15 +51,27 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cookieParser());
 
-// Rate Limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, error: { code: 'RATE_LIMIT_EXCEEDED', message: 'Too many requests, please try again later.' } }
+// NoSQL Injection Protection
+app.use((req, res, next) => {
+  const sanitize = (obj: any) => {
+    if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+      for (const key in obj) {
+        if (key.startsWith('$')) {
+          delete obj[key];
+        } else {
+          sanitize(obj[key]);
+        }
+      }
+    }
+  };
+  sanitize(req.body);
+  sanitize(req.query);
+  sanitize(req.params);
+  next();
 });
-app.use(limiter);
+
+// Rate Limiting
+app.use(globalLimiter);
 
 // Health and Readiness
 app.get('/health', (req, res) => {

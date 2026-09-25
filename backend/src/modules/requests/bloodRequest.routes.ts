@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { BloodRequestController } from './bloodRequest.controller';
 import { requireAuth } from '../../core/middleware/auth.middleware';
 import { requireAdmin } from '../../core/middleware/role.middleware';
+import { emergencyLimiter } from '../../core/middleware/rateLimit.middleware';
 
 const router = Router();
 
@@ -15,6 +16,6 @@ router.post('/:id/fulfill', requireAuth, BloodRequestController.fulfill);
 
 // Admin routes
 router.post('/:id/verify', requireAuth, requireAdmin, BloodRequestController.verify);
-router.post('/:id/broadcast', requireAuth, requireAdmin, BloodRequestController.broadcast);
+router.post('/:id/broadcast', requireAuth, requireAdmin, emergencyLimiter, BloodRequestController.broadcast);
 
 export default router;

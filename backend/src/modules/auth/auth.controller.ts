@@ -3,26 +3,29 @@ import { AuthService } from './auth.service';
 import { SuccessResponse } from '../../core/http/result';
 import { env } from '../../config/env.config';
 import { AppError } from '../../core/errors/appError';
+import { registerSchema, loginSchema, verifyOtpSchema, forgotPasswordSchema, resetPasswordSchema } from './auth.validation';
 
 export class AuthController {
   static async register(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await AuthService.register(req.body);
+      const validated = registerSchema.parse(req.body);
+      const result = await AuthService.register(validated);
       res.status(201).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }
 
   static async verifyEmail(req: Request, res: Response, next: NextFunction) {
     try {
-      const { userId, code } = req.body;
-      const result = await AuthService.verifyOtp(userId, code, 'REGISTRATION');
+      const validated = verifyOtpSchema.parse(req.body);
+      const result = await AuthService.verifyOtp(validated.userId, validated.code, validated.purpose);
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }
 
   static async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await AuthService.login(req.body, req.ip || '', req.headers['user-agent'] || '');
+      const validated = loginSchema.parse(req.body);
+      const result = await AuthService.login(validated, req.ip || '', req.headers['user-agent'] || '');
       
       const maxAgeStr = env.REFRESH_TOKEN_TTL.replace(/\D/g, '');
       const days = parseInt(maxAgeStr) || 7;

@@ -11,6 +11,11 @@ export const errorMiddleware = (err: Error, req: Request, res: Response, next: N
     return res.status(err.statusCode).json(ErrorResponse(err.code, err.message, err.details, requestId));
   }
 
+  if (err.name === 'ZodError') {
+    logger.warn(`[${requestId}] ValidationError: ${err.message}`);
+    return res.status(400).json(ErrorResponse('VALIDATION_ERROR', 'Invalid request data', (err as any).errors, requestId));
+  }
+
   logger.error(`[${requestId}] Unhandled Error: ${err.message}`, { stack: err.stack });
   res.status(500).json(ErrorResponse('INTERNAL_ERROR', 'An unexpected error occurred.', [], requestId));
 };
