@@ -10,11 +10,7 @@ export { FindBloodScreen } from './findBlood/FindBloodScreen';
 export { RequestsNavigator as RequestsScreen } from './requests/RequestsNavigator';
 export { ContactRequestsScreen } from './contactRequests/ContactRequestsScreen';
 
-export const DonateScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
-    <Text>Donate Screen</Text>
-  </View>
-);
+export { DonateNavigator as DonateScreen } from './donate/DonateNavigator';
 
 export const ProfileScreen = () => (
   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>

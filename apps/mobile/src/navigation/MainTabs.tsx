@@ -20,7 +20,7 @@ export const MainTabs = () => {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Find Blood" component={FindBloodScreen} />
       <Tab.Screen name="Requests" component={RequestsScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Donate" component={DonateScreen} />
+      <Tab.Screen name="Donate" component={DonateScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
