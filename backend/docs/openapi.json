@@ -1,0 +1,792 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Blood Sanjal API",
+    "version": "1.0.0",
+    "description": "API for Blood Sanjal platform - A comprehensive blood donation and request management system."
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "API v1"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "requestId": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object"
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "requestId": {
+                "type": "string"
+              },
+              "pagination": {
+                "type": "object",
+                "properties": {
+                  "page": {
+                    "type": "integer"
+                  },
+                  "limit": {
+                    "type": "integer"
+                  },
+                  "total": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "USER",
+              "DONOR",
+              "ADMIN",
+              "SUPER_ADMIN"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "DonorProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "bloodGroup": {
+            "type": "string"
+          },
+          "availabilityStatus": {
+            "type": "boolean"
+          },
+          "lastDonationDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "location": {
+            "type": "object",
+            "properties": {
+              "province": {
+                "type": "string"
+              },
+              "district": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "BloodRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "requesterId": {
+            "type": "string"
+          },
+          "patientName": {
+            "type": "string"
+          },
+          "bloodGroup": {
+            "type": "string"
+          },
+          "unitsRequired": {
+            "type": "integer"
+          },
+          "urgency": {
+            "type": "string",
+            "enum": [
+              "NORMAL",
+              "URGENT",
+              "EMERGENCY"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "ACTIVE",
+              "FULFILLED",
+              "CLOSED",
+              "ARCHIVED"
+            ]
+          },
+          "location": {
+            "type": "object",
+            "properties": {
+              "hospital": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              }
+            }
+          },
+          "requiredByDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Payment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "amountMinor": {
+            "type": "integer",
+            "description": "Amount in minor units (e.g., paisa)"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "SEARCH_PLATFORM_FEE"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "SUCCESS",
+              "FAILED",
+              "CANCELLED"
+            ]
+          },
+          "gateway": {
+            "type": "string"
+          },
+          "transactionId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register a new user",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "name": "John Doe",
+                "email": "john@example.com",
+                "password": "Password123!"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "User already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login user",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "email": "john@example.com",
+                "password": "Password123!"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "user": {
+                              "$ref": "#/components/schemas/User"
+                            },
+                            "accessToken": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    "/donors/search": {
+      "get": {
+        "tags": [
+          "Donor Search"
+        ],
+        "summary": "Search for active donors",
+        "parameters": [
+          {
+            "name": "bloodGroup",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "province",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "city",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of display-safe donor profiles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/DonorProfile"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requests/contact": {
+      "post": {
+        "tags": [
+          "Contact Requests"
+        ],
+        "summary": "Request contact details of a donor (Requires Platform Fee)",
+        "description": "Idempotent operation using a unique request ID or standard idempotency key if provided.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "donorId": {
+                    "type": "string"
+                  },
+                  "purpose": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "donorId",
+                  "purpose"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contact request initiated"
+          }
+        }
+      }
+    },
+    "/requests": {
+      "post": {
+        "tags": [
+          "Blood Requests"
+        ],
+        "summary": "Create a blood request (Normal/Urgent/Emergency)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patientName": {
+                    "type": "string"
+                  },
+                  "bloodGroup": {
+                    "type": "string"
+                  },
+                  "unitsRequired": {
+                    "type": "integer"
+                  },
+                  "urgency": {
+                    "type": "string",
+                    "enum": [
+                      "NORMAL",
+                      "URGENT",
+                      "EMERGENCY"
+                    ]
+                  },
+                  "location": {
+                    "type": "object",
+                    "properties": {
+                      "hospital": {
+                        "type": "string"
+                      },
+                      "province": {
+                        "type": "string"
+                      },
+                      "district": {
+                        "type": "string"
+                      },
+                      "city": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "patientName": "Jane Doe",
+                "bloodGroup": "O+",
+                "unitsRequired": 2,
+                "urgency": "EMERGENCY",
+                "location": {
+                  "hospital": "General Hospital",
+                  "city": "Kathmandu"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Blood request created"
+          }
+        }
+      }
+    },
+    "/payments/initiate": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Initiate a payment for platform fees",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amountMinor": {
+                    "type": "integer",
+                    "description": "Amount in paisa"
+                  },
+                  "purpose": {
+                    "type": "string",
+                    "enum": [
+                      "SEARCH_PLATFORM_FEE"
+                    ]
+                  },
+                  "gateway": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment initiated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Payment"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/donations": {
+      "post": {
+        "tags": [
+          "Donations"
+        ],
+        "summary": "Record a successful donation",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "requestId": {
+                    "type": "string"
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "location": {
+                    "type": "string"
+                  },
+                  "units": {
+                    "type": "integer"
+                  },
+                  "evidenceFileId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Donation recorded successfully"
+          }
+        }
+      }
+    },
+    "/certificates/verify/{certificateId}": {
+      "get": {
+        "tags": [
+          "Certificates"
+        ],
+        "summary": "Verify a donation or reward certificate",
+        "security": [],
+        "parameters": [
+          {
+            "name": "certificateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Certificate details"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Check API health",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "API is healthy"
+          }
+        }
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List users (Admin only)",
+        "parameters": [
+          {
+            "name": "role",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of users"
+          }
+        }
+      }
+    },
+    "/admin/reports/dashboard": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Get dashboard KPIs",
+        "responses": {
+          "200": {
+            "description": "KPI metrics"
+          }
+        }
+      }
+    },
+    "/files/upload": {
+      "post": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "Upload a media or evidence file",
+        "description": "Uploads a file to Cloudinary. Must respect size and MIME limits.",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "purpose": {
+                    "type": "string",
+                    "enum": [
+                      "PROFILES",
+                      "CAMPAIGNS",
+                      "DONATIONS",
+                      "CERTIFICATES",
+                      "REQUESTS"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "File uploaded successfully"
+          }
+        }
+      }
+    }
+  }
+}

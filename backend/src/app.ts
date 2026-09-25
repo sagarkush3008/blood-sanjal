@@ -24,8 +24,28 @@ import locationRoutes from './modules/locations/location.routes';
 import mediaRoutes from './modules/media/media.routes';
 import { SuccessResponse } from './core/http/result';
 import { logger } from './config/logger.config';
+import swaggerUi from 'swagger-ui-express';
+import * as path from 'path';
+import * as fs from 'fs';
 
 const app = express();
+
+// Load OpenAPI spec
+let swaggerDocument: any;
+try {
+  const swaggerPath = path.join(__dirname, '../docs/openapi.json');
+  if (fs.existsSync(swaggerPath)) {
+    swaggerDocument = JSON.parse(fs.readFileSync(swaggerPath, 'utf8'));
+  } else {
+    // try one more level up for dist
+    const distPath = path.join(__dirname, '../../docs/openapi.json');
+    if (fs.existsSync(distPath)) {
+      swaggerDocument = JSON.parse(fs.readFileSync(distPath, 'utf8'));
+    }
+  }
+} catch (error) {
+  logger.warn('Failed to load swagger docs');
+}
 
 // Security Headers
 app.use(helmet());
@@ -80,6 +100,11 @@ app.get('/health', (req, res) => {
 app.get('/ready', (req, res) => {
   res.status(200).json(SuccessResponse({ status: 'READY' }, req.id));
 });
+
+// Swagger Documentation Route
+if (swaggerDocument) {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+}
 
 // Routes
 app.use('/api/v1/auth', authRoutes);
