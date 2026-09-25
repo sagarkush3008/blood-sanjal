@@ -21,7 +21,7 @@ export const MainTabs = () => {
       <Tab.Screen name="Find Blood" component={FindBloodScreen} />
       <Tab.Screen name="Requests" component={RequestsScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Donate" component={DonateScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
     </Tab.Navigator>
   );
 };

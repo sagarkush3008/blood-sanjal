@@ -12,8 +12,4 @@ export { ContactRequestsScreen } from './contactRequests/ContactRequestsScreen';
 
 export { DonateNavigator as DonateScreen } from './donate/DonateNavigator';
 
-export const ProfileScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
-    <Text>Profile Screen</Text>
-  </View>
-);
+export { ProfileNavigator as ProfileScreen } from './profile/ProfileNavigator';
