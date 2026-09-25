@@ -1,23 +1,29 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Text, View } from 'react-native';
-
-const Stack = createNativeStackNavigator();
-
-// Temporary Placeholder Screen
-const PlaceholderScreen = () => (
-  <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-    <Text>Blood Sanjal Mobile App</Text>
-  </View>
-);
+import { ActivityIndicator, View } from 'react-native';
+import { useAuthStore } from '../store/authStore';
+import { AuthNavigator } from './AuthNavigator';
+import { MainTabs } from './MainTabs';
+import { colors } from '../theme';
 
 export const RootNavigator = () => {
+  const { token, isLoading, checkAuth } = useAuthStore();
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="HomePlaceholder" component={PlaceholderScreen} options={{ title: 'Blood Sanjal' }} />
-      </Stack.Navigator>
+      {token ? <MainTabs /> : <AuthNavigator />}
     </NavigationContainer>
   );
 };
