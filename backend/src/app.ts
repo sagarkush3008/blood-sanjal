@@ -21,6 +21,7 @@ import rewardRoutes from './modules/rewards/reward.routes';
 import certificateRoutes from './modules/certificates/certificate.routes';
 import adminRoutes from './modules/admin/admin.routes';
 import locationRoutes from './modules/locations/location.routes';
+import mediaRoutes from './modules/media/media.routes';
 import { SuccessResponse } from './core/http/result';
 import { logger } from './config/logger.config';
 
@@ -83,6 +84,7 @@ app.use('/api/v1/rewards', rewardRoutes);
 app.use('/api/v1/certificates', certificateRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/locations', locationRoutes);
+app.use('/api/v1/media', mediaRoutes);
 
 // 404 Handler
 app.use(notFoundMiddleware);

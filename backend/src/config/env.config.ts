@@ -17,6 +17,9 @@ const envSchema = z.object({
   COOKIE_SECURE: z.string().default('false').transform(v => v === 'true'),
   OTP_EXPIRY_MINUTES: z.string().default('10').transform(Number),
   PASSWORD_RESET_EXPIRY_MINUTES: z.string().default('30').transform(Number),
+  CLOUDINARY_CLOUD_NAME: z.string().default('demo'),
+  CLOUDINARY_API_KEY: z.string().default('demo_key'),
+  CLOUDINARY_API_SECRET: z.string().default('demo_secret'),
 });
 
 const parsed = envSchema.safeParse(process.env);
