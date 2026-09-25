@@ -20,6 +20,13 @@ const envSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().default('demo'),
   CLOUDINARY_API_KEY: z.string().default('demo_key'),
   CLOUDINARY_API_SECRET: z.string().default('demo_secret'),
+  SMTP_HOST: z.string().default('smtp.mailtrap.io'),
+  SMTP_PORT: z.string().default('2525').transform(Number),
+  SMTP_USER: z.string().default('test_user'),
+  SMTP_PASS: z.string().default('test_pass'),
+  SMTP_SECURE: z.string().default('false').transform(v => v === 'true'),
+  EMAIL_FROM: z.string().default('noreply@bloodsanjal.org'),
+  FRONTEND_BASE_URL: z.string().default('http://localhost:3000'),
 });
 
 const parsed = envSchema.safeParse(process.env);
