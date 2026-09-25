@@ -4,6 +4,7 @@ import { AdminDashboardScreen } from './AdminDashboardScreen';
 import { AdminEmergencyReviewScreen } from './AdminEmergencyReviewScreen';
 import { AdminUsersScreen } from './AdminUsersScreen';
 import { AdminSettingsScreen } from './AdminSettingsScreen';
+import { AdminAuditScreen } from './AdminAuditScreen';
 import { colors } from '../../theme';
 
 const Stack = createNativeStackNavigator();
@@ -21,6 +22,7 @@ export const AdminNavigator = () => {
       <Stack.Screen name="EmergencyReview" component={AdminEmergencyReviewScreen} options={{ title: 'Emergency Reviews' }} />
       <Stack.Screen name="AdminUsers" component={AdminUsersScreen} options={{ title: 'User & Donor Management' }} />
       <Stack.Screen name="AdminSettings" component={AdminSettingsScreen} options={{ title: 'System Settings' }} />
+      <Stack.Screen name="AdminAudit" component={AdminAuditScreen} options={{ title: 'Audit Logs' }} />
     </Stack.Navigator>
   );
 };

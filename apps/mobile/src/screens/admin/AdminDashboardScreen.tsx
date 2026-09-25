@@ -53,6 +53,11 @@ export const AdminDashboardScreen = () => {
         <Text style={styles.menuItemText}>📊 System Settings & Fees</Text>
         <Text style={styles.menuItemArrow}>→</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('AdminAudit')}>
+        <Text style={styles.menuItemText}>🛡️ Audit Logs</Text>
+        <Text style={styles.menuItemArrow}>→</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };

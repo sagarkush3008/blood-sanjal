@@ -5,6 +5,7 @@ import { PrivacySettingsScreen } from './PrivacySettingsScreen';
 import { RewardsScreen } from './RewardsScreen';
 import { SupportPlatformScreen } from './SupportPlatformScreen';
 import { EditProfileScreen } from './EditProfileScreen';
+import { VerifyCertificateScreen } from './VerifyCertificateScreen';
 import { AdminNavigator } from '../admin/AdminNavigator';
 import { colors } from '../../theme';
 
@@ -23,6 +24,7 @@ export const ProfileNavigator = () => {
       <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit Profile' }} />
       <Stack.Screen name="PrivacySettings" component={PrivacySettingsScreen} options={{ title: 'Privacy Settings' }} />
       <Stack.Screen name="Rewards" component={RewardsScreen} options={{ title: 'Achievements & Rewards' }} />
+      <Stack.Screen name="VerifyCertificate" component={VerifyCertificateScreen} options={{ title: 'Verify Certificate' }} />
       <Stack.Screen name="SupportPlatform" component={SupportPlatformScreen} options={{ title: 'Support Platform' }} />
       <Stack.Screen name="Admin" component={AdminNavigator} options={{ headerShown: false }} />
     </Stack.Navigator>

@@ -1,10 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigation } from '@react-navigation/native';
 import { RewardsAPI, CertificatesAPI } from '../../api/rewards.api';
 import { colors, spacing, typography } from '../../theme';
 
 export const RewardsScreen = () => {
+  const navigation = useNavigation<any>();
   const { data: rewardsData, isLoading: rewardsLoading } = useQuery({
     queryKey: ['my-rewards'],
     queryFn: () => RewardsAPI.getMyRewards().then(res => res.data.data || res.data),
@@ -45,7 +47,12 @@ export const RewardsScreen = () => {
         </View>
       )}
 
-      <Text style={[styles.sectionTitle, { marginTop: spacing.xl }]}>Certificates of Appreciation</Text>
+      <View style={styles.sectionHeaderRow}>
+        <Text style={[styles.sectionTitle, { marginTop: spacing.xl }]}>Certificates of Appreciation</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('VerifyCertificate')}>
+          <Text style={{ color: colors.primary, fontWeight: 'bold', marginTop: spacing.xl }}>Verify</Text>
+        </TouchableOpacity>
+      </View>
       {certs.length === 0 ? (
         <Text style={styles.emptyText}>No certificates available yet.</Text>
       ) : (
@@ -88,6 +95,11 @@ const styles = StyleSheet.create({
     ...typography.h3,
     color: colors.text,
     marginBottom: spacing.m,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   emptyText: {
     ...typography.body2,
