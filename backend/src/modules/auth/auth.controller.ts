@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 import { AuthService } from './auth.service';
 import { SuccessResponse } from '../../core/http/result';
 import { env } from '../../config/env.config';
@@ -39,16 +40,33 @@ export class AuthController {
         maxAge: days * 24 * 60 * 60 * 1000
       });
 
-      res.status(200).json(SuccessResponse({ user: result.user, accessToken: result.accessToken }, req.id));
+      res.status(200).json(SuccessResponse({
+        user: result.user,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken
+      }, req.id));
     } catch (error) { next(error); }
   }
 
   static async refresh(req: Request, res: Response, next: NextFunction) {
     try {
-      const refreshToken = req.cookies.refreshToken;
-      if (!req.user || !refreshToken) throw new AppError(401, 'UNAUTHENTICATED', 'Missing refresh token');
+      const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+      if (!refreshToken) throw new AppError(401, 'UNAUTHENTICATED', 'Missing refresh token');
 
-      const result = await AuthService.refresh(req.user.userId, refreshToken);
+      // Decode the expired access token to get the userId if available
+      const authHeader = req.headers.authorization;
+      let userId: string | undefined = req.body?.userId;
+      if (!userId && authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        try {
+          const payload = jwt.verify(token, env.JWT_ACCESS_SECRET, { ignoreExpiration: true }) as any;
+          userId = payload.userId;
+        } catch (e) {
+          // Token is malformed or invalid
+        }
+      }
+
+      const result = await AuthService.refresh(refreshToken, userId);
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }

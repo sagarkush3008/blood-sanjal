@@ -128,24 +128,39 @@ export class AuthService {
     return { user: { id: user._id, name: user.name, role: user.role }, accessToken, refreshToken };
   }
 
-  static async refresh(userId: string, rawRefreshToken: string) {
-    const sessions = await Session.find({ userId, revokedAt: null, expiresAt: { $gt: new Date() } });
+  static async refresh(rawRefreshToken: string, userId?: string) {
     let validSession = null;
-    
-    for (const session of sessions) {
-      if (await bcrypt.compare(rawRefreshToken, session.refreshTokenHash)) {
-        validSession = session;
-        break;
+    let targetUserId = userId;
+
+    if (targetUserId) {
+      const sessions = await Session.find({ userId: targetUserId, revokedAt: null, expiresAt: { $gt: new Date() } });
+      for (const session of sessions) {
+        if (await bcrypt.compare(rawRefreshToken, session.refreshTokenHash)) {
+          validSession = session;
+          break;
+        }
       }
     }
 
-    if (!validSession) throw new AppError(401, 'UNAUTHENTICATED', 'Invalid refresh token');
+    // If session not found by userId or userId wasn't provided, search active sessions
+    if (!validSession) {
+      const sessions = await Session.find({ revokedAt: null, expiresAt: { $gt: new Date() } }).sort({ updatedAt: -1 }).limit(100);
+      for (const session of sessions) {
+        if (await bcrypt.compare(rawRefreshToken, session.refreshTokenHash)) {
+          validSession = session;
+          targetUserId = session.userId.toString();
+          break;
+        }
+      }
+    }
 
-    const user = await User.findById(userId);
+    if (!validSession || !targetUserId) throw new AppError(401, 'UNAUTHENTICATED', 'Invalid or expired refresh token');
+
+    const user = await User.findById(targetUserId);
     if (!user || user.status === 'SUSPENDED') throw new AppError(401, 'UNAUTHENTICATED', 'User inactive');
 
     const accessToken = jwt.sign({ userId: user._id, role: user.role }, env.JWT_ACCESS_SECRET, { expiresIn: env.ACCESS_TOKEN_TTL as any });
-    return { accessToken };
+    return { accessToken, refreshToken: rawRefreshToken };
   }
 
   static async logout(userId: string, rawRefreshToken: string) {

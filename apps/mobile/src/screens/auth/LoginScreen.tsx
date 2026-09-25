@@ -33,9 +33,9 @@ export const LoginScreen = () => {
     onSuccess: (response) => {
       // Assuming response.data returns { token: { access, refresh }, user }
       // Check exact structure from OpenAPI, this assumes a standard pattern
-      const { accessToken, user } = response.data.data || response.data;
+      const { accessToken, refreshToken, user } = response.data?.data || response.data || {};
       if (accessToken) {
-        setAuth(accessToken, user);
+        setAuth(accessToken, user, refreshToken);
       } else {
         setApiError('Login failed: Token missing from response');
       }
