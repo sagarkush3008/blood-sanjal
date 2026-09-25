@@ -2,6 +2,9 @@ import { PaymentTransaction } from './payment.model';
 import { feeConfig } from '../../config/fee.config';
 import { AppError } from '../../core/errors/appError';
 import { AuditLog } from '../audit/auditLog.model';
+import { MockPaymentProvider } from './providers/mockProvider';
+
+const paymentProvider = new MockPaymentProvider();
 
 export class PaymentService {
   static async initiateSearchFee(userId: string) {
@@ -10,54 +13,61 @@ export class PaymentService {
     const validFrom = new Date(Date.now() - feeConfig.SEARCH_FEE_VALIDITY_HOURS * 3600 * 1000);
     const existing = await PaymentTransaction.findOne({
       userId,
-      purpose: 'SEARCH_FEE',
-      status: 'COMPLETED',
+      purpose: 'SEARCH_PLATFORM_FEE',
+      status: 'SUCCESS',
       updatedAt: { $gte: validFrom }
     });
 
     if (existing) return { status: 'ALREADY_PAID', transactionId: existing._id };
 
+    const amountMinor = feeConfig.SEARCH_FEE_AMOUNT * 100; // Converting to paisa
+
     const tx = await PaymentTransaction.create({
       userId,
-      amount: feeConfig.SEARCH_FEE_AMOUNT,
-      purpose: 'SEARCH_FEE',
+      amountMinor,
+      purpose: 'SEARCH_PLATFORM_FEE',
       currency: feeConfig.CURRENCY
     });
+
+    const initData = await paymentProvider.initiatePayment(tx._id.toString(), tx.amountMinor, tx.currency, tx.purpose);
+
+    tx.gatewayTransactionId = initData.providerTransactionId;
+    tx.gateway = 'MOCK_GATEWAY';
+    tx.metadata = { rawInit: initData.rawResponse };
+    await tx.save();
 
     return { 
       status: 'PENDING', 
       transactionId: tx._id, 
-      amount: tx.amount, 
+      paymentUrl: initData.paymentUrl,
+      amountMinor: tx.amountMinor, 
       currency: tx.currency,
       disclaimer: feeConfig.DISCLAIMER
     };
   }
 
-  static async verifyTransaction(transactionId: string, gatewayTxId: string, userId: string) {
-    const tx = await PaymentTransaction.findById(transactionId);
+  static async handleWebhook(gatewayTxId: string) {
+    const tx = await PaymentTransaction.findOne({ gatewayTransactionId: gatewayTxId });
     if (!tx) throw new AppError(404, 'NOT_FOUND', 'Transaction not found');
     
-    if (tx.userId.toString() !== userId) throw new AppError(403, 'FORBIDDEN', 'Transaction does not belong to you');
-
-    if (tx.status === 'COMPLETED') {
-      throw new AppError(409, 'CONFLICT', 'Transaction already completed. Replay attack prevented.');
+    if (tx.status === 'SUCCESS') {
+      return tx; // Idempotent success
     }
-    
-    const duplicate = await PaymentTransaction.findOne({ gatewayTransactionId: gatewayTxId });
-    if (duplicate) throw new AppError(409, 'CONFLICT', 'Gateway transaction ID already used');
 
-    // MOCK: Abstract Gateway verification would happen here
+    const verification = await paymentProvider.verifyPayment(gatewayTxId, tx.amountMinor);
 
-    tx.status = 'COMPLETED';
-    tx.gatewayTransactionId = gatewayTxId;
+    tx.status = verification.status;
+    tx.metadata = { ...tx.metadata, webhookRaw: verification.rawResponse };
     await tx.save();
 
-    await AuditLog.create({
-      actorId: userId,
-      action: 'SEARCH_FEE_PAID',
-      entityType: 'PaymentTransaction',
-      entityId: tx._id.toString()
-    });
+    if (tx.status === 'SUCCESS') {
+      await AuditLog.create({
+        actorId: tx.userId,
+        action: 'SEARCH_PLATFORM_FEE_PAID',
+        entityType: 'PaymentTransaction',
+        entityId: tx._id.toString()
+      });
+    }
 
     return tx;
   }
@@ -68,11 +78,27 @@ export class PaymentService {
     const validFrom = new Date(Date.now() - feeConfig.SEARCH_FEE_VALIDITY_HOURS * 3600 * 1000);
     const existing = await PaymentTransaction.findOne({
       userId,
-      purpose: 'SEARCH_FEE',
-      status: 'COMPLETED',
+      purpose: 'SEARCH_PLATFORM_FEE',
+      status: 'SUCCESS',
       updatedAt: { $gte: validFrom }
     });
     
     return !!existing;
+  }
+
+  static async getUserPaymentHistory(userId: string) {
+    return PaymentTransaction.find({ userId })
+      .sort({ createdAt: -1 })
+      .select('-metadata'); // privacy: hide metadata from user
+  }
+
+  static async getAdminPaymentReport(filters: any = {}) {
+    const query: any = {};
+    if (filters.status) query.status = filters.status;
+    if (filters.purpose) query.purpose = filters.purpose;
+    
+    return PaymentTransaction.find(query)
+      .sort({ createdAt: -1 })
+      .populate('userId', 'name email phone');
   }
 }

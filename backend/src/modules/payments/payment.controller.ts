@@ -12,16 +12,31 @@ export class PaymentController {
     } catch (error) { next(error); }
   }
 
-  static async verify(req: Request, res: Response, next: NextFunction) {
+  static async webhook(req: Request, res: Response, next: NextFunction) {
     try {
-      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
-      const { transactionId, gatewayTxId } = req.body;
+      const { gatewayTxId } = req.body;
       
-      if (!transactionId || !gatewayTxId) {
-        throw new AppError(400, 'BAD_REQUEST', 'Missing transaction details');
+      if (!gatewayTxId) {
+        throw new AppError(400, 'BAD_REQUEST', 'Missing gateway transaction details');
       }
 
-      const result = await PaymentService.verifyTransaction(transactionId, gatewayTxId, req.user.userId);
+      const result = await PaymentService.handleWebhook(gatewayTxId);
+      res.status(200).json(SuccessResponse({ status: result.status }, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async getHistory(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const result = await PaymentService.getUserPaymentHistory(req.user.userId);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async getAdminReport(req: Request, res: Response, next: NextFunction) {
+    try {
+      const filters = req.query;
+      const result = await PaymentService.getAdminPaymentReport(filters);
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }

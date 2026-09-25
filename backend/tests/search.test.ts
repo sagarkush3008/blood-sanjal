@@ -18,7 +18,7 @@ describe('Donor Search & Fee Workflow', () => {
   describe('POST /api/v1/payments/search-fee/initiate', () => {
     it('should create a new pending fee if not paid', async () => {
       (PaymentTransaction.findOne as jest.Mock).mockResolvedValue(null);
-      (PaymentTransaction.create as jest.Mock).mockResolvedValue({ _id: 'tx1', amount: 50, currency: 'NPR' });
+      (PaymentTransaction.create as jest.Mock).mockResolvedValue({ _id: 'tx1', amountMinor: 5000, currency: 'NPR', purpose: 'SEARCH_PLATFORM_FEE' });
 
       const res = await request(app)
         .post('/api/v1/payments/search-fee/initiate')
@@ -41,38 +41,76 @@ describe('Donor Search & Fee Workflow', () => {
     });
   });
 
-  describe('POST /api/v1/payments/verify', () => {
-    it('should prevent replay attacks for already completed transactions', async () => {
-      (PaymentTransaction.findById as jest.Mock).mockResolvedValue({ 
+  describe('POST /api/v1/payments/webhook', () => {
+    it('should ignore duplicate webhooks for already completed transactions', async () => {
+      (PaymentTransaction.findOne as jest.Mock).mockResolvedValue({ 
         _id: 'tx1', 
-        status: 'COMPLETED',
-        userId: 'user1'
+        status: 'SUCCESS',
+        userId: 'user1',
+        amountMinor: 5000,
+        save: jest.fn()
       });
 
       const res = await request(app)
-        .post('/api/v1/payments/verify')
-        .set('Authorization', `Bearer ${generateToken('user1')}`)
-        .send({ transactionId: 'tx1', gatewayTxId: 'gateway123' });
+        .post('/api/v1/payments/webhook')
+        .send({ gatewayTxId: 'gateway123' });
 
-      expect(res.status).toBe(409);
-      expect(res.body.error.message).toMatch(/completed/i);
+      expect(res.status).toBe(200); // Idempotent
     });
 
-    it('should prevent duplicate gateway transaction IDs', async () => {
-      (PaymentTransaction.findById as jest.Mock).mockResolvedValue({ 
+    it('should process a valid webhook to SUCCESS', async () => {
+      const mockSave = jest.fn();
+      (PaymentTransaction.findOne as jest.Mock).mockResolvedValue({ 
         _id: 'tx1', 
         status: 'PENDING',
-        userId: 'user1'
+        userId: 'user1',
+        amountMinor: 5000,
+        save: mockSave
       });
-      (PaymentTransaction.findOne as jest.Mock).mockResolvedValue({ _id: 'tx2' });
 
       const res = await request(app)
-        .post('/api/v1/payments/verify')
-        .set('Authorization', `Bearer ${generateToken('user1')}`)
-        .send({ transactionId: 'tx1', gatewayTxId: 'gateway123' });
+        .post('/api/v1/payments/webhook')
+        .send({ gatewayTxId: 'gateway123' }); // Not containing FAIL or CANCEL
 
-      expect(res.status).toBe(409);
-      expect(res.body.error.message).toMatch(/already used/i);
+      expect(res.status).toBe(200);
+      expect(res.body.data.status).toBe('SUCCESS');
+      expect(mockSave).toHaveBeenCalled();
+    });
+
+    it('should process a failed payment webhook to FAILED', async () => {
+      const mockSave = jest.fn();
+      (PaymentTransaction.findOne as jest.Mock).mockResolvedValue({ 
+        _id: 'tx1', 
+        status: 'PENDING',
+        userId: 'user1',
+        amountMinor: 5000,
+        save: mockSave
+      });
+
+      const res = await request(app)
+        .post('/api/v1/payments/webhook')
+        .send({ gatewayTxId: 'gateway-FAIL-123' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.status).toBe('FAILED');
+    });
+
+    it('should process a mismatched amount webhook to FAILED', async () => {
+      const mockSave = jest.fn();
+      (PaymentTransaction.findOne as jest.Mock).mockResolvedValue({ 
+        _id: 'tx1', 
+        status: 'PENDING',
+        userId: 'user1',
+        amountMinor: 5000,
+        save: mockSave
+      });
+
+      const res = await request(app)
+        .post('/api/v1/payments/webhook')
+        .send({ gatewayTxId: 'gateway-MISMATCH' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.status).toBe('FAILED');
     });
   });
 

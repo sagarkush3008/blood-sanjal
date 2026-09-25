@@ -26,3 +26,12 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
     return next(new AppError(401, 'UNAUTHENTICATED', 'Token is expired or invalid'));
   }
 };
+
+export const requireRole = (roles: string[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return next(new AppError(403, 'FORBIDDEN', 'Insufficient permissions'));
+    }
+    next();
+  };
+};
