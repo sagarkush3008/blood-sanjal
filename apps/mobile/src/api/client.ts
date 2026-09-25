@@ -14,7 +14,7 @@ if (__DEV__) {
   }
 }
 
-export const API_BASE_URL = `http://${HOST}:5000/api/v1`;
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || `http://${HOST}:5000/api/v1`;
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
