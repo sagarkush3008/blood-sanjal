@@ -49,6 +49,11 @@ export const AdminDashboardScreen = () => {
         <Text style={styles.menuItemArrow}>→</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('AdminDonations')}>
+        <Text style={styles.menuItemText}>🩸 Verify Donations</Text>
+        <Text style={styles.menuItemArrow}>→</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('AdminSettings')}>
         <Text style={styles.menuItemText}>📊 System Settings & Fees</Text>
         <Text style={styles.menuItemArrow}>→</Text>
