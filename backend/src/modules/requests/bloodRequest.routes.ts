@@ -6,7 +6,9 @@ import { emergencyLimiter } from '../../core/middleware/rateLimit.middleware';
 
 const router = Router();
 
-// User routes
+// Public/user routes
+router.get('/', requireAuth, BloodRequestController.list);
+router.get('/:id', requireAuth, BloodRequestController.getById);
 router.post('/', requireAuth, BloodRequestController.create);
 router.patch('/:id', requireAuth, BloodRequestController.update);
 router.post('/:id/cancel', requireAuth, BloodRequestController.cancel);

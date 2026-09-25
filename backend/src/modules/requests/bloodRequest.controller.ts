@@ -5,6 +5,22 @@ import { createBloodRequestSchema, updateBloodRequestSchema } from './bloodReque
 import { AppError } from '../../core/errors/appError';
 
 export class BloodRequestController {
+  static async list(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const result = await BloodRequestService.listRequests(req.user.userId, req.query);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async getById(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const result = await BloodRequestService.getRequestById(req.params.id as string);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
   static async create(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');

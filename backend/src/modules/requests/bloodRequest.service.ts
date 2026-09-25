@@ -5,6 +5,37 @@ import { DonorProfile } from '../donors/donorProfile.model';
 import { NotificationJob } from '../notifications/notificationQueue.model';
 
 export class BloodRequestService {
+  static async listRequests(userId: string, query: any) {
+    const filter: any = {};
+
+    if (query.myRequests === 'true') {
+      filter.requesterId = userId;
+    }
+    if (query.status) {
+      filter.status = query.status;
+    }
+    if (query.bloodGroup) {
+      filter.bloodGroup = query.bloodGroup;
+    }
+
+    const limit = Math.min(parseInt(query.limit) || 20, 100);
+    const page = parseInt(query.page) || 1;
+    const skip = (page - 1) * limit;
+
+    const [requests, total] = await Promise.all([
+      BloodRequest.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).populate('requesterId', 'name'),
+      BloodRequest.countDocuments(filter),
+    ]);
+
+    return { requests, total, page, limit };
+  }
+
+  static async getRequestById(requestId: string) {
+    const request = await BloodRequest.findById(requestId).populate('requesterId', 'name email phone');
+    if (!request) throw new AppError(404, 'NOT_FOUND', 'Request not found');
+    return request;
+  }
+
   static async createRequest(userId: string, data: any) {
     // Check for duplicate pending/active requests for same blood group
     const duplicate = await BloodRequest.findOne({
