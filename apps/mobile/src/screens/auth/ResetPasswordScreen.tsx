@@ -31,8 +31,13 @@ export const ResetPasswordScreen = () => {
   });
 
   const handleReset = () => {
-    if (!code || !newPassword) {
+    const cleanCode = code.replace(/\D/g, '').trim();
+    if (!cleanCode || !newPassword) {
       Alert.alert('Incomplete Form', 'Please enter both the reset code and your new password.');
+      return;
+    }
+    if (cleanCode.length !== 6) {
+      Alert.alert('Incomplete Code', 'Please enter the full 6-digit verification code.');
       return;
     }
     if (newPassword.length < 8) {
@@ -44,7 +49,7 @@ export const ResetPasswordScreen = () => {
       Alert.alert('Session Expired', 'Please request a password reset code again from the Forgot Password screen.');
       return;
     }
-    resetMutation.mutate({ userId: target, email, code: code.trim(), newPassword });
+    resetMutation.mutate({ userId: target, email, code: cleanCode, newPassword });
   };
 
   return (

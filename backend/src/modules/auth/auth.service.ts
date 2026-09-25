@@ -70,20 +70,39 @@ export class AuthService {
   }
 
   static async verifyOtp(userId: string, code: string, purpose: string) {
-    const otp = await OtpCode.findOne({ userId, purpose: purpose as any, consumedAt: null, expiresAt: { $gt: new Date() } }) as IOtpCode | null;
-    if (!otp) throw new AppError(400, 'INVALID_OTP', 'OTP is invalid or expired');
+    const cleanCode = code.replace(/\D/g, '').trim();
 
-    if (otp.attemptCount >= 3) throw new AppError(429, 'RATE_LIMIT', 'Too many attempts');
+    const otps = await OtpCode.find({ 
+      userId, 
+      purpose: purpose as any, 
+      consumedAt: null, 
+      expiresAt: { $gt: new Date() } 
+    }).sort({ createdAt: -1 });
 
-    const isValid = await bcrypt.compare(code, otp.codeHash);
-    if (!isValid) {
-      otp.attemptCount += 1;
-      await otp.save();
+    if (!otps || otps.length === 0) {
+      throw new AppError(400, 'INVALID_OTP', 'OTP is invalid or expired');
+    }
+
+    let matchedOtp: IOtpCode | null = null;
+    for (const otp of otps) {
+      if (otp.attemptCount >= 5) continue;
+      const isValid = await bcrypt.compare(cleanCode, otp.codeHash);
+      if (isValid) {
+        matchedOtp = otp;
+        break;
+      }
+    }
+
+    if (!matchedOtp) {
+      otps[0].attemptCount += 1;
+      await otps[0].save();
       throw new AppError(400, 'INVALID_OTP', 'Incorrect OTP');
     }
 
-    otp.consumedAt = new Date();
-    await otp.save();
+    await OtpCode.updateMany(
+      { userId, purpose: purpose as any }, 
+      { consumedAt: new Date() }
+    );
 
     await User.findByIdAndUpdate(userId, { status: 'ACTIVE', emailVerifiedAt: new Date() });
     
@@ -183,6 +202,9 @@ export class AuthService {
     // Always return success to prevent user enumeration
     if (!user) return { message: 'If an account exists, a reset code has been sent.' };
 
+    // Invalidate prior codes to avoid duplicate active codes
+    await OtpCode.deleteMany({ userId: user._id, purpose: 'PASSWORD_RESET' });
+
     const rawCode = Math.floor(100000 + Math.random() * 900000).toString();
     const codeHash = await bcrypt.hash(rawCode, 10);
 
@@ -201,25 +223,49 @@ export class AuthService {
   static async resetPassword(userIdOrEmail: string, code: string, newPassword: string) {
     let targetUserId = userIdOrEmail;
     if (!mongoose.Types.ObjectId.isValid(userIdOrEmail)) {
-      const user = await User.findOne({ email: userIdOrEmail.toLowerCase().trim() });
+      const user = await User.findOne({
+        $or: [{ email: userIdOrEmail.toLowerCase().trim() }, { phone: userIdOrEmail.trim() }]
+      });
       if (!user) throw new AppError(400, 'INVALID_OTP', 'Reset code is invalid or expired');
       targetUserId = user._id.toString();
     }
 
-    const otp = await OtpCode.findOne({ userId: targetUserId, purpose: 'PASSWORD_RESET' as any, consumedAt: null, expiresAt: { $gt: new Date() } }) as IOtpCode | null;
-    if (!otp) throw new AppError(400, 'INVALID_OTP', 'Reset code is invalid or expired');
+    const cleanCode = code.replace(/\D/g, '').trim();
 
-    if (otp.attemptCount >= 3) throw new AppError(429, 'RATE_LIMIT', 'Too many attempts');
+    // Fetch all active unconsumed reset codes, newest first
+    const otps = await OtpCode.find({ 
+      userId: targetUserId, 
+      purpose: 'PASSWORD_RESET' as any, 
+      consumedAt: null, 
+      expiresAt: { $gt: new Date() } 
+    }).sort({ createdAt: -1 });
 
-    const isValid = await bcrypt.compare(code, otp.codeHash);
-    if (!isValid) {
-      otp.attemptCount += 1;
-      await otp.save();
-      throw new AppError(400, 'INVALID_OTP', 'Incorrect reset code');
+    if (!otps || otps.length === 0) {
+      throw new AppError(400, 'INVALID_OTP', 'Reset code is invalid or expired. Please request a new code.');
     }
 
-    otp.consumedAt = new Date();
-    await otp.save();
+    let matchedOtp: IOtpCode | null = null;
+    for (const otp of otps) {
+      if (otp.attemptCount >= 5) continue;
+      const isValid = await bcrypt.compare(cleanCode, otp.codeHash);
+      if (isValid) {
+        matchedOtp = otp;
+        break;
+      }
+    }
+
+    if (!matchedOtp) {
+      // Increment attempt count on the most recent OTP
+      otps[0].attemptCount += 1;
+      await otps[0].save();
+      throw new AppError(400, 'INVALID_OTP', 'Incorrect reset code. Please check your latest email.');
+    }
+
+    // Invalidate/consume all reset OTPs for this user
+    await OtpCode.updateMany(
+      { userId: targetUserId, purpose: 'PASSWORD_RESET' }, 
+      { consumedAt: new Date() }
+    );
 
     const passwordHash = await bcrypt.hash(newPassword, 12);
     await User.findByIdAndUpdate(targetUserId, { passwordHash });
