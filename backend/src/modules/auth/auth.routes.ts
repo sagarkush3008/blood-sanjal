@@ -10,6 +10,8 @@ router.use(authLimiter);
 router.post('/register', AuthController.register);
 router.post('/verify-email', AuthController.verifyEmail);
 router.post('/login', AuthController.login);
+router.post('/forgot-password', AuthController.forgotPassword);
+router.post('/reset-password', AuthController.resetPassword);
 router.post('/refresh', requireAuth, AuthController.refresh);
 router.post('/logout', requireAuth, AuthController.logout);
 

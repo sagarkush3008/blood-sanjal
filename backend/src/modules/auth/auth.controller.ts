@@ -63,4 +63,23 @@ export class AuthController {
       res.status(200).json(SuccessResponse({ success: true }, req.id));
     } catch (error) { next(error); }
   }
+
+  static async forgotPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const validated = forgotPasswordSchema.parse(req.body);
+      const result = await AuthService.forgotPassword(validated);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async resetPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { userId, code, newPassword } = req.body;
+      if (!userId || !code || !newPassword) {
+        throw new AppError(400, 'VALIDATION_ERROR', 'userId, code, and newPassword are required');
+      }
+      const result = await AuthService.resetPassword(userId, code, newPassword);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
 }

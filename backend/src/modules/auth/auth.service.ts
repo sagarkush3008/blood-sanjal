@@ -159,4 +159,48 @@ export class AuthService {
     }
     return { success: true };
   }
+
+  static async forgotPassword(data: any) {
+    const user = await User.findOne({
+      $or: [{ email: data.email }, { phone: data.phone }].filter(Boolean)
+    });
+    // Always return success to prevent user enumeration
+    if (!user) return { message: 'If an account exists, a reset code has been sent.' };
+
+    const rawCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const codeHash = await bcrypt.hash(rawCode, 10);
+
+    await OtpCode.create({
+      userId: user._id,
+      purpose: 'PASSWORD_RESET',
+      codeHash,
+      expiresAt: new Date(Date.now() + env.PASSWORD_RESET_EXPIRY_MINUTES * 60000)
+    });
+
+    sendOtp(data.email || data.phone, rawCode).catch(console.error);
+
+    return { userId: user._id.toString(), message: 'If an account exists, a reset code has been sent.' };
+  }
+
+  static async resetPassword(userId: string, code: string, newPassword: string) {
+    const otp = await OtpCode.findOne({ userId, purpose: 'PASSWORD_RESET' as any, consumedAt: null, expiresAt: { $gt: new Date() } }) as IOtpCode | null;
+    if (!otp) throw new AppError(400, 'INVALID_OTP', 'Reset code is invalid or expired');
+
+    if (otp.attemptCount >= 3) throw new AppError(429, 'RATE_LIMIT', 'Too many attempts');
+
+    const isValid = await bcrypt.compare(code, otp.codeHash);
+    if (!isValid) {
+      otp.attemptCount += 1;
+      await otp.save();
+      throw new AppError(400, 'INVALID_OTP', 'Incorrect reset code');
+    }
+
+    otp.consumedAt = new Date();
+    await otp.save();
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await User.findByIdAndUpdate(userId, { passwordHash });
+
+    return { success: true, message: 'Password reset successfully.' };
+  }
 }

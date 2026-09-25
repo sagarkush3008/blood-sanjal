@@ -14,13 +14,13 @@ export const ForgotPasswordScreen = () => {
   const forgotMutation = useMutation({
     mutationFn: (data: any) => AuthAPI.forgotPassword(data),
     onSuccess: (res: any) => {
-      // The backend typically sends a code to the email, and possibly returns a reset token/userId depending on implementation
+      const userId = res?.data?.data?.userId;
       Alert.alert('Success', 'If an account exists with this email, a reset code has been sent.', [
-        { text: 'Enter Code', onPress: () => navigation.navigate('ResetPassword', { email }) }
+        { text: 'Enter Code', onPress: () => navigation.navigate('ResetPassword', { email, userId }) }
       ]);
     },
     onError: (error: any) => {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to request password reset.');
+      Alert.alert('Error', error.response?.data?.error?.message || error.response?.data?.message || 'Failed to request password reset.');
     }
   });
 

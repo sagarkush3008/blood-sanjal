@@ -11,6 +11,7 @@ export const ResetPasswordScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const email = route.params?.email || '';
+  const userId = route.params?.userId || '';
 
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -23,7 +24,7 @@ export const ResetPasswordScreen = () => {
       ]);
     },
     onError: (error: any) => {
-      Alert.alert('Reset Failed', error.response?.data?.message || 'Invalid code or failed to reset password.');
+      Alert.alert('Reset Failed', error.response?.data?.error?.message || error.response?.data?.message || 'Invalid code or failed to reset password.');
     }
   });
 
@@ -32,7 +33,7 @@ export const ResetPasswordScreen = () => {
       Alert.alert('Error', 'Please enter both the reset code and a new password.');
       return;
     }
-    resetMutation.mutate({ email, code, newPassword });
+    resetMutation.mutate({ userId, code, newPassword });
   };
 
   return (
