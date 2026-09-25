@@ -58,9 +58,12 @@ export class EmailService {
       });
 
       if (status === 'PENDING') {
-        // Asynchronously process the email without awaiting its completion
-        this.processEmail(event._id.toString(), content.text, content.html).catch(err => {
-          logger.error(`Failed to process email async: ${err.message}`);
+        import('../../core/jobs').then(({ emailQueue }) => {
+          emailQueue.add(
+            'sendEmail',
+            { eventId: event._id.toString(), text: content.text, html: content.html },
+            { jobId: dedupeKey }
+          ).catch(err => logger.error(`Failed to enqueue email: ${err.message}`));
         });
       }
 

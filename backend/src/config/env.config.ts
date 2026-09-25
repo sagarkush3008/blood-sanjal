@@ -8,6 +8,7 @@ const envSchema = z.object({
   PORT: z.string().default('3000').transform(Number),
   MONGODB_URI: z.string().url().default('mongodb://localhost:27017/blood-sanjal-test'),
   CORS_ORIGINS: z.string().default('*'),
+  REDIS_URL: z.string().url().default('redis://localhost:6379'),
   LOG_LEVEL: z.string().default('info'),
   JWT_ACCESS_SECRET: z.string().default('supersecret_access'),
   JWT_REFRESH_SECRET: z.string().default('supersecret_refresh'),

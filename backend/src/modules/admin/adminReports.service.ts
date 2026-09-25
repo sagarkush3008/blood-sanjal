@@ -85,6 +85,11 @@ export class AdminReportsService {
       requestedBy: new mongoose.Types.ObjectId(adminId)
     });
     await AdminService.logAudit(adminId, `REQUEST_EXPORT_${reportType}`, 'REPORT_JOB', job._id.toString());
+    
+    import('../../core/jobs').then(({ exportQueue }) => {
+      exportQueue.add('processExport', { jobId: job._id.toString() }, { jobId: job._id.toString() });
+    });
+
     return job;
   }
 
