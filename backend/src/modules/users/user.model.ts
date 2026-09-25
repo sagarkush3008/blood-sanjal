@@ -65,8 +65,7 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
-userSchema.index({ email: 1 }, { unique: true, sparse: true });
-userSchema.index({ phone: 1 }, { unique: true, sparse: true });
+// Email and phone already have unique/sparse indexes defined in schema definition
 userSchema.index({ role: 1, status: 1, createdAt: -1 });
 userSchema.index({ locationCoordinates: '2dsphere' });
 userSchema.index({ provinceId: 1, districtId: 1, cityId: 1 });
