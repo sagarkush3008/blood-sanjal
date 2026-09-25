@@ -55,4 +55,11 @@ router.get('/reports/aggregations/:type', AdminReportsController.getAggregations
 router.post('/reports/export', AdminReportsController.requestExport);
 router.post('/reports/export/:jobId/process', AdminReportsController.processExportSync);
 
+import { AdminSettingsController } from './adminSettings.controller';
+
+// Settings & Audit
+router.get('/settings', AdminSettingsController.getSettings);
+router.put('/settings', AdminSettingsController.updateSettings);
+router.get('/audit', AdminSettingsController.getAuditLogs);
+
 export default router;

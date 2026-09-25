@@ -3,6 +3,7 @@ import { DonorProfile } from '../donors/donorProfile.model';
 import { BloodRequest } from '../requests/bloodRequest.model';
 import { DonationRecord } from '../donors/donationRecord.model';
 import { AuditLog } from '../audit/auditLog.model';
+import { AuditService } from '../audit/audit.service';
 import { AppError } from '../../core/errors/appError';
 import mongoose from 'mongoose';
 
@@ -11,14 +12,7 @@ export class AdminService {
    * Log audit for sensitive admin actions
    */
   static async logAudit(actorId: string, action: string, entityType: string, entityId: string, ipHash?: string, userAgent?: string) {
-    await AuditLog.create({
-      actorId: new mongoose.Types.ObjectId(actorId),
-      action,
-      entityType,
-      entityId,
-      ipHash,
-      userAgent
-    });
+    await AuditService.logAction(actorId, action, entityType, entityId, null, ipHash, userAgent);
   }
 
   // --- USER MANAGEMENT ---
