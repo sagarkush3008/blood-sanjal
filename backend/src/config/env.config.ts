@@ -38,3 +38,24 @@ if (!parsed.success) {
 }
 
 export const env = parsed.data;
+
+if (env.NODE_ENV === 'production') {
+  const criticalKeys = ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'MONGODB_URI', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET', 'SMTP_PASS'];
+  const defaultValues = [
+    'supersecret_access',
+    'supersecret_refresh',
+    'mongodb://localhost:27017/blood-sanjal-test',
+    'demo_key',
+    'demo_secret',
+    'test_pass'
+  ];
+
+  for (let i = 0; i < criticalKeys.length; i++) {
+    const key = criticalKeys[i];
+    if ((env as any)[key] === defaultValues[i]) {
+      console.error(`FATAL: In production, you MUST provide a real value for ${key}. The default value is not allowed.`);
+      process.exit(1);
+    }
+  }
+}
+

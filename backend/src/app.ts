@@ -22,7 +22,7 @@ import certificateRoutes from './modules/certificates/certificate.routes';
 import adminRoutes from './modules/admin/admin.routes';
 import locationRoutes from './modules/locations/location.routes';
 import mediaRoutes from './modules/media/media.routes';
-import { SuccessResponse } from './core/http/result';
+import { SuccessResponse, ErrorResponse } from './core/http/result';
 import { logger } from './config/logger.config';
 import swaggerUi from 'swagger-ui-express';
 import * as path from 'path';
@@ -93,16 +93,23 @@ app.use((req, res, next) => {
 // Rate Limiting
 app.use(globalLimiter);
 
+import mongoose from 'mongoose';
+
 // Health and Readiness
 app.get('/health', (req, res) => {
   res.status(200).json(SuccessResponse({ status: 'UP' }, req.id));
 });
 app.get('/ready', (req, res) => {
-  res.status(200).json(SuccessResponse({ status: 'READY' }, req.id));
+  const isDbReady = mongoose.connection.readyState === 1; // 1 = connected
+  if (isDbReady) {
+    res.status(200).json(SuccessResponse({ status: 'READY' }, req.id));
+  } else {
+    res.status(503).json(ErrorResponse('SERVICE_UNAVAILABLE', 'Database not ready', [], req.id));
+  }
 });
 
-// Swagger Documentation Route
-if (swaggerDocument) {
+// Swagger Documentation Route (Disabled in production)
+if (swaggerDocument && env.NODE_ENV !== 'production') {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 }
 

@@ -3,6 +3,7 @@ import { connectDB } from './config/db.config';
 import { logger } from './config/logger.config';
 import { env } from './config/env.config';
 import mongoose from 'mongoose';
+import { redisConnection } from './core/jobs/redis.client';
 
 const startServer = async () => {
   try {
@@ -17,8 +18,14 @@ const startServer = async () => {
       logger.info('Shutting down server...');
       server.close(async () => {
         logger.info('HTTP server closed.');
-        await mongoose.connection.close();
-        logger.info('MongoDB connection closed.');
+        try {
+          await mongoose.connection.close();
+          logger.info('MongoDB connection closed.');
+          await redisConnection.quit();
+          logger.info('Redis connection closed.');
+        } catch (err) {
+          logger.error('Error during teardown:', err);
+        }
         process.exit(0);
       });
 
