@@ -30,9 +30,14 @@ export const RegisterScreen = () => {
 
   const registerMutation = useMutation({
     mutationFn: (data: RegisterFormData) => AuthAPI.register(data),
-    onSuccess: () => {
-      // Typically, direct user to OTP or Login
-      navigation.navigate('Login');
+    onSuccess: (response: any) => {
+      // API typically returns the user object, so we pass the user ID to the verify screen
+      const userId = response?.data?.data?.user?.id || response?.data?.data?.id || response?.data?.data?._id;
+      if (userId) {
+        navigation.navigate('VerifyEmail', { userId });
+      } else {
+        navigation.navigate('Login');
+      }
     },
     onError: (error: any) => {
       const message = error.response?.data?.message || 'Failed to register.';

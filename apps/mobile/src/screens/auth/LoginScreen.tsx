@@ -99,6 +99,10 @@ export const LoginScreen = () => {
         loading={loginMutation.isPending}
       />
 
+      <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} style={{ marginTop: spacing.l, alignItems: 'center' }}>
+        <Text style={{ color: colors.primary, ...typography.body2 }}>Forgot Password?</Text>
+      </TouchableOpacity>
+
       <View style={styles.footer}>
         <Text style={styles.footerText}>Don't have an account? </Text>
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>
