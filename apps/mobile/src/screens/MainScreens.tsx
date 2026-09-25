@@ -7,7 +7,7 @@ export { HomeScreen } from './home/HomeScreen';
 
 export { FindBloodScreen } from './findBlood/FindBloodScreen';
 
-export { RequestsScreen } from './requests/RequestsScreen';
+export { RequestsNavigator as RequestsScreen } from './requests/RequestsNavigator';
 export { ContactRequestsScreen } from './contactRequests/ContactRequestsScreen';
 
 export const DonateScreen = () => (
