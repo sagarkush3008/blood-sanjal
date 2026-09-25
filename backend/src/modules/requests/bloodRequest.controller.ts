@@ -82,4 +82,48 @@ export class BloodRequestController {
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }
+
+  static async createEmergency(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const payload = {
+        ...req.body,
+        urgency: 'EMERGENCY',
+        unitsRequired: req.body.unitsRequired || 1,
+      };
+      const parsedData = createBloodRequestSchema.safeParse(payload);
+      if (!parsedData.success) {
+        throw new AppError(422, 'VALIDATION_ERROR', 'Invalid data', parsedData.error.issues);
+      }
+
+      const result = await BloodRequestService.createRequest(req.user.userId, parsedData.data);
+      res.status(201).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async listEmergency(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const query = { ...req.query, urgency: 'EMERGENCY' };
+      const result = await BloodRequestService.listRequests(req.user.userId, query);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async getEmergencyById(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const result = await BloodRequestService.getRequestById(req.params.id as string);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async reviewEmergency(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const { status } = req.body;
+      const result = await BloodRequestService.verifyRequest(req.params.id as string, req.user.userId, status === 'APPROVED');
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
 }

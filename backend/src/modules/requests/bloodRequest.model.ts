@@ -33,7 +33,7 @@ const bloodRequestSchema = new Schema<IBloodRequest>(
     requesterId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     patientName: { type: String },
     bloodGroup: { type: String, required: true },
-    unitsRequired: { type: Number, required: true, min: 1 },
+    unitsRequired: { type: Number, default: 1, min: 1 },
     unitsFulfilled: { type: Number, default: 0 },
     hospitalName: { type: String, required: true },
     hospitalLocation: {

@@ -17,6 +17,9 @@ export class BloodRequestService {
     if (query.bloodGroup) {
       filter.bloodGroup = query.bloodGroup;
     }
+    if (query.urgency) {
+      filter.urgency = query.urgency;
+    }
 
     const limit = Math.min(parseInt(query.limit) || 20, 100);
     const page = parseInt(query.page) || 1;
@@ -60,14 +63,20 @@ export class BloodRequestService {
       ? new Date(data.requiredDate)
       : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
+    const additionalInfo = data.additionalInfo || data.reason;
+
+    const unitsRequired = Number(data.unitsRequired) || 1;
+
     const request = await BloodRequest.create({
       ...data,
       requesterId: userId,
+      unitsRequired,
       patientName: data.patientName,
       contactPhone: data.contactPhone,
       hospitalLocation,
       contactPerson,
       requiredDate,
+      additionalInfo,
       status: 'PENDING_VERIFICATION'
     });
 
