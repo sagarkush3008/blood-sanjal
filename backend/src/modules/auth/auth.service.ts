@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import mongoose from 'mongoose';
 import { User } from '../users/user.model';
 import { OtpCode, IOtpCode } from './models/otpCode.model';
 import { Session } from './models/session.model';
@@ -197,8 +198,15 @@ export class AuthService {
     return { userId: user._id.toString(), message: 'If an account exists, a reset code has been sent.' };
   }
 
-  static async resetPassword(userId: string, code: string, newPassword: string) {
-    const otp = await OtpCode.findOne({ userId, purpose: 'PASSWORD_RESET' as any, consumedAt: null, expiresAt: { $gt: new Date() } }) as IOtpCode | null;
+  static async resetPassword(userIdOrEmail: string, code: string, newPassword: string) {
+    let targetUserId = userIdOrEmail;
+    if (!mongoose.Types.ObjectId.isValid(userIdOrEmail)) {
+      const user = await User.findOne({ email: userIdOrEmail.toLowerCase().trim() });
+      if (!user) throw new AppError(400, 'INVALID_OTP', 'Reset code is invalid or expired');
+      targetUserId = user._id.toString();
+    }
+
+    const otp = await OtpCode.findOne({ userId: targetUserId, purpose: 'PASSWORD_RESET' as any, consumedAt: null, expiresAt: { $gt: new Date() } }) as IOtpCode | null;
     if (!otp) throw new AppError(400, 'INVALID_OTP', 'Reset code is invalid or expired');
 
     if (otp.attemptCount >= 3) throw new AppError(429, 'RATE_LIMIT', 'Too many attempts');
@@ -214,7 +222,7 @@ export class AuthService {
     await otp.save();
 
     const passwordHash = await bcrypt.hash(newPassword, 12);
-    await User.findByIdAndUpdate(userId, { passwordHash });
+    await User.findByIdAndUpdate(targetUserId, { passwordHash });
 
     return { success: true, message: 'Password reset successfully.' };
   }

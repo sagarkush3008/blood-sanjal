@@ -1,58 +1,79 @@
-import React, { useState } from 'react';
-import { View, TextInput, Text, StyleSheet, TextInputProps } from 'react-native';
+import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
+import { View, TextInput, Text, StyleSheet, TextInputProps, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme';
 
-interface InputFieldProps extends TextInputProps {
+export interface InputFieldProps extends TextInputProps {
   label: string;
   error?: string;
   leftIcon?: string | React.ReactNode;
 }
 
-export const InputField: React.FC<InputFieldProps> = ({ label, error, leftIcon, style, ...props }) => {
-  const [isFocused, setIsFocused] = useState(false);
+export const InputField = forwardRef<TextInput, InputFieldProps>(
+  ({ label, error, leftIcon, style, onFocus, onBlur, ...props }, ref) => {
+    const [isFocused, setIsFocused] = useState(false);
+    const internalInputRef = useRef<TextInput>(null);
 
-  const renderIcon = () => {
-    if (!leftIcon) return null;
-    if (typeof leftIcon === 'string') {
+    useImperativeHandle(ref, () => internalInputRef.current as TextInput);
+
+    const handleContainerPress = () => {
+      if (internalInputRef.current) {
+        internalInputRef.current.focus();
+      }
+    };
+
+    const renderIcon = () => {
+      if (!leftIcon) return null;
       return (
-        <Ionicons
-          name={leftIcon as any}
-          size={18}
-          color={isFocused ? colors.primary : '#64748B'}
-          style={{ marginRight: 10 }}
-        />
+        <View pointerEvents="none" style={styles.iconWrapper}>
+          {typeof leftIcon === 'string' ? (
+            <Ionicons
+              name={leftIcon as any}
+              size={18}
+              color={isFocused ? colors.primary : '#64748B'}
+            />
+          ) : (
+            leftIcon
+          )}
+        </View>
       );
-    }
-    if (React.isValidElement(leftIcon)) {
-      return leftIcon;
-    }
-    return null;
-  };
+    };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
-      <View
-        style={[
-          styles.inputContainer,
-          isFocused && styles.inputFocused,
-          Boolean(error) && styles.inputError,
-        ]}
-      >
-        {renderIcon()}
-        <TextInput
-          style={[styles.input, style]}
-          placeholderTextColor="#94A3B8"
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          {...props}
-        />
+    return (
+      <View style={styles.container}>
+        <Text style={styles.label}>{label}</Text>
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={handleContainerPress}
+          style={[
+            styles.inputContainer,
+            isFocused && styles.inputFocused,
+            Boolean(error) && styles.inputError,
+          ]}
+        >
+          {renderIcon()}
+          <TextInput
+            ref={internalInputRef}
+            style={[styles.input, style]}
+            placeholderTextColor="#94A3B8"
+            onFocus={(e) => {
+              setIsFocused(true);
+              onFocus?.(e);
+            }}
+            onBlur={(e) => {
+              setIsFocused(false);
+              onBlur?.(e);
+            }}
+            {...props}
+          />
+        </TouchableOpacity>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </View>
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
-    </View>
-  );
-};
+    );
+  }
+);
+
+InputField.displayName = 'InputField';
 
 const styles = StyleSheet.create({
   container: {
@@ -73,10 +94,18 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 14,
+    minHeight: 52,
+  },
+  iconWrapper: {
+    marginRight: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   input: {
     flex: 1,
-    paddingVertical: 12,
+    height: '100%',
+    minHeight: 48,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
     fontSize: 15,
     color: '#0F172A',
     fontWeight: '500',

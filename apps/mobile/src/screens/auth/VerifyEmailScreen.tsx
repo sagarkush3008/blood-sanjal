@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, Alert, ScrollView, TouchableOpacity, StatusBar, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useMutation } from '@tanstack/react-query';
@@ -38,7 +38,7 @@ export const VerifyEmailScreen = () => {
       Alert.alert('Error', 'Missing user ID. Please register again.');
       return;
     }
-    verifyMutation.mutate({ userId, code, purpose: 'REGISTRATION' });
+    verifyMutation.mutate({ userId, code: code.trim(), purpose: 'REGISTRATION' });
   };
 
   return (
@@ -58,11 +58,15 @@ export const VerifyEmailScreen = () => {
         <View style={styles.card}>
           <InputField
             label="6-Digit Verification Code"
-            placeholder="• • • • • •"
+            placeholder="e.g. 123456"
             value={code}
             onChangeText={setCode}
-            keyboardType="number-pad"
+            keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'numeric'}
             maxLength={6}
+            autoCapitalize="none"
+            autoCorrect={false}
+            textContentType="oneTimeCode"
+            autoComplete="sms-otp"
             leftIcon="shield-checkmark-outline"
           />
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, Alert, ScrollView, TouchableOpacity, StatusBar, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useMutation } from '@tanstack/react-query';
@@ -35,7 +35,16 @@ export const ResetPasswordScreen = () => {
       Alert.alert('Incomplete Form', 'Please enter both the reset code and your new password.');
       return;
     }
-    resetMutation.mutate({ userId, code, newPassword });
+    if (newPassword.length < 8) {
+      Alert.alert('Weak Password', 'Password must be at least 8 characters.');
+      return;
+    }
+    const target = userId || email;
+    if (!target) {
+      Alert.alert('Session Expired', 'Please request a password reset code again from the Forgot Password screen.');
+      return;
+    }
+    resetMutation.mutate({ userId: target, email, code: code.trim(), newPassword });
   };
 
   return (
@@ -55,11 +64,15 @@ export const ResetPasswordScreen = () => {
         <View style={styles.card}>
           <InputField
             label="6-Digit Reset Code"
-            placeholder="• • • • • •"
+            placeholder="e.g. 123456"
             value={code}
             onChangeText={setCode}
-            keyboardType="number-pad"
+            keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'numeric'}
             maxLength={6}
+            autoCapitalize="none"
+            autoCorrect={false}
+            textContentType="oneTimeCode"
+            autoComplete="sms-otp"
             leftIcon="shield-checkmark-outline"
           />
 
@@ -69,6 +82,7 @@ export const ResetPasswordScreen = () => {
             value={newPassword}
             onChangeText={setNewPassword}
             secureTextEntry
+            textContentType="newPassword"
             leftIcon="lock-closed-outline"
           />
 

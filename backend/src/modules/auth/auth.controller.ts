@@ -92,11 +92,12 @@ export class AuthController {
 
   static async resetPassword(req: Request, res: Response, next: NextFunction) {
     try {
-      const { userId, code, newPassword } = req.body;
-      if (!userId || !code || !newPassword) {
-        throw new AppError(400, 'VALIDATION_ERROR', 'userId, code, and newPassword are required');
+      const { userId, email, code, newPassword } = req.body;
+      const targetUser = userId || email;
+      if (!targetUser || !code || !newPassword) {
+        throw new AppError(400, 'VALIDATION_ERROR', 'userId or email, code, and newPassword are required');
       }
-      const result = await AuthService.resetPassword(userId, code, newPassword);
+      const result = await AuthService.resetPassword(targetUser, code, newPassword);
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }
