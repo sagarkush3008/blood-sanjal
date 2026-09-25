@@ -11,6 +11,7 @@ export interface IDonationRecord extends Document {
   verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED';
   verifiedBy?: mongoose.Types.ObjectId;
   rejectionReason?: string;
+  deletedAt?: Date;
 }
 
 const donationRecordSchema = new Schema<IDonationRecord>(
@@ -24,7 +25,8 @@ const donationRecordSchema = new Schema<IDonationRecord>(
     evidenceAssetId: { type: String },
     verificationStatus: { type: String, enum: ['PENDING', 'VERIFIED', 'REJECTED'], default: 'PENDING' },
     verifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
-    rejectionReason: { type: String }
+    rejectionReason: { type: String },
+    deletedAt: { type: Date },
   },
   { timestamps: true }
 );

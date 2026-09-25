@@ -28,6 +28,7 @@ export interface IUser extends Document {
     coordinates: [number, number]; // [longitude, latitude]
   };
   privacySettings: IPrivacySettings;
+  deletedAt?: Date;
 }
 
 const privacySettingsSchema = new Schema<IPrivacySettings>({
@@ -59,6 +60,7 @@ const userSchema = new Schema<IUser>(
       coordinates: { type: [Number] },
     },
     privacySettings: { type: privacySettingsSchema, default: () => ({}) },
+    deletedAt: { type: Date },
   },
   { timestamps: true }
 );

@@ -23,6 +23,7 @@ export interface IBloodRequest extends Document {
   evidenceAssetId?: string;
   broadcastedAt?: Date;
   status: 'DRAFT' | 'PENDING_VERIFICATION' | 'VERIFIED' | 'ACTIVE' | 'PARTIALLY_FULFILLED' | 'FULFILLED' | 'CANCELLED' | 'EXPIRED';
+  deletedAt?: Date;
 }
 
 const bloodRequestSchema = new Schema<IBloodRequest>(
@@ -53,6 +54,7 @@ const bloodRequestSchema = new Schema<IBloodRequest>(
       enum: ['DRAFT', 'PENDING_VERIFICATION', 'VERIFIED', 'ACTIVE', 'PARTIALLY_FULFILLED', 'FULFILLED', 'CANCELLED', 'EXPIRED'],
       default: 'PENDING_VERIFICATION'
     },
+    deletedAt: { type: Date },
   },
   { timestamps: true }
 );
