@@ -7,6 +7,7 @@ import { SupportPlatformScreen } from './SupportPlatformScreen';
 import { EditProfileScreen } from './EditProfileScreen';
 import { VerifyCertificateScreen } from './VerifyCertificateScreen';
 import { LogDonationScreen } from './LogDonationScreen';
+import { PaymentHistoryScreen } from './PaymentHistoryScreen';
 import { AdminNavigator } from '../admin/AdminNavigator';
 import { colors } from '../../theme';
 
@@ -28,6 +29,7 @@ export const ProfileNavigator = () => {
       <Stack.Screen name="VerifyCertificate" component={VerifyCertificateScreen} options={{ title: 'Verify Certificate' }} />
       <Stack.Screen name="LogDonation" component={LogDonationScreen} options={{ title: 'Log Donation' }} />
       <Stack.Screen name="SupportPlatform" component={SupportPlatformScreen} options={{ title: 'Support Platform' }} />
+      <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen} options={{ title: 'Contribution History' }} />
       <Stack.Screen name="Admin" component={AdminNavigator} options={{ headerShown: false }} />
     </Stack.Navigator>
   );

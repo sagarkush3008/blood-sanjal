@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -16,7 +16,10 @@ const paymentSchema = z.object({
 
 type PaymentFormData = z.infer<typeof paymentSchema>;
 
+import { useNavigation } from '@react-navigation/native';
+
 export const SupportPlatformScreen = () => {
+  const navigation = useNavigation<any>();
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
   
   const { control, handleSubmit, formState: { errors } } = useForm<PaymentFormData>({
@@ -25,7 +28,7 @@ export const SupportPlatformScreen = () => {
   });
 
   const payMutation = useMutation({
-    mutationFn: (data: PaymentFormData) => PaymentsAPI.createPaymentIntent({ ...data, provider: 'MOCK' }),
+    mutationFn: (data: PaymentFormData) => PaymentsAPI.initiateSearchFee({ ...data, provider: 'MOCK' }),
     onSuccess: (res) => {
       // Mock payment flow: usually would open eSewa/Khalti URL, but we just simulate success here
       setPaymentStatus('Processing...');
@@ -84,6 +87,12 @@ export const SupportPlatformScreen = () => {
           {paymentStatus === 'Processing...' ? <ActivityIndicator color={colors.primary} /> : <Text style={styles.statusText}>{paymentStatus}</Text>}
         </View>
       )}
+
+      <View style={{ marginTop: spacing.xxl, alignItems: 'center' }}>
+        <TouchableOpacity onPress={() => navigation.navigate('PaymentHistory')}>
+          <Text style={{ color: colors.primary, ...typography.body1, fontWeight: 'bold' }}>View Contribution History</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
