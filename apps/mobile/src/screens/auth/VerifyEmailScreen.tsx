@@ -36,7 +36,7 @@ export const VerifyEmailScreen = () => {
       Alert.alert('Error', 'Missing user ID. Please register again.');
       return;
     }
-    verifyMutation.mutate({ userId, code, purpose: 'EMAIL_VERIFICATION' });
+    verifyMutation.mutate({ userId, code, purpose: 'REGISTRATION' });
   };
 
   return (

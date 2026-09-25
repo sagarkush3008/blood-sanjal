@@ -10,9 +10,38 @@ import { AppError } from '../../core/errors/appError';
 import { AuditLog } from '../audit/auditLog.model';
 import { logger } from '../../config/logger.config';
 
-// Mock mail service for now
-const sendOtp = async (to: string, code: string) => logger.info(`[MAIL_MOCK] Sending OTP ${code} to ${to}`);
-const sendResetLink = async (to: string, token: string) => logger.info(`[MAIL_MOCK] Sending Reset Token ${token} to ${to}`);
+import nodemailer from 'nodemailer';
+
+const transporter = nodemailer.createTransport({
+  host: env.SMTP_HOST,
+  port: parseInt(env.SMTP_PORT),
+  secure: env.SMTP_SECURE === 'true',
+  auth: {
+    user: env.SMTP_USER,
+    pass: env.SMTP_PASS,
+  }
+});
+
+const sendOtp = async (to: string, code: string) => {
+  logger.info(`[MAIL] Sending OTP ${code} to ${to}`);
+  await transporter.sendMail({
+    from: env.EMAIL_FROM,
+    to,
+    subject: 'Your Blood Sanjal Verification Code',
+    text: `Your verification code is: ${code}. It expires in ${env.OTP_EXPIRY_MINUTES} minutes.`,
+    html: `<p>Your verification code is: <strong>${code}</strong>. It expires in ${env.OTP_EXPIRY_MINUTES} minutes.</p>`
+  }).catch(err => logger.error(`[MAIL_ERROR] ${err.message}`));
+};
+
+const sendResetLink = async (to: string, token: string) => {
+  logger.info(`[MAIL] Sending Reset Token to ${to}`);
+  await transporter.sendMail({
+    from: env.EMAIL_FROM,
+    to,
+    subject: 'Blood Sanjal Password Reset',
+    text: `Your password reset token is: ${token}`,
+  }).catch(err => logger.error(`[MAIL_ERROR] ${err.message}`));
+};
 
 export class AuthService {
   static async register(data: any) {
