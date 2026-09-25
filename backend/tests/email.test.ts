@@ -15,11 +15,23 @@ jest.mock('../src/config/logger.config', () => ({
   }
 }));
 
+import { emailQueue } from '../src/core/jobs';
+
 export const mockSendMail = jest.fn().mockResolvedValue({ messageId: 'mock-message-id' });
 jest.mock('nodemailer', () => ({
   createTransport: jest.fn(() => ({
     sendMail: (...args: any[]) => mockSendMail(...args)
   }))
+}));
+
+jest.mock('../src/core/jobs', () => ({
+  emailQueue: {
+    add: jest.fn().mockImplementation(async (name, data) => {
+      // Simulate the worker processing the job immediately
+      await EmailService.processEmail(data.eventId, data.text, data.html);
+      return { id: 'mock-job-id' };
+    })
+  }
 }));
 
 describe('Email API', () => {

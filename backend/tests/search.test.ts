@@ -18,7 +18,7 @@ describe('Donor Search & Fee Workflow', () => {
   describe('POST /api/v1/payments/search-fee/initiate', () => {
     it('should create a new pending fee if not paid', async () => {
       (PaymentTransaction.findOne as jest.Mock).mockResolvedValue(null);
-      (PaymentTransaction.create as jest.Mock).mockResolvedValue({ _id: 'tx1', amountMinor: 5000, currency: 'NPR', purpose: 'SEARCH_PLATFORM_FEE' });
+      (PaymentTransaction.create as jest.Mock).mockResolvedValue({ _id: 'tx1', amountMinor: 5000, currency: 'NPR', purpose: 'SEARCH_PLATFORM_FEE', save: jest.fn().mockResolvedValue(true) });
 
       const res = await request(app)
         .post('/api/v1/payments/search-fee/initiate')
