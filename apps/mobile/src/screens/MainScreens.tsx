@@ -5,11 +5,7 @@ import { colors } from '../theme';
 
 export { HomeScreen } from './home/HomeScreen';
 
-export const FindBloodScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
-    <Text>Find Blood Screen</Text>
-  </View>
-);
+export { FindBloodScreen } from './findBlood/FindBloodScreen';
 
 export const RequestsScreen = () => (
   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
