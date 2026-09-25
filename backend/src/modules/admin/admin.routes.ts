@@ -47,4 +47,12 @@ router.post('/notifications/:id/process', AdminOpsController.processBroadcastSyn
 // Rewards
 router.post('/rewards', AdminOpsController.issueReward);
 
+import { AdminReportsController } from './adminReports.controller';
+
+// Reports
+router.get('/reports/kpis', AdminReportsController.getDashboardKPIs);
+router.get('/reports/aggregations/:type', AdminReportsController.getAggregations);
+router.post('/reports/export', AdminReportsController.requestExport);
+router.post('/reports/export/:jobId/process', AdminReportsController.processExportSync);
+
 export default router;
