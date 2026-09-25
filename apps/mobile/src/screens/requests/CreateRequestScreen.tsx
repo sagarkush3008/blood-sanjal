@@ -39,7 +39,12 @@ export const CreateRequestScreen = () => {
       navigation.goBack();
     },
     onError: (error: any) => {
-      setApiError(error.response?.data?.message || 'Failed to create request.');
+      const message =
+        error.response?.data?.error?.message ||
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to create request.';
+      setApiError(message);
     }
   });
 

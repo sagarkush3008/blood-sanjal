@@ -16,6 +16,11 @@ export const errorMiddleware = (err: Error, req: Request, res: Response, next: N
     return res.status(400).json(ErrorResponse('VALIDATION_ERROR', 'Invalid request data', (err as any).errors, requestId));
   }
 
+  if (err.name === 'ValidationError') {
+    logger.warn(`[${requestId}] Mongoose ValidationError: ${err.message}`);
+    return res.status(400).json(ErrorResponse('VALIDATION_ERROR', err.message, [], requestId));
+  }
+
   logger.error(`[${requestId}] Unhandled Error: ${err.message}`, { stack: err.stack });
   res.status(500).json(ErrorResponse('INTERNAL_ERROR', 'An unexpected error occurred.', [], requestId));
 };

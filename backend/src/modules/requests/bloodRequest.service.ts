@@ -47,10 +47,28 @@ export class BloodRequestService {
       throw new AppError(409, 'CONFLICT', 'You already have an active request for this blood group');
     }
 
+    const hospitalLocation = data.hospitalLocation || {
+      address: data.hospitalName || 'Not specified',
+    };
+
+    const contactPerson = data.contactPerson || {
+      name: data.patientName || 'Contact Person',
+      phone: data.contactPhone || 'Not specified',
+    };
+
+    const requiredDate = data.requiredDate
+      ? new Date(data.requiredDate)
+      : new Date(Date.now() + 24 * 60 * 60 * 1000);
+
     const request = await BloodRequest.create({
       ...data,
       requesterId: userId,
-      status: data.urgency === 'EMERGENCY' ? 'PENDING_VERIFICATION' : 'PENDING_VERIFICATION' // All require verification for safety
+      patientName: data.patientName,
+      contactPhone: data.contactPhone,
+      hospitalLocation,
+      contactPerson,
+      requiredDate,
+      status: 'PENDING_VERIFICATION'
     });
 
     await AuditLog.create({

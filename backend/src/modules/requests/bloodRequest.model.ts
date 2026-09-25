@@ -2,23 +2,25 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IBloodRequest extends Document {
   requesterId: mongoose.Types.ObjectId;
+  patientName?: string;
   bloodGroup: string;
   unitsRequired: number;
   unitsFulfilled: number;
   hospitalName: string;
-  hospitalLocation: {
+  hospitalLocation?: {
     provinceId?: string;
     districtId?: string;
     cityId?: string;
     coordinates?: [number, number]; // [lon, lat]
-    address: string;
+    address?: string;
   };
-  requiredDate: Date;
+  requiredDate?: Date;
   urgency: 'NORMAL' | 'URGENT' | 'EMERGENCY';
-  contactPerson: {
-    name: string;
-    phone: string;
+  contactPerson?: {
+    name?: string;
+    phone?: string;
   };
+  contactPhone?: string;
   additionalInfo?: string;
   evidenceAssetId?: string;
   broadcastedAt?: Date;
@@ -29,6 +31,7 @@ export interface IBloodRequest extends Document {
 const bloodRequestSchema = new Schema<IBloodRequest>(
   {
     requesterId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    patientName: { type: String },
     bloodGroup: { type: String, required: true },
     unitsRequired: { type: Number, required: true, min: 1 },
     unitsFulfilled: { type: Number, default: 0 },
@@ -38,14 +41,15 @@ const bloodRequestSchema = new Schema<IBloodRequest>(
       districtId: { type: String },
       cityId: { type: String },
       coordinates: { type: [Number] },
-      address: { type: String, required: true },
+      address: { type: String },
     },
-    requiredDate: { type: Date, required: true },
-    urgency: { type: String, enum: ['NORMAL', 'URGENT', 'EMERGENCY'], required: true },
+    requiredDate: { type: Date, default: () => new Date(Date.now() + 24 * 60 * 60 * 1000) },
+    urgency: { type: String, enum: ['NORMAL', 'URGENT', 'EMERGENCY'], default: 'NORMAL' },
     contactPerson: {
-      name: { type: String, required: true },
-      phone: { type: String, required: true },
+      name: { type: String },
+      phone: { type: String },
     },
+    contactPhone: { type: String },
     additionalInfo: { type: String },
     evidenceAssetId: { type: String },
     broadcastedAt: { type: Date },
