@@ -17,7 +17,7 @@ export const MainTabs = () => {
         headerTitleStyle: { fontWeight: 'bold' },
       }}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Find Blood" component={FindBloodScreen} />
       <Tab.Screen name="Requests" component={RequestsScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Donate" component={DonateScreen} options={{ headerShown: false }} />

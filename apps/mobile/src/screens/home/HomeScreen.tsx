@@ -59,7 +59,7 @@ export const HomeScreen = () => {
           <Text style={styles.greeting}>Hello, {meData?.name?.split(' ')[0] || 'Donor'}</Text>
           <Text style={styles.locationContext}>{meData?.cityId || 'Nepal'}</Text>
         </View>
-        <TouchableOpacity style={styles.bellIcon} onPress={() => {/* navigate to Notifications */}}>
+        <TouchableOpacity style={styles.bellIcon} onPress={() => navigation.navigate('Notifications')}>
           <Text style={{ fontSize: 24 }}>🔔</Text>
           {unreadCount > 0 && (
             <View style={styles.badge}>

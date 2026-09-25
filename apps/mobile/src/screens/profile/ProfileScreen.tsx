@@ -57,6 +57,11 @@ export const ProfileScreen = () => {
           <Text style={styles.menuItemText}>Achievements & Badges</Text>
           <Text style={styles.menuItemArrow}>→</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('SupportPlatform')}>
+          <Text style={styles.menuItemText}>Support Blood Sanjal</Text>
+          <Text style={styles.menuItemArrow}>→</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={[styles.section, { marginTop: spacing.xl }]}>

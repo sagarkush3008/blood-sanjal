@@ -3,7 +3,7 @@ import { View, Text, Button } from 'react-native';
 import { useAuthStore } from '../store/authStore';
 import { colors } from '../theme';
 
-export { HomeScreen } from './home/HomeScreen';
+export { HomeNavigator as HomeScreen } from './home/HomeNavigator';
 
 export { FindBloodScreen } from './findBlood/FindBloodScreen';
 
