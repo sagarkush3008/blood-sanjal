@@ -1,15 +1,34 @@
 import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet, TextInputProps } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme';
 
 interface InputFieldProps extends TextInputProps {
   label: string;
   error?: string;
-  leftIcon?: React.ReactNode;
+  leftIcon?: string | React.ReactNode;
 }
 
 export const InputField: React.FC<InputFieldProps> = ({ label, error, leftIcon, style, ...props }) => {
   const [isFocused, setIsFocused] = useState(false);
+
+  const renderIcon = () => {
+    if (!leftIcon) return null;
+    if (typeof leftIcon === 'string') {
+      return (
+        <Ionicons
+          name={leftIcon as any}
+          size={18}
+          color={isFocused ? colors.primary : '#64748B'}
+          style={{ marginRight: 10 }}
+        />
+      );
+    }
+    if (React.isValidElement(leftIcon)) {
+      return leftIcon;
+    }
+    return null;
+  };
 
   return (
     <View style={styles.container}>
@@ -21,7 +40,7 @@ export const InputField: React.FC<InputFieldProps> = ({ label, error, leftIcon, 
           Boolean(error) && styles.inputError,
         ]}
       >
-        {leftIcon}
+        {renderIcon()}
         <TextInput
           style={[styles.input, style]}
           placeholderTextColor="#94A3B8"
@@ -82,3 +101,4 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 });
+

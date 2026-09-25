@@ -1,5 +1,13 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  ViewStyle,
+  TextStyle,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme';
 
 interface PrimaryButtonProps {
@@ -10,7 +18,7 @@ interface PrimaryButtonProps {
   variant?: 'primary' | 'outline' | 'danger' | 'secondary';
   style?: ViewStyle;
   textStyle?: TextStyle;
-  icon?: React.ReactNode;
+  icon?: string | React.ReactNode;
 }
 
 export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
@@ -26,6 +34,30 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   const isOutline = variant === 'outline';
   const isDanger = variant === 'danger';
   const isSecondary = variant === 'secondary';
+
+  const iconColor = isOutline
+    ? colors.primary
+    : isSecondary
+    ? colors.primary
+    : '#FFFFFF';
+
+  const renderIcon = () => {
+    if (!icon) return null;
+    if (typeof icon === 'string') {
+      return (
+        <Ionicons
+          name={icon as any}
+          size={18}
+          color={iconColor}
+          style={{ marginRight: 8 }}
+        />
+      );
+    }
+    if (React.isValidElement(icon)) {
+      return icon;
+    }
+    return null;
+  };
 
   return (
     <TouchableOpacity
@@ -45,7 +77,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
         <ActivityIndicator color={isOutline ? colors.primary : '#FFFFFF'} />
       ) : (
         <>
-          {icon}
+          {renderIcon()}
           <Text
             style={[
               styles.text,
@@ -61,6 +93,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
     </TouchableOpacity>
   );
 };
+
 
 const styles = StyleSheet.create({
   button: {

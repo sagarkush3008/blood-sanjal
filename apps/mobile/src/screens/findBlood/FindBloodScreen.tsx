@@ -7,9 +7,10 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -143,15 +144,16 @@ export const FindBloodScreen = () => {
               placeholder="e.g. Kathmandu, Bir Hospital"
               value={city}
               onChangeText={setCity}
-              leftIcon={<Ionicons name="location-outline" size={18} color="#64748B" style={{ marginRight: 8 }} />}
+              leftIcon="location-outline"
             />
 
             <PrimaryButton
               title="Search Donors"
               onPress={handleSearch}
               loading={isFetching}
-              icon={<Ionicons name="search" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />}
+              icon="search"
             />
+
 
             {hasSearched && (
               <View style={styles.resultsBadgeRow}>
