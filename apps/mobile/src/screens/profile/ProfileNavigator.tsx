@@ -4,6 +4,7 @@ import { ProfileScreen } from './ProfileScreen';
 import { PrivacySettingsScreen } from './PrivacySettingsScreen';
 import { RewardsScreen } from './RewardsScreen';
 import { SupportPlatformScreen } from './SupportPlatformScreen';
+import { EditProfileScreen } from './EditProfileScreen';
 import { AdminNavigator } from '../admin/AdminNavigator';
 import { colors } from '../../theme';
 
@@ -19,6 +20,7 @@ export const ProfileNavigator = () => {
       }}
     >
       <Stack.Screen name="ProfileHome" component={ProfileScreen} options={{ title: 'My Profile' }} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit Profile' }} />
       <Stack.Screen name="PrivacySettings" component={PrivacySettingsScreen} options={{ title: 'Privacy Settings' }} />
       <Stack.Screen name="Rewards" component={RewardsScreen} options={{ title: 'Achievements & Rewards' }} />
       <Stack.Screen name="SupportPlatform" component={SupportPlatformScreen} options={{ title: 'Support Platform' }} />

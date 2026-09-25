@@ -117,18 +117,24 @@ export const HomeScreen = () => {
 
       {/* Live Content: Campaigns */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Upcoming Blood Camps</Text>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>Upcoming Blood Camps</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Campaigns')}>
+            <Text style={{ color: colors.primary, fontWeight: 'bold' }}>View All</Text>
+          </TouchableOpacity>
+        </View>
         {isLoadingCampaigns ? (
           <ActivityIndicator color={colors.primary} style={{ margin: 20 }} />
         ) : activeCampaigns.length > 0 ? (
           activeCampaigns.map((camp: any, index: number) => (
-            <CampaignCard 
-              key={camp._id || index}
-              title={camp.title || 'Blood Donation Drive'}
-              organizer={camp.organizer || 'Red Cross Society'}
-              date={camp.startDate ? new Date(camp.startDate).toLocaleDateString() : 'TBD'}
-              location={camp.location?.address || 'Unknown'}
-            />
+            <TouchableOpacity key={camp._id || index} onPress={() => navigation.navigate('CampaignDetails', { id: camp._id })}>
+              <CampaignCard 
+                title={camp.title || 'Blood Donation Drive'}
+                organizer={camp.organizer || 'Red Cross Society'}
+                date={camp.startDate ? new Date(camp.startDate).toLocaleDateString() : 'TBD'}
+                location={camp.location?.address || 'Unknown'}
+              />
+            </TouchableOpacity>
           ))
         ) : (
           <Text style={styles.emptyState}>No upcoming camps found.</Text>

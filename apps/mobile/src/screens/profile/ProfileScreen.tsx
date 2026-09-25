@@ -43,6 +43,11 @@ export const ProfileScreen = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account Settings</Text>
 
+        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('EditProfile')}>
+          <Text style={styles.menuItemText}>Edit Profile</Text>
+          <Text style={styles.menuItemArrow}>→</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('PrivacySettings')}>
           <Text style={styles.menuItemText}>Privacy & Visibility</Text>
           <Text style={styles.menuItemArrow}>→</Text>

@@ -44,13 +44,13 @@ export const AdminDashboardScreen = () => {
         <Text style={styles.menuItemArrow}>→</Text>
       </TouchableOpacity>
       
-      <TouchableOpacity style={styles.menuItem}>
-        <Text style={styles.menuItemText}>👥 Manage Users & Donors (Coming Soon)</Text>
+      <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('AdminUsers')}>
+        <Text style={styles.menuItemText}>👥 Manage Users & Donors</Text>
         <Text style={styles.menuItemArrow}>→</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.menuItem}>
-        <Text style={styles.menuItemText}>📊 System Settings & Fees (Coming Soon)</Text>
+      <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('AdminSettings')}>
+        <Text style={styles.menuItemText}>📊 System Settings & Fees</Text>
         <Text style={styles.menuItemArrow}>→</Text>
       </TouchableOpacity>
     </ScrollView>
