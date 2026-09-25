@@ -65,6 +65,13 @@ export const ProfileScreen = () => {
       </View>
 
       <View style={[styles.section, { marginTop: spacing.xl }]}>
+        {(meData?.role === 'ADMIN' || meData?.role === 'SUPER_ADMIN') && (
+          <TouchableOpacity style={[styles.menuItem, { backgroundColor: '#FEF2F2', borderColor: colors.danger }]} onPress={() => navigation.navigate('Admin')}>
+            <Text style={[styles.menuItemText, { color: colors.danger, fontWeight: 'bold' }]}>🚨 Admin Control Panel</Text>
+            <Text style={styles.menuItemArrow}>→</Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity style={styles.logoutButton} onPress={logout}>
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
