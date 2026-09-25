@@ -32,7 +32,7 @@ export const RegisterScreen = () => {
     mutationFn: (data: RegisterFormData) => AuthAPI.register(data),
     onSuccess: (response: any) => {
       // API typically returns the user object, so we pass the user ID to the verify screen
-      const userId = response?.data?.data?.user?.id || response?.data?.data?.id || response?.data?.data?._id;
+      const userId = response?.data?.data?.userId || response?.data?.data?.user?.id || response?.data?.data?.id || response?.data?.data?._id;
       if (userId) {
         navigation.navigate('VerifyEmail', { userId });
       } else {

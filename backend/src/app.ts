@@ -31,6 +31,9 @@ import * as fs from 'fs';
 
 const app = express();
 
+// Trust reverse proxies (needed for rate-limiting behind localtunnel/ngrok/etc)
+app.set('trust proxy', 1);
+
 // Load OpenAPI spec
 let swaggerDocument: any;
 try {
