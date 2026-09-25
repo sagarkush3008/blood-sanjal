@@ -1,10 +1,19 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 
-// For Android emulator, use 10.0.2.2 instead of localhost
-// Note: When testing on a real device, replace this with your local machine's IP address (e.g., 192.168.1.100)
-const HOST = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+// Dynamically grab the local IP address of the machine running Expo
+let HOST = 'localhost';
+if (__DEV__) {
+  const scriptURL = NativeModules.SourceCode?.scriptURL;
+  if (scriptURL) {
+    const address = scriptURL.split('://')[1].split('/')[0];
+    HOST = address.split(':')[0];
+  } else {
+    HOST = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+  }
+}
+
 export const API_BASE_URL = `http://${HOST}:5000/api/v1`;
 
 export const apiClient = axios.create({
