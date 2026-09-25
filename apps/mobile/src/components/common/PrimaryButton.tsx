@@ -1,28 +1,62 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { colors, spacing, typography } from '../../theme';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
+import { colors } from '../../theme';
 
 interface PrimaryButtonProps {
   title: string;
   onPress: () => void;
   loading?: boolean;
   disabled?: boolean;
+  variant?: 'primary' | 'outline' | 'danger' | 'secondary';
+  style?: ViewStyle;
+  textStyle?: TextStyle;
+  icon?: React.ReactNode;
 }
 
-export const PrimaryButton: React.FC<PrimaryButtonProps> = ({ title, onPress, loading, disabled }) => {
+export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
+  title,
+  onPress,
+  loading,
+  disabled,
+  variant = 'primary',
+  style,
+  textStyle,
+  icon,
+}) => {
+  const isOutline = variant === 'outline';
+  const isDanger = variant === 'danger';
+  const isSecondary = variant === 'secondary';
+
   return (
     <TouchableOpacity
       style={[
         styles.button,
-        (disabled || loading) && styles.disabled
+        isOutline && styles.buttonOutline,
+        isDanger && styles.buttonDanger,
+        isSecondary && styles.buttonSecondary,
+        (disabled || loading) && styles.disabled,
+        style,
       ]}
       onPress={onPress}
       disabled={disabled || loading}
+      activeOpacity={0.85}
     >
       {loading ? (
-        <ActivityIndicator color={colors.surface} />
+        <ActivityIndicator color={isOutline ? colors.primary : '#FFFFFF'} />
       ) : (
-        <Text style={styles.text}>{title}</Text>
+        <>
+          {icon}
+          <Text
+            style={[
+              styles.text,
+              isOutline && styles.textOutline,
+              isSecondary && styles.textSecondary,
+              textStyle,
+            ]}
+          >
+            {title}
+          </Text>
+        </>
       )}
     </TouchableOpacity>
   );
@@ -31,18 +65,48 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({ title, onPress, lo
 const styles = StyleSheet.create({
   button: {
     backgroundColor: colors.primary,
-    paddingVertical: spacing.m,
-    paddingHorizontal: spacing.l,
-    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
     width: '100%',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  buttonOutline: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  buttonDanger: {
+    backgroundColor: colors.danger,
+    shadowColor: colors.danger,
+  },
+  buttonSecondary: {
+    backgroundColor: colors.primaryLight,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   disabled: {
-    backgroundColor: colors.textMuted,
+    opacity: 0.6,
   },
   text: {
-    color: colors.surface,
-    ...typography.button,
-  }
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  textOutline: {
+    color: colors.primary,
+  },
+  textSecondary: {
+    color: colors.primary,
+  },
 });

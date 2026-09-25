@@ -1,15 +1,27 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  TouchableOpacity,
+  RefreshControl,
+  StatusBar,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { NotificationsAPI } from '../../api/notifications.api';
-import { colors, spacing, typography } from '../../theme';
+import { colors, spacing } from '../../theme';
 
 export const NotificationsScreen = () => {
   const queryClient = useQueryClient();
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['notifications'],
-    queryFn: () => NotificationsAPI.list().then(res => res.data.data || res.data),
+    queryFn: () =>
+      NotificationsAPI.list().then((res) => res.data.data || res.data),
   });
 
   const markAsReadMutation = useMutation({
@@ -17,7 +29,7 @@ export const NotificationsScreen = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['notifications', 'unread'] });
-    }
+    },
   });
 
   const markAllAsReadMutation = useMutation({
@@ -25,136 +37,295 @@ export const NotificationsScreen = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['notifications', 'unread'] });
-    }
+    },
   });
 
   const notifications = Array.isArray(data) ? data : data?.items || [];
+  const unreadCount = notifications.filter((n: any) => !n.isRead).length;
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'EMERGENCY':
+        return { name: 'alert-circle', color: '#DC2626', bg: '#FEE2E2' };
+      case 'CONTACT_REQUEST':
+        return { name: 'person', color: '#2563EB', bg: '#EFF6FF' };
+      case 'REWARD':
+        return { name: 'trophy', color: '#D97706', bg: '#FEF3C7' };
+      case 'CAMPAIGN':
+        return { name: 'calendar', color: '#059669', bg: '#ECFDF5' };
+      default:
+        return { name: 'notifications', color: '#B91C1C', bg: '#FFF1F2' };
+    }
+  };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+
+      {/* Screen Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Notifications</Text>
-        {notifications.some((n: any) => !n.isRead) && (
-          <TouchableOpacity onPress={() => markAllAsReadMutation.mutate()} disabled={markAllAsReadMutation.isPending}>
-            <Text style={styles.markAllText}>Mark all as read</Text>
+        <View style={styles.headerTitleRow}>
+          <Text style={styles.title}>Notifications</Text>
+          {unreadCount > 0 && (
+            <View style={styles.unreadCountPill}>
+              <Text style={styles.unreadCountText}>{unreadCount} New</Text>
+            </View>
+          )}
+        </View>
+
+        {unreadCount > 0 && (
+          <TouchableOpacity
+            style={styles.markAllButton}
+            onPress={() => markAllAsReadMutation.mutate()}
+            disabled={markAllAsReadMutation.isPending}
+          >
+            <Ionicons name="checkmark-done" size={14} color="#B91C1C" />
+            <Text style={styles.markAllText}>Mark all read</Text>
           </TouchableOpacity>
         )}
       </View>
 
       {isLoading ? (
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: spacing.xl }} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#DC2626" />
+          <Text style={styles.loadingText}>Fetching notifications...</Text>
+        </View>
       ) : notifications.length === 0 ? (
-        <Text style={styles.emptyState}>You're all caught up!</Text>
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconCircle}>
+            <Ionicons name="notifications-off-outline" size={36} color="#94A3B8" />
+          </View>
+          <Text style={styles.emptyTitle}>All Caught Up!</Text>
+          <Text style={styles.emptyText}>
+            You have no notifications at this time. New emergency alerts and donation requests will appear here.
+          </Text>
+        </View>
       ) : (
         <FlatList
           data={notifications}
           keyExtractor={(item) => item._id}
-          refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={colors.primary} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={refetch}
+              tintColor="#DC2626"
+            />
+          }
           contentContainerStyle={styles.listContainer}
-          renderItem={({ item }) => (
-            <TouchableOpacity 
-              style={[styles.notificationCard, !item.isRead && styles.unreadCard]}
-              onPress={() => {
-                if (!item.isRead) markAsReadMutation.mutate(item._id);
-              }}
-            >
-              <View style={styles.iconContainer}>
-                <Text style={styles.iconText}>
-                  {item.type === 'EMERGENCY' ? '🚨' : 
-                   item.type === 'CONTACT_REQUEST' ? '👤' : 
-                   item.type === 'REWARD' ? '🏆' : '🔔'}
-                </Text>
-              </View>
-              <View style={styles.contentContainer}>
-                <Text style={[styles.message, !item.isRead && styles.unreadMessage]}>{item.message}</Text>
-                <Text style={styles.time}>{new Date(item.createdAt).toLocaleString()}</Text>
-              </View>
-              {!item.isRead && <View style={styles.unreadDot} />}
-            </TouchableOpacity>
-          )}
+          renderItem={({ item }) => {
+            const iconConfig = getNotificationIcon(item.type);
+            const timeStr = new Date(item.createdAt).toLocaleDateString([], {
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+
+            return (
+              <TouchableOpacity
+                activeOpacity={0.88}
+                style={[
+                  styles.notificationCard,
+                  !item.isRead && styles.unreadCard,
+                ]}
+                onPress={() => {
+                  if (!item.isRead) markAsReadMutation.mutate(item._id);
+                }}
+              >
+                <View
+                  style={[
+                    styles.iconContainer,
+                    { backgroundColor: iconConfig.bg },
+                  ]}
+                >
+                  <Ionicons
+                    name={iconConfig.name as any}
+                    size={20}
+                    color={iconConfig.color}
+                  />
+                </View>
+
+                <View style={styles.contentContainer}>
+                  <View style={styles.notifTopRow}>
+                    <Text style={styles.typeBadge}>
+                      {item.type?.replace('_', ' ') || 'SYSTEM'}
+                    </Text>
+                    <Text style={styles.time}>{timeStr}</Text>
+                  </View>
+
+                  <Text
+                    style={[
+                      styles.message,
+                      !item.isRead && styles.unreadMessage,
+                    ]}
+                  >
+                    {item.message}
+                  </Text>
+                </View>
+
+                {!item.isRead && <View style={styles.unreadDot} />}
+              </TouchableOpacity>
+            );
+          }}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#F8FAFC',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: spacing.l,
-    backgroundColor: colors.surface,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 16,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: '#F1F5F9',
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   title: {
-    ...typography.h2,
-    color: colors.primaryDark,
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#0F172A',
+  },
+  unreadCountPill: {
+    backgroundColor: '#DC2626',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  unreadCountText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  markAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFF1F2',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
   },
   markAllText: {
-    ...typography.button,
-    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#B91C1C',
   },
   listContainer: {
-    padding: spacing.m,
+    padding: 16,
   },
-  emptyState: {
-    ...typography.body1,
-    color: colors.textMuted,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#64748B',
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  emptyIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 24,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 6,
+  },
+  emptyText: {
+    fontSize: 13,
+    color: '#64748B',
     textAlign: 'center',
-    marginTop: spacing.xl,
+    lineHeight: 18,
   },
   notificationCard: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
-    padding: spacing.m,
-    borderRadius: 12,
-    marginBottom: spacing.m,
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 18,
+    marginBottom: 10,
     borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
+    borderColor: '#E2E8F0',
+    alignItems: 'flex-start',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 1,
   },
   unreadCard: {
-    backgroundColor: '#FFF1F3',
-    borderColor: '#FCC2CC',
+    backgroundColor: '#FFF8F8',
+    borderColor: '#FECACA',
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.background,
+    width: 42,
+    height: 42,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.m,
-  },
-  iconText: {
-    fontSize: 20,
+    marginRight: 12,
   },
   contentContainer: {
     flex: 1,
   },
-  message: {
-    ...typography.body2,
-    color: colors.text,
+  notifTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 4,
   },
+  typeBadge: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#94A3B8',
+    letterSpacing: 0.5,
+  },
+  message: {
+    fontSize: 13,
+    color: '#334155',
+    lineHeight: 18,
+  },
   unreadMessage: {
-    fontWeight: 'bold',
+    fontWeight: '700',
+    color: '#0F172A',
   },
   time: {
-    ...typography.caption,
-    color: colors.textMuted,
+    fontSize: 11,
+    color: '#94A3B8',
   },
   unreadDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.primary,
-    marginLeft: spacing.m,
-  }
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#DC2626',
+    marginLeft: 8,
+    marginTop: 4,
+  },
 });
+

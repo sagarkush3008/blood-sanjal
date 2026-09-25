@@ -1,0 +1,505 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+  Linking,
+  StatusBar,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+
+interface BloodBank {
+  id: string;
+  name: string;
+  type: string;
+  address: string;
+  distance: string;
+  phone: string;
+  hours: string;
+  status: 'AMPLE' | 'MODERATE' | 'URGENT';
+  availableGroups: string[];
+}
+
+const BLOOD_BANKS_DATA: BloodBank[] = [
+  {
+    id: '1',
+    name: 'Central Blood Transfusion Service (Nepal Red Cross)',
+    type: 'National Central Bank',
+    address: 'Exhibition Road, Bhrikutimandap, Kathmandu',
+    distance: '1.2 km away',
+    phone: '+97714225344',
+    hours: 'Open 24 Hours / 7 Days',
+    status: 'AMPLE',
+    availableGroups: ['A+', 'B+', 'O+', 'AB+', 'A-', 'O-'],
+  },
+  {
+    id: '2',
+    name: 'TU Teaching Hospital Blood Bank',
+    type: 'Government Teaching Hospital',
+    address: 'Maharajgunj, Kathmandu',
+    distance: '3.8 km away',
+    phone: '+97714412303',
+    hours: 'Open 24 Hours / 7 Days',
+    status: 'MODERATE',
+    availableGroups: ['A+', 'B+', 'O+', 'AB+'],
+  },
+  {
+    id: '3',
+    name: 'Patan Hospital Blood Transfusion Center',
+    type: 'Community Hospital Center',
+    address: 'Lagankhel, Lalitpur',
+    distance: '4.5 km away',
+    phone: '+97715522266',
+    hours: 'Open 24 Hours / 7 Days',
+    status: 'URGENT',
+    availableGroups: ['A+', 'B+', 'O+'],
+  },
+  {
+    id: '4',
+    name: 'Bhaktapur Red Cross Blood Bank',
+    type: 'District Blood Bank',
+    address: 'Doodhpati, Bhaktapur',
+    distance: '11.0 km away',
+    phone: '+97716611661',
+    hours: '08:00 AM - 08:00 PM',
+    status: 'AMPLE',
+    availableGroups: ['A+', 'B+', 'O+', 'AB+', 'B-'],
+  },
+  {
+    id: '5',
+    name: 'Bir Hospital Emergency Blood Storage',
+    type: 'Government Emergency Unit',
+    address: 'Kanti Path, Kathmandu',
+    distance: '1.8 km away',
+    phone: '+97714221119',
+    hours: 'Open 24 Hours / 7 Days',
+    status: 'MODERATE',
+    availableGroups: ['A+', 'B+', 'O+'],
+  },
+  {
+    id: '6',
+    name: 'Civil Service Hospital Blood Center',
+    type: 'Public Hospital Unit',
+    address: 'Minbhawan, Kathmandu',
+    distance: '4.1 km away',
+    phone: '+97714107000',
+    hours: 'Open 24 Hours / 7 Days',
+    status: 'AMPLE',
+    availableGroups: ['A+', 'B+', 'O+', 'AB+', 'A-'],
+  },
+];
+
+export const BanksScreen = () => {
+  const navigation = useNavigation<any>();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredBanks = BLOOD_BANKS_DATA.filter(
+    (b) =>
+      b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      b.address.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const makeCall = (phone: string) => {
+    Linking.openURL(`tel:${phone}`);
+  };
+
+  const getStatusBadge = (status: BloodBank['status']) => {
+    switch (status) {
+      case 'AMPLE':
+        return { label: 'High Stock', bg: '#ECFDF5', text: '#065F46', border: '#A7F3D0' };
+      case 'MODERATE':
+        return { label: 'Moderate', bg: '#FEF3C7', text: '#92400E', border: '#FDE68A' };
+      case 'URGENT':
+        return { label: 'Critical Supply', bg: '#FEE2E2', text: '#991B1B', border: '#FECACA' };
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+
+      {/* Screen Header */}
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <View>
+            <View style={styles.brandRow}>
+              <Ionicons name="medkit" size={20} color="#DC2626" />
+              <Text style={styles.headerTitle}>Blood Banks Directory</Text>
+            </View>
+            <Text style={styles.headerSubtitle}>
+              Verified national centers with real-time stock levels
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.profileChip}
+            onPress={() => navigation.navigate('Profile')}
+          >
+            <Ionicons name="person-circle-outline" size={20} color="#0F172A" />
+            <Text style={styles.profileChipText}>Profile</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 24/7 Helpline Banner */}
+        <TouchableOpacity
+          activeOpacity={0.88}
+          style={styles.emergencyBanner}
+          onPress={() => makeCall('1130')}
+        >
+          <View style={styles.emergencyIcon}>
+            <Ionicons name="call" size={18} color="#FFFFFF" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.emergencyTitle}>24/7 Emergency Blood Helpline</Text>
+            <Text style={styles.emergencyDesc}>Dial 1130 for instant ambulance & blood unit dispatch</Text>
+          </View>
+          <View style={styles.callPill}>
+            <Text style={styles.callPillText}>Call 1130</Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* Search Bar */}
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={18} color="#94A3B8" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by hospital name or city..."
+            placeholderTextColor="#94A3B8"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery ? (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={18} color="#94A3B8" />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      </View>
+
+      <FlatList
+        data={filteredBanks}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item }) => {
+          const status = getStatusBadge(item.status);
+          return (
+            <View style={styles.bankCard}>
+              <View style={styles.cardHeader}>
+                <View style={styles.typeBadge}>
+                  <Text style={styles.typeBadgeText}>{item.type}</Text>
+                </View>
+
+                <View
+                  style={[
+                    styles.statusPill,
+                    { backgroundColor: status.bg, borderColor: status.border },
+                  ]}
+                >
+                  <Text style={[styles.statusPillText, { color: status.text }]}>
+                    {status.label}
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.bankName}>{item.name}</Text>
+
+              <View style={styles.metaRow}>
+                <Ionicons name="location-outline" size={15} color="#64748B" />
+                <Text style={styles.metaText} numberOfLines={1}>
+                  {item.address}
+                </Text>
+              </View>
+
+              <View style={styles.metaRow}>
+                <Ionicons name="time-outline" size={15} color="#059669" />
+                <Text style={[styles.metaText, { color: '#059669', fontWeight: '600' }]}>
+                  {item.hours} · {item.distance}
+                </Text>
+              </View>
+
+              {/* In-Stock Blood Groups */}
+              <View style={styles.stockRow}>
+                <Text style={styles.stockLabel}>Stocked Groups:</Text>
+                <View style={styles.stockPills}>
+                  {item.availableGroups.map((bg) => (
+                    <View key={bg} style={styles.groupBadge}>
+                      <Text style={styles.groupBadgeText}>{bg}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              {/* Action Buttons */}
+              <View style={styles.actionRow}>
+                <TouchableOpacity
+                  style={styles.callButton}
+                  onPress={() => makeCall(item.phone)}
+                >
+                  <Ionicons name="call" size={15} color="#FFFFFF" />
+                  <Text style={styles.callButtonText}>Call Blood Bank</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.directionsButton}
+                  onPress={() =>
+                    Linking.openURL(
+                      `https://maps.google.com/?q=${encodeURIComponent(
+                        item.name + ' ' + item.address
+                      )}`
+                    )
+                  }
+                >
+                  <Ionicons name="navigate" size={15} color="#0F172A" />
+                  <Text style={styles.directionsButtonText}>Directions</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          );
+        }}
+      />
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 14,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#0F172A',
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  profileChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  profileChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  emergencyBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#B91C1C',
+    padding: 12,
+    borderRadius: 16,
+    marginBottom: 12,
+    gap: 10,
+  },
+  emergencyIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emergencyTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  emergencyDesc: {
+    fontSize: 11,
+    color: '#FECACA',
+    marginTop: 1,
+  },
+  callPill: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  callPillText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#B91C1C',
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 12,
+    height: 44,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#0F172A',
+  },
+  listContainer: {
+    padding: 16,
+    paddingBottom: 24,
+  },
+  bankCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  typeBadge: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  typeBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  statusPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  statusPillText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  bankName: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 8,
+    lineHeight: 22,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  metaText: {
+    fontSize: 13,
+    color: '#64748B',
+    flex: 1,
+  },
+  stockRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    gap: 8,
+  },
+  stockLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  stockPills: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+  },
+  groupBadge: {
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1,
+    borderColor: '#FFE4E6',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  groupBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#B91C1C',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 14,
+  },
+  callButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#DC2626',
+    height: 42,
+    borderRadius: 14,
+    gap: 6,
+  },
+  callButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  directionsButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    height: 42,
+    borderRadius: 14,
+    gap: 6,
+  },
+  directionsButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+});

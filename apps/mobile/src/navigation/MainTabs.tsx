@@ -2,7 +2,13 @@ import React from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { HomeScreen, FindBloodScreen, RequestsScreen, DonateScreen, ProfileScreen } from '../screens/MainScreens';
+import {
+  HomeScreen,
+  FindBloodScreen,
+  RequestsScreen,
+  DonateScreen,
+  BanksScreen,
+} from '../screens/MainScreens';
 
 const Tab = createBottomTabNavigator();
 
@@ -48,10 +54,11 @@ export const MainTabs = () => {
         name="Find Blood"
         component={FindBloodScreen}
         options={{
+          headerShown: false,
           tabBarLabel: 'Find Blood',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.iconWrapper, focused && styles.activePill]}>
-              <Ionicons name="search" size={20} color={focused ? '#B91C1C' : color} />
+              <Ionicons name={focused ? 'search' : 'search-outline'} size={20} color={focused ? '#B91C1C' : color} />
             </View>
           ),
         }}
@@ -86,8 +93,8 @@ export const MainTabs = () => {
       />
 
       <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
+        name="Banks"
+        component={BanksScreen}
         options={{
           headerShown: false,
           tabBarLabel: 'Banks',
@@ -101,6 +108,7 @@ export const MainTabs = () => {
     </Tab.Navigator>
   );
 };
+
 
 const styles = StyleSheet.create({
   iconWrapper: {

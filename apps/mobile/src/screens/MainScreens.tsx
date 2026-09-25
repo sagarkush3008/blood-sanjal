@@ -12,4 +12,7 @@ export { ContactRequestsScreen } from './contactRequests/ContactRequestsScreen';
 
 export { DonateNavigator as DonateScreen } from './donate/DonateNavigator';
 
+export { BanksScreen } from './banks/BanksScreen';
+
 export { ProfileNavigator as ProfileScreen } from './profile/ProfileNavigator';
+

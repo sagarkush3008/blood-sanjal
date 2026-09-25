@@ -1,21 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet, TextInputProps } from 'react-native';
-import { colors, spacing, typography } from '../../theme';
+import { colors } from '../../theme';
 
 interface InputFieldProps extends TextInputProps {
   label: string;
   error?: string;
+  leftIcon?: React.ReactNode;
 }
 
-export const InputField: React.FC<InputFieldProps> = ({ label, error, ...props }) => {
+export const InputField: React.FC<InputFieldProps> = ({ label, error, leftIcon, style, ...props }) => {
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput
-        style={[styles.input, error && styles.inputError]}
-        placeholderTextColor={colors.textMuted}
-        {...props}
-      />
+      <View
+        style={[
+          styles.inputContainer,
+          isFocused && styles.inputFocused,
+          Boolean(error) && styles.inputError,
+        ]}
+      >
+        {leftIcon}
+        <TextInput
+          style={[styles.input, style]}
+          placeholderTextColor="#94A3B8"
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          {...props}
+        />
+      </View>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );
@@ -23,31 +37,48 @@ export const InputField: React.FC<InputFieldProps> = ({ label, error, ...props }
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.m,
+    marginBottom: 16,
     width: '100%',
   },
   label: {
-    ...typography.body2,
-    color: colors.text,
-    marginBottom: spacing.xs,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#334155',
+    marginBottom: 6,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.2,
+    borderColor: '#E2E8F0',
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 14,
   },
   input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: spacing.m,
-    paddingVertical: spacing.s,
-    ...typography.body1,
-    color: colors.text,
-    backgroundColor: colors.surface,
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: '#0F172A',
+    fontWeight: '500',
+  },
+  inputFocused: {
+    borderColor: colors.primary,
+    backgroundColor: '#FFFFFF',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   inputError: {
     borderColor: colors.danger,
+    backgroundColor: '#FFF5F5',
   },
   errorText: {
     color: colors.danger,
-    ...typography.caption,
-    marginTop: spacing.xs,
-  }
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
+  },
 });
