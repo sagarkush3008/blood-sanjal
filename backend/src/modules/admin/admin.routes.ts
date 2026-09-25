@@ -32,4 +32,19 @@ router.delete('/requests/:id', AdminController.softDeleteRequest);
 router.get('/donations', AdminController.listDonations);
 router.patch('/donations/:id/verify', AdminController.verifyDonation);
 
+import { AdminOpsController } from './adminOps.controller';
+
+// Campaigns
+router.post('/campaigns', AdminOpsController.createCampaign);
+router.put('/campaigns/:id', AdminOpsController.updateCampaign);
+router.patch('/campaigns/:id/status', AdminOpsController.updateCampaignStatus);
+
+// Notifications
+router.post('/notifications', AdminOpsController.createBroadcast);
+router.post('/notifications/:id/cancel', AdminOpsController.cancelBroadcast);
+router.post('/notifications/:id/process', AdminOpsController.processBroadcastSync);
+
+// Rewards
+router.post('/rewards', AdminOpsController.issueReward);
+
 export default router;
