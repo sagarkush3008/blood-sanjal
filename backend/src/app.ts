@@ -22,6 +22,7 @@ import certificateRoutes from './modules/certificates/certificate.routes';
 import adminRoutes from './modules/admin/admin.routes';
 import locationRoutes from './modules/locations/location.routes';
 import mediaRoutes from './modules/media/media.routes';
+import legalRoutes from './modules/legal/legal.routes';
 import { SuccessResponse, ErrorResponse } from './core/http/result';
 import { logger } from './config/logger.config';
 import swaggerUi from 'swagger-ui-express';
@@ -129,6 +130,7 @@ app.use('/api/v1/certificates', certificateRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/locations', locationRoutes);
 app.use('/api/v1/media', mediaRoutes);
+app.use('/api/v1/legal', legalRoutes);
 
 // 404 Handler
 app.use(notFoundMiddleware);

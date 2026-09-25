@@ -1,4 +1,5 @@
 import request from 'supertest';
+import mongoose from 'mongoose';
 import app from '../src/app';
 
 describe('App Core functionality', () => {
@@ -9,11 +10,31 @@ describe('App Core functionality', () => {
     expect(res.body.data.status).toBe('UP');
   });
 
-  it('should return 200 OK for /ready', async () => {
+  it('should return 200 OK for /ready when DB is connected', async () => {
+    const originalReadyState = mongoose.connection.readyState;
+    // Mock readyState to 1 (connected)
+    Object.defineProperty(mongoose.connection, 'readyState', { get: () => 1, configurable: true });
+    
     const res = await request(app).get('/ready');
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data.status).toBe('READY');
+
+    // Restore
+    Object.defineProperty(mongoose.connection, 'readyState', { get: () => originalReadyState, configurable: true });
+  });
+
+  it('should return 503 for /ready when DB is disconnected', async () => {
+    const originalReadyState = mongoose.connection.readyState;
+    // Mock readyState to 0 (disconnected)
+    Object.defineProperty(mongoose.connection, 'readyState', { get: () => 0, configurable: true });
+    
+    const res = await request(app).get('/ready');
+    expect(res.status).toBe(503);
+    expect(res.body.success).toBe(false);
+
+    // Restore
+    Object.defineProperty(mongoose.connection, 'readyState', { get: () => originalReadyState, configurable: true });
   });
 
   it('should return 404 structured error for unknown routes', async () => {

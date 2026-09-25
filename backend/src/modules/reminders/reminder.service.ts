@@ -64,7 +64,7 @@ export class ReminderService {
       });
 
       try {
-        const message = `Hello ${user.name}, it has been a while since your last donation. You may be eligible to donate again. Please follow the guidance of your relevant blood donation service or healthcare provider to confirm your eligibility.`;
+        const message = `Hello ${user.name}, it has been a while since your last donation. We encourage you to consider donating again if you feel well. Please consult your healthcare provider or local blood bank to confirm if you are medically cleared to donate.`;
         
         logger.info(`[MAIL_MOCK] Sending reminder to ${user.email}: ${message}`);
         
