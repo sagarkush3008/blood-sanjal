@@ -3,6 +3,10 @@ import { DonorProfile } from '../donors/donorProfile.model';
 import { BloodRequest } from '../requests/bloodRequest.model';
 import { BloodRequestService } from '../requests/bloodRequest.service';
 import { DonationRecord } from '../donors/donationRecord.model';
+import { DonationService } from '../donors/donation.service';
+import { Certificate } from '../certificates/certificate.model';
+import { CertificateService } from '../certificates/certificate.service';
+import { ReminderService } from '../reminders/reminder.service';
 import { Campaign } from '../campaigns/campaign.model';
 import { PaymentTransaction } from '../payments/payment.model';
 import { NotificationJob } from '../notifications/notificationQueue.model';
@@ -506,6 +510,7 @@ export class AdminService {
     const filter: any = { deletedAt: { $exists: false } };
     if (query.status) filter.verificationStatus = query.status;
     if (query.campaignId) filter.campaignId = query.campaignId;
+    if (query.donorProfileId) filter.donorProfileId = query.donorProfileId;
 
     const page = parseInt(query.page || '1');
     const limit = parseInt(query.limit || '10');
@@ -513,8 +518,9 @@ export class AdminService {
     const donations = await DonationRecord.find(filter)
       .populate({
         path: 'donorProfileId',
-        populate: { path: 'userId', select: 'name email bloodGroup' }
+        populate: { path: 'userId', select: 'name email bloodGroup phone' }
       })
+      .populate('verifiedBy', 'name role')
       .skip((page - 1) * limit)
       .limit(limit)
       .sort({ donationDate: -1 });
@@ -522,28 +528,73 @@ export class AdminService {
     return { data: donations, items: donations, results: donations, total, page, limit };
   }
 
+  static async getDonationDetails(donationId: string) {
+    const donation = await DonationRecord.findById(donationId)
+      .populate({
+        path: 'donorProfileId',
+        populate: { path: 'userId', select: 'name email bloodGroup phone' }
+      })
+      .populate('verifiedBy', 'name role');
+    if (!donation || donation.deletedAt) throw new AppError(404, 'NOT_FOUND', 'Donation not found');
+
+    const timeline = await AuditLog.find({
+      entityType: 'DonationRecord',
+      entityId: donationId
+    }).sort({ createdAt: 1 });
+
+    const certificate = await Certificate.findOne({
+      donorProfileId: donation.donorProfileId,
+      certificateType: 'DONATION'
+    });
+
+    return {
+      donation,
+      timeline,
+      certificate
+    };
+  }
+
   static async verifyDonation(donationId: string, status: 'VERIFIED' | 'REJECTED', reason: string | undefined, actorId: string) {
+    const donation = await DonationService.verifyDonation(donationId, actorId, status, reason);
+    await this.logAudit(actorId, `ADMIN_VERIFY_DONATION_${status}`, 'DONATION_RECORD', donationId);
+    return donation;
+  }
+
+  static async issueDonationCertificate(donationId: string, actorId: string) {
     const donation = await DonationRecord.findById(donationId);
     if (!donation || donation.deletedAt) throw new AppError(404, 'NOT_FOUND', 'Donation not found');
-    
-    donation.verificationStatus = status;
-    donation.verifiedBy = new mongoose.Types.ObjectId(actorId);
-    if (reason) donation.rejectionReason = reason;
-
-    await donation.save();
-
-    // Update total donations count if verified
-    if (status === 'VERIFIED') {
-      const donor = await DonorProfile.findById(donation.donorProfileId);
-      if (donor) {
-        donor.totalDonations = (donor.totalDonations || 0) + 1;
-        donor.lastDonationDate = donation.donationDate;
-        await donor.save();
-      }
+    if (donation.verificationStatus !== 'VERIFIED') {
+      throw new AppError(400, 'BAD_REQUEST', 'Cannot issue certificate for unverified donation');
     }
 
-    await this.logAudit(actorId, `VERIFY_DONATION_${status}`, 'DONATION_RECORD', donationId);
-    return donation;
+    const cert = await CertificateService.issueCertificate(actorId, {
+      donorProfileId: donation.donorProfileId.toString(),
+      certificateType: 'DONATION',
+      assetUrl: donation.evidenceAssetId
+    });
+
+    await this.logAudit(actorId, 'ISSUE_DONATION_CERTIFICATE', 'DONATION_RECORD', donationId);
+    return cert;
+  }
+
+  // --- REMINDERS & ELIGIBILITY POLICY ---
+  static async getReminderConfig() {
+    return ReminderService.getConfig();
+  }
+
+  static async updateReminderConfig(value: any, actorId: string) {
+    const updated = await ReminderService.updateConfig(value);
+    await this.logAudit(actorId, 'UPDATE_REMINDER_POLICY', 'SYSTEM_CONFIG', 'REMINDER_POLICY');
+    return updated.value;
+  }
+
+  static async triggerReminders(targetDate?: string, actorId?: string) {
+    const parsedDate = targetDate ? new Date(targetDate) : undefined;
+    const processedCount = await ReminderService.processReminders(parsedDate);
+    if (actorId) {
+      await this.logAudit(actorId, 'TRIGGER_REMINDERS', 'REMINDER_POLICY', 'MANUAL_TRIGGER');
+    }
+    return { processedCount };
   }
 
   // --- CONTACT REQUEST MANAGEMENT ---

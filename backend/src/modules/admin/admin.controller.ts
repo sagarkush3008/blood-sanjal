@@ -196,8 +196,44 @@ export class AdminController {
 
   static async verifyDonation(req: Request, res: Response, next: NextFunction) {
     try {
-      const { verificationStatus, rejectionReason } = req.body;
-      const result = await AdminService.verifyDonation(req.params.id as string, verificationStatus, rejectionReason, req.user!.userId);
+      const status = req.body.verificationStatus || req.body.action || (req.body.status === 'VERIFIED' ? 'VERIFIED' : 'REJECTED');
+      const rejectionReason = req.body.rejectionReason || req.body.reason;
+      const result = await AdminService.verifyDonation(req.params.id as string, status, rejectionReason, req.user!.userId);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async getDonationDetails(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.getDonationDetails(req.params.id as string);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async issueDonationCertificate(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.issueDonationCertificate(req.params.id as string, req.user!.userId);
+      res.status(201).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async getReminderConfig(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.getReminderConfig();
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async updateReminderConfig(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.updateReminderConfig(req.body, req.user!.userId);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async triggerReminders(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.triggerReminders(req.body.targetDate, req.user!.userId);
       res.json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }

@@ -8,16 +8,30 @@ import { RewardService } from '../rewards/reward.service';
 
 export class DonationService {
   static async submitDonation(userId: string, data: any) {
-    const profile = await DonorProfile.findOne({ userId });
-    if (!profile) throw new AppError(404, 'NOT_FOUND', 'Donor profile not found');
+    let profile = await DonorProfile.findOne({ userId });
+    if (!profile) {
+      const user = await User.findById(userId);
+      if (user && user.bloodGroup) {
+        profile = await DonorProfile.create({
+          userId: user._id,
+          bloodGroup: user.bloodGroup,
+          donorStatus: 'ACTIVE',
+          contactPreference: 'PHONE',
+          notificationPreference: 'ALL'
+        });
+      } else {
+        throw new AppError(404, 'NOT_FOUND', 'Donor profile not found');
+      }
+    }
 
-    if (new Date(data.donationDate) > new Date()) {
+    const donationDate = data.donationDate ? new Date(data.donationDate) : new Date();
+    if (donationDate > new Date()) {
       throw new AppError(400, 'BAD_REQUEST', 'Donation date cannot be in the future');
     }
 
     const existing = await DonationRecord.findOne({ 
       donorProfileId: profile._id, 
-      donationDate: new Date(data.donationDate) 
+      donationDate 
     });
     
     if (existing) {
@@ -26,7 +40,8 @@ export class DonationService {
 
     const record = await DonationRecord.create({
       donorProfileId: profile._id,
-      donationDate: data.donationDate,
+      donationDate,
+      donationType: data.donationType || 'WHOLE_BLOOD',
       location: data.location,
       hospitalName: data.hospitalName,
       campaignId: data.campaignId,
@@ -78,7 +93,33 @@ export class DonationService {
         await profile.save();
 
         // Check for new reward badges
-        await RewardService.checkAndIssueRewards(profile._id.toString());
+        try {
+          await RewardService.checkAndIssueRewards(profile._id.toString());
+        } catch (e) {}
+
+        // Auto-generate donation certificate if not already issued
+        try {
+          const { CertificateService } = await import('../certificates/certificate.service');
+          await CertificateService.issueCertificate(verifierId, {
+            donorProfileId: profile._id.toString(),
+            certificateType: 'DONATION',
+            assetUrl: record.evidenceAssetId
+          });
+        } catch (e) {}
+
+        // Dispatch in-app notification
+        try {
+          const { NotificationService } = await import('../notifications/notification.service');
+          if (profile.userId) {
+            await NotificationService.dispatch({
+              userId: profile.userId.toString(),
+              type: 'SYSTEM',
+              title: 'Donation Verified! 🩸',
+              message: `Your blood donation at ${record.hospitalName || 'the healthcare facility'} was successfully verified. Thank you for being a lifesaver!`,
+              dedupeKey: `donation_verified_${record._id}`
+            });
+          }
+        } catch (e) {}
       }
     }
 
@@ -92,9 +133,21 @@ export class DonationService {
     return record;
   }
 
-  static async getHistory(filters: any) {
+  static async getHistory(filters: any, currentUserId?: string, userRole?: string) {
     const query: any = {};
-    if (filters.donorProfileId) query.donorProfileId = filters.donorProfileId;
+
+    const isStaffOrAdmin = ['ADMIN', 'SUPER_ADMIN', 'HOSPITAL', 'BLOOD_BANK', 'NGO'].includes(userRole || '');
+
+    if (!isStaffOrAdmin && currentUserId) {
+      const myProfile = await DonorProfile.findOne({ userId: currentUserId });
+      if (!myProfile) {
+        return { results: [], items: [], data: [], pagination: { page: 1, limit: 20, count: 0, total: 0 }, total: 0, page: 1, limit: 20 };
+      }
+      query.donorProfileId = myProfile._id;
+    } else if (filters.donorProfileId) {
+      query.donorProfileId = filters.donorProfileId;
+    }
+
     if (filters.location) query.location = { $regex: filters.location, $options: 'i' };
     if (filters.hospitalName) query.hospitalName = { $regex: filters.hospitalName, $options: 'i' };
     if (filters.campaignId) query.campaignId = filters.campaignId;
@@ -122,12 +175,31 @@ export class DonationService {
 
     const total = await DonationRecord.countDocuments(query);
 
-    return { results: records, pagination: { page, limit, count: records.length, total } };
+    return { 
+      results: records, 
+      items: records, 
+      data: records, 
+      pagination: { page, limit, count: records.length, total },
+      total,
+      page,
+      limit
+    };
   }
 
-  static async getDetail(recordId: string) {
-    const record = await DonationRecord.findById(recordId).populate('donorProfileId').populate('verifiedBy', 'name role');
+  static async getDetail(recordId: string, currentUserId?: string, userRole?: string) {
+    const record = await DonationRecord.findById(recordId)
+      .populate('donorProfileId')
+      .populate('verifiedBy', 'name role');
     if (!record) throw new AppError(404, 'NOT_FOUND', 'Record not found');
+
+    const isStaffOrAdmin = ['ADMIN', 'SUPER_ADMIN', 'HOSPITAL', 'BLOOD_BANK', 'NGO'].includes(userRole || '');
+    if (!isStaffOrAdmin && currentUserId) {
+      const profile: any = record.donorProfileId;
+      if (profile?.userId?.toString() !== currentUserId) {
+        throw new AppError(403, 'FORBIDDEN', 'Access denied to this donation record');
+      }
+    }
+
     return record;
   }
 }

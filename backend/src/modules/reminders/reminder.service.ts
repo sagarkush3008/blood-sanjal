@@ -66,7 +66,35 @@ export class ReminderService {
       try {
         const message = `Hello ${user.name}, it has been a while since your last donation. We encourage you to consider donating again if you feel well. Please consult your healthcare provider or local blood bank to confirm if you are medically cleared to donate.`;
         
-        logger.info(`[MAIL_MOCK] Sending reminder to ${user.email}: ${message}`);
+        logger.info(`Sending donation reminder to ${user.email}`);
+
+        // Enqueue email
+        const { EmailService } = await import('../email/email.service');
+        const lastDateStr = donor.lastDonationDate 
+          ? new Date(donor.lastDonationDate).toISOString().split('T')[0]
+          : 'recent donation';
+        const reminderDateStr = donor.reminderDate ? donor.reminderDate.toISOString() : new Date().toISOString();
+        EmailService.enqueueEmail(
+          user.email,
+          'donationReminder',
+          {
+            donorName: user.name || 'Lifesaver',
+            lastDonationDate: lastDateStr
+          },
+          `reminder_${donor._id}_${reminderDateStr}`
+        ).catch(() => {});
+
+        // Dispatch in-app notification
+        try {
+          const { NotificationService } = await import('../notifications/notification.service');
+          await NotificationService.dispatch({
+            userId: user._id.toString(),
+            type: 'DONATION_REMINDER',
+            title: 'Eligible to Donate Blood Again 🩸',
+            message: `Hi ${user.name}, you are now eligible to donate blood again! Every drop counts towards saving lives.`,
+            dedupeKey: `reminder_notif_${donor._id}_${reminderDateStr}`
+          });
+        } catch (e) {}
         
         job.status = 'SENT';
         job.sentAt = new Date();

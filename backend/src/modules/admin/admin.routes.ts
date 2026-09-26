@@ -57,8 +57,15 @@ router.get('/email-logs', AdminController.getEmailLogs);
 
 // Donations
 router.get('/donations', AdminController.listDonations);
-router.patch('/donations/:id/verify', AdminController.verifyDonation);
+router.get('/donations/:id', AdminController.getDonationDetails);
 router.post('/donations/:id/verify', AdminController.verifyDonation);
+router.patch('/donations/:id/verify', AdminController.verifyDonation);
+router.post('/donations/:id/certificate', AdminController.issueDonationCertificate);
+
+// Reminders & Eligibility Policy
+router.get('/reminders/config', AdminController.getReminderConfig);
+router.patch('/reminders/config', AdminController.updateReminderConfig);
+router.post('/reminders/trigger', AdminController.triggerReminders);
 
 import { AdminOpsController } from './adminOps.controller';
 
