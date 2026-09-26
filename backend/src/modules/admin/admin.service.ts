@@ -1,7 +1,10 @@
 import { User } from '../users/user.model';
 import { DonorProfile } from '../donors/donorProfile.model';
 import { BloodRequest } from '../requests/bloodRequest.model';
+import { BloodRequestService } from '../requests/bloodRequest.service';
 import { DonationRecord } from '../donors/donationRecord.model';
+import { Campaign } from '../campaigns/campaign.model';
+import { PaymentTransaction } from '../payments/payment.model';
 import { AuditLog } from '../audit/auditLog.model';
 import { AuditService } from '../audit/audit.service';
 import { AppError } from '../../core/errors/appError';
@@ -13,6 +16,57 @@ export class AdminService {
    */
   static async logAudit(actorId: string, action: string, entityType: string, entityId: string, ipHash?: string, userAgent?: string) {
     await AuditService.logAction(actorId, action, entityType, entityId, null, ipHash, userAgent);
+  }
+
+  // --- DASHBOARD SUMMARY ---
+  static async getDashboardSummary() {
+    const [
+      totalUsers,
+      activeUsers,
+      totalDonors,
+      activeDonors,
+      totalRequests,
+      activeRequests,
+      pendingEmergencies,
+      totalDonations,
+      verifiedDonations,
+      campaignsCount,
+      paymentsSummary,
+      recentAudit
+    ] = await Promise.all([
+      User.countDocuments({ deletedAt: { $exists: false } }).catch(() => 0),
+      User.countDocuments({ status: 'ACTIVE', deletedAt: { $exists: false } }).catch(() => 0),
+      DonorProfile.countDocuments({ deletedAt: { $exists: false } }).catch(() => 0),
+      DonorProfile.countDocuments({ donorStatus: 'ACTIVE', deletedAt: { $exists: false } }).catch(() => 0),
+      BloodRequest.countDocuments({ deletedAt: { $exists: false } }).catch(() => 0),
+      BloodRequest.countDocuments({ status: { $in: ['ACTIVE', 'PARTIALLY_FULFILLED', 'VERIFIED'] }, deletedAt: { $exists: false } }).catch(() => 0),
+      BloodRequest.countDocuments({ urgency: 'EMERGENCY', status: 'PENDING_VERIFICATION', deletedAt: { $exists: false } }).catch(() => 0),
+      DonationRecord.countDocuments({ deletedAt: { $exists: false } }).catch(() => 0),
+      DonationRecord.countDocuments({ verificationStatus: 'VERIFIED', deletedAt: { $exists: false } }).catch(() => 0),
+      Campaign.countDocuments({ deletedAt: { $exists: false } }).catch(() => 0),
+      PaymentTransaction.aggregate([
+        { $match: { status: 'SUCCESS' } },
+        { $group: { _id: null, totalRevenueMinor: { $sum: '$amountMinor' }, count: { $sum: 1 } } }
+      ]).catch(() => []),
+      AuditLog.find().sort({ createdAt: -1 }).limit(10).catch(() => [])
+    ]);
+
+    const revenueMinor = paymentsSummary[0]?.totalRevenueMinor || 0;
+
+    return {
+      users: totalUsers,
+      activeUsers,
+      donors: totalDonors,
+      activeDonors,
+      requests: totalRequests,
+      activeRequests,
+      pendingEmergencies,
+      donations: verifiedDonations,
+      totalDonations,
+      campaigns: campaignsCount,
+      revenueNPR: Math.round(revenueMinor / 100),
+      recentActivity: recentAudit
+    };
   }
 
   // --- USER MANAGEMENT ---
@@ -36,7 +90,7 @@ export class AdminService {
       .sort({ createdAt: -1 });
     
     const total = await User.countDocuments(filter);
-    return { data: users, total, page, limit };
+    return { data: users, items: users, results: users, total, page, limit };
   }
 
   static async getUserDetails(userId: string) {
@@ -93,7 +147,7 @@ export class AdminService {
       .skip((page - 1) * limit)
       .limit(limit);
     const total = await DonorProfile.countDocuments(filter);
-    return { data: donors, total, page, limit };
+    return { data: donors, items: donors, results: donors, total, page, limit };
   }
 
   // --- REQUEST MANAGEMENT ---
@@ -112,7 +166,7 @@ export class AdminService {
       .limit(limit)
       .sort({ requiredDate: 1 });
     const total = await BloodRequest.countDocuments(filter);
-    return { data: requests, total, page, limit };
+    return { data: requests, items: requests, results: requests, total, page, limit };
   }
 
   static async updateRequestStatus(requestId: string, status: string, urgency: string, actorId: string) {
@@ -136,6 +190,67 @@ export class AdminService {
     return request;
   }
 
+  // --- EMERGENCY REQUEST MANAGEMENT ---
+  static async listEmergencyRequests(query: any) {
+    const filter: any = { urgency: 'EMERGENCY', deletedAt: { $exists: false } };
+    if (query.status) {
+      filter.status = query.status;
+    } else {
+      filter.status = 'PENDING_VERIFICATION';
+    }
+
+    const page = parseInt(query.page || '1');
+    const limit = parseInt(query.limit || '10');
+
+    const requests = await BloodRequest.find(filter)
+      .populate('requesterId', 'name email phone')
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    const total = await BloodRequest.countDocuments(filter);
+    return { data: requests, items: requests, results: requests, total, page, limit };
+  }
+
+  static async approveEmergencyRequest(requestId: string, actorId: string) {
+    const request = await BloodRequest.findById(requestId);
+    if (!request || request.deletedAt) throw new AppError(404, 'NOT_FOUND', 'Emergency request not found');
+
+    if (request.status === 'PENDING_VERIFICATION') {
+      await BloodRequestService.verifyRequest(requestId, actorId, true);
+    }
+
+    if (!request.broadcastedAt) {
+      try {
+        await BloodRequestService.broadcastEmergency(requestId, actorId);
+      } catch (err: any) {
+        // If already broadcasted or conflict, continue
+      }
+    }
+
+    await this.logAudit(actorId, 'APPROVE_EMERGENCY_BROADCAST', 'BLOOD_REQUEST', requestId);
+    const updated = await BloodRequest.findById(requestId);
+    return updated;
+  }
+
+  static async rejectEmergencyRequest(requestId: string, reason: string | undefined, actorId: string) {
+    const request = await BloodRequest.findById(requestId);
+    if (!request || request.deletedAt) throw new AppError(404, 'NOT_FOUND', 'Emergency request not found');
+
+    request.status = 'CANCELLED';
+    if (reason) request.additionalInfo = (request.additionalInfo ? request.additionalInfo + ' | ' : '') + `Rejection: ${reason}`;
+    await request.save();
+
+    await this.logAudit(actorId, 'REJECT_EMERGENCY_REQUEST', 'BLOOD_REQUEST', requestId);
+    return request;
+  }
+
+  static async verifyBloodRequest(requestId: string, activate: boolean, actorId: string) {
+    const request = await BloodRequestService.verifyRequest(requestId, actorId, activate);
+    await this.logAudit(actorId, activate ? 'ACTIVATE_BLOOD_REQUEST' : 'VERIFY_BLOOD_REQUEST', 'BLOOD_REQUEST', requestId);
+    return request;
+  }
+
   // --- DONATION MANAGEMENT ---
   static async listDonations(query: any) {
     const filter: any = { deletedAt: { $exists: false } };
@@ -154,7 +269,7 @@ export class AdminService {
       .limit(limit)
       .sort({ donationDate: -1 });
     const total = await DonationRecord.countDocuments(filter);
-    return { data: donations, total, page, limit };
+    return { data: donations, items: donations, results: donations, total, page, limit };
   }
 
   static async verifyDonation(donationId: string, status: 'VERIFIED' | 'REJECTED', reason: string | undefined, actorId: string) {

@@ -9,9 +9,8 @@ const router = Router();
 
 router.use(requireAuth, requireAdmin);
 
-router.get('/dashboard', (req, res) => {
-  res.status(200).json(SuccessResponse({ message: 'Welcome Admin' }, req.id));
-});
+router.get('/dashboard', AdminController.getDashboardSummary);
+router.get('/dashboard/summary', AdminController.getDashboardSummary);
 
 // Users
 router.get('/users', AdminController.listUsers);
@@ -23,14 +22,23 @@ router.delete('/users/:id', AdminController.softDeleteUser);
 router.get('/donors', AdminController.listDonors);
 router.patch('/donors/:id/status', AdminController.updateDonorStatus);
 
-// Requests
+// Blood Requests
 router.get('/requests', AdminController.listRequests);
+router.get('/blood-requests', AdminController.listRequests);
+router.post('/blood-requests/:id/verify', AdminController.verifyBloodRequest);
 router.patch('/requests/:id/status', AdminController.updateRequestStatus);
 router.delete('/requests/:id', AdminController.softDeleteRequest);
+
+// Emergency Requests
+router.get('/emergency-requests', AdminController.listEmergencyRequests);
+router.post('/emergency-requests/:id/approve', AdminController.approveEmergencyRequest);
+router.post('/emergency-requests/:id/reject', AdminController.rejectEmergencyRequest);
+router.patch('/emergency-requests/:id', AdminController.reviewEmergencyRequest);
 
 // Donations
 router.get('/donations', AdminController.listDonations);
 router.patch('/donations/:id/verify', AdminController.verifyDonation);
+router.post('/donations/:id/verify', AdminController.verifyDonation);
 
 import { AdminOpsController } from './adminOps.controller';
 
@@ -60,6 +68,10 @@ import { AdminSettingsController } from './adminSettings.controller';
 // Settings & Audit
 router.get('/settings', AdminSettingsController.getSettings);
 router.put('/settings', AdminSettingsController.updateSettings);
+router.patch('/settings', AdminSettingsController.updateSettings);
+router.get('/settings/:key', AdminSettingsController.getSettingByKey);
+router.patch('/settings/:key', AdminSettingsController.updateSettingByKey);
 router.get('/audit', AdminSettingsController.getAuditLogs);
+router.get('/audit-events', AdminSettingsController.getAuditLogs);
 
 export default router;

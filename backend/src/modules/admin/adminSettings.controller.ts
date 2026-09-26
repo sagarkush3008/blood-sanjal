@@ -18,10 +18,26 @@ export class AdminSettingsController {
     } catch (error) { next(error); }
   }
 
+  static async getSettingByKey(req: Request, res: Response, next: any) {
+    try {
+      const result = await SettingsService.getSettingByKey(req.params.key as string);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async updateSettingByKey(req: Request, res: Response, next: any) {
+    try {
+      const { value } = req.body;
+      const result = await SettingsService.updateSettingByKey(req.params.key as string, value, req.user!.userId, req);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
   static async getAuditLogs(req: Request, res: Response, next: any) {
     try {
       const result = await AuditService.getLogs(req.query);
-      res.json(SuccessResponse(result, req.id));
+      const items = result.data || [];
+      res.json(SuccessResponse({ ...result, items, results: items }, req.id));
     } catch (error) { next(error); }
   }
 }

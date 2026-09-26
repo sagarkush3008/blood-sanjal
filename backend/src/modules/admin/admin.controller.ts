@@ -77,6 +77,57 @@ export class AdminController {
     } catch (error) { next(error); }
   }
 
+  static async getDashboardSummary(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.getDashboardSummary();
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async listEmergencyRequests(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.listEmergencyRequests(req.query);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async approveEmergencyRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.approveEmergencyRequest(req.params.id as string, req.user!.userId);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async rejectEmergencyRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { reason } = req.body;
+      const result = await AdminService.rejectEmergencyRequest(req.params.id as string, reason, req.user!.userId);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async reviewEmergencyRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { action, status, reason } = req.body;
+      const isApproved = action === 'APPROVE' || status === 'APPROVED' || status === 'ACTIVE';
+      if (isApproved) {
+        const result = await AdminService.approveEmergencyRequest(req.params.id as string, req.user!.userId);
+        res.json(SuccessResponse(result, req.id));
+      } else {
+        const result = await AdminService.rejectEmergencyRequest(req.params.id as string, reason, req.user!.userId);
+        res.json(SuccessResponse(result, req.id));
+      }
+    } catch (error) { next(error); }
+  }
+
+  static async verifyBloodRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { activate = true } = req.body;
+      const result = await AdminService.verifyBloodRequest(req.params.id as string, activate, req.user!.userId);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
   static async verifyDonation(req: Request, res: Response, next: NextFunction) {
     try {
       const { verificationStatus, rejectionReason } = req.body;

@@ -60,4 +60,25 @@ export class SettingsService {
     await AuditService.logAction(adminId, 'UPDATE_SYSTEM_SETTINGS', 'SYSTEM_CONFIG', 'GLOBAL', req);
     return parsed.data;
   }
+
+  static async getSettingByKey(key: string) {
+    const config = await SystemConfig.findOne({ key });
+    if (!config) {
+      throw new AppError(404, 'NOT_FOUND', `Setting with key '${key}' not found`);
+    }
+    return { key: config.key, value: config.value };
+  }
+
+  static async updateSettingByKey(key: string, value: any, adminId: string, req?: any) {
+    if (value === undefined) {
+      throw new AppError(400, 'BAD_REQUEST', 'Setting value is required');
+    }
+    const updated = await SystemConfig.findOneAndUpdate(
+      { key },
+      { value },
+      { upsert: true, new: true }
+    );
+    await AuditService.logAction(adminId, `UPDATE_SETTING_${key}`, 'SYSTEM_CONFIG', key, req);
+    return { key: updated.key, value: updated.value };
+  }
 }
