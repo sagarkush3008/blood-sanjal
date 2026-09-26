@@ -1,4 +1,5 @@
 import { Campaign } from '../campaigns/campaign.model';
+import { CampaignService } from '../campaigns/campaign.service';
 import { BroadcastNotification } from './broadcastNotification.model';
 import { Reward } from '../rewards/reward.model';
 import { DonorProfile } from '../donors/donorProfile.model';
@@ -8,9 +9,35 @@ import { EmailService } from '../email/email.service';
 import { AdminService } from './admin.service';
 import mongoose from 'mongoose';
 import { CampaignParticipant } from '../campaigns/campaignParticipant.model';
+import { AuditLog } from '../audit/auditLog.model';
 
 export class AdminOpsService {
   // --- CAMPAIGNS ---
+  static async listCampaigns(filters: any) {
+    return CampaignService.listAdminCampaigns(filters);
+  }
+
+  static async getCampaign(id: string) {
+    const campaign = await Campaign.findById(id).populate('createdBy', 'name email');
+    if (!campaign) throw new AppError(404, 'NOT_FOUND', 'Campaign not found');
+
+    const participantsCount = await CampaignParticipant.countDocuments({
+      campaignId: campaign._id,
+      status: { $ne: 'CANCELLED' }
+    });
+
+    const timeline = await AuditLog.find({
+      entityType: 'Campaign',
+      entityId: id
+    }).sort({ createdAt: 1 });
+
+    return {
+      campaign,
+      participantsCount,
+      timeline
+    };
+  }
+
   static async createCampaign(data: any, adminId: string) {
     const campaign = await Campaign.create({ ...data, createdBy: new mongoose.Types.ObjectId(adminId) });
     await AdminService.logAudit(adminId, 'CREATE_CAMPAIGN', 'CAMPAIGN', campaign._id.toString());
@@ -31,6 +58,26 @@ export class AdminOpsService {
     await campaign.save();
     await AdminService.logAudit(adminId, `CAMPAIGN_STATUS_${status}`, 'CAMPAIGN', id);
     return campaign;
+  }
+
+  static async deleteCampaign(id: string, adminId: string) {
+    const result = await CampaignService.deleteCampaign(id);
+    await AdminService.logAudit(adminId, 'DELETE_CAMPAIGN', 'CAMPAIGN', id);
+    return result;
+  }
+
+  static async getCampaignParticipants(campaignId: string, query: any) {
+    return CampaignService.getCampaignParticipants(campaignId, query);
+  }
+
+  static async updateParticipantStatus(campaignId: string, participantId: string, status: string, adminId: string) {
+    return CampaignService.updateParticipantStatus(campaignId, participantId, status, adminId);
+  }
+
+  static async notifyCampaignAudience(campaignId: string, adminId: string) {
+    const count = await CampaignService.notifyTargetUsers(campaignId, adminId);
+    await AdminService.logAudit(adminId, 'NOTIFY_CAMPAIGN_AUDIENCE', 'CAMPAIGN', campaignId);
+    return { notifiedCount: count };
   }
 
   // --- NOTIFICATIONS ---

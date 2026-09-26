@@ -13,6 +13,14 @@ export class CampaignController {
     } catch (error) { next(error); }
   }
 
+  static async update(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const result = await CampaignService.updateCampaign(req.params.id as string, req.body, req.user.userId);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
   static async updateStatus(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
@@ -45,9 +53,17 @@ export class CampaignController {
     } catch (error) { next(error); }
   }
 
+  static async listMy(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const result = await CampaignService.listMyCampaigns(req.user.userId);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
   static async get(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await CampaignService.getCampaignDetails(req.params.id as string);
+      const result = await CampaignService.getCampaignDetails(req.params.id as string, req.user?.userId);
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }
@@ -56,6 +72,42 @@ export class CampaignController {
     try {
       if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
       const result = await CampaignService.registerForCampaign(req.params.id as string, req.user.userId);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async withdraw(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const result = await CampaignService.withdrawFromCampaign(req.params.id as string, req.user.userId);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async setReminder(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const result = await CampaignService.scheduleCampaignReminder(req.params.id as string, req.user.userId, req.body);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async getParticipants(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await CampaignService.getCampaignParticipants(req.params.id as string, req.query);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async updateParticipant(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const result = await CampaignService.updateParticipantStatus(
+        req.params.id as string,
+        req.params.participantId as string,
+        req.body.status,
+        req.user.userId
+      );
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }

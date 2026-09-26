@@ -70,9 +70,16 @@ router.post('/reminders/trigger', AdminController.triggerReminders);
 import { AdminOpsController } from './adminOps.controller';
 
 // Campaigns
+router.get('/campaigns', AdminOpsController.listCampaigns);
+router.get('/campaigns/:id', AdminOpsController.getCampaign);
 router.post('/campaigns', AdminOpsController.createCampaign);
 router.put('/campaigns/:id', AdminOpsController.updateCampaign);
+router.patch('/campaigns/:id', AdminOpsController.updateCampaign);
 router.patch('/campaigns/:id/status', AdminOpsController.updateCampaignStatus);
+router.delete('/campaigns/:id', AdminOpsController.deleteCampaign);
+router.get('/campaigns/:id/participants', AdminOpsController.getCampaignParticipants);
+router.patch('/campaigns/:id/participants/:participantId', AdminOpsController.updateParticipantStatus);
+router.post('/campaigns/:id/notify', AdminOpsController.notifyCampaignAudience);
 
 // Notifications
 router.post('/notifications', AdminOpsController.createBroadcast);

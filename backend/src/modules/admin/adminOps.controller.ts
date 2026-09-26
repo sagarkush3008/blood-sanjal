@@ -4,6 +4,20 @@ import { SuccessResponse } from '../../core/http/result';
 
 export class AdminOpsController {
   // Campaigns
+  static async listCampaigns(req: Request, res: Response, next: any) {
+    try {
+      const result = await AdminOpsService.listCampaigns(req.query);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async getCampaign(req: Request, res: Response, next: any) {
+    try {
+      const result = await AdminOpsService.getCampaign(req.params.id as string);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
   static async createCampaign(req: Request, res: Response, next: any) {
     try {
       const result = await AdminOpsService.createCampaign(req.body, req.user!.userId);
@@ -21,6 +35,39 @@ export class AdminOpsController {
   static async updateCampaignStatus(req: Request, res: Response, next: any) {
     try {
       const result = await AdminOpsService.updateCampaignStatus(req.params.id as string, req.body.status, req.user!.userId);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async deleteCampaign(req: Request, res: Response, next: any) {
+    try {
+      const result = await AdminOpsService.deleteCampaign(req.params.id as string, req.user!.userId);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async getCampaignParticipants(req: Request, res: Response, next: any) {
+    try {
+      const result = await AdminOpsService.getCampaignParticipants(req.params.id as string, req.query);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async updateParticipantStatus(req: Request, res: Response, next: any) {
+    try {
+      const result = await AdminOpsService.updateParticipantStatus(
+        req.params.id as string,
+        req.params.participantId as string,
+        req.body.status,
+        req.user!.userId
+      );
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async notifyCampaignAudience(req: Request, res: Response, next: any) {
+    try {
+      const result = await AdminOpsService.notifyCampaignAudience(req.params.id as string, req.user!.userId);
       res.json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }
