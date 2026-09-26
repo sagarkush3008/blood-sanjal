@@ -40,8 +40,12 @@ router.delete('/blood-requests/:id', AdminController.softDeleteRequest);
 
 // Emergency Requests
 router.get('/emergency-requests', AdminController.listEmergencyRequests);
+router.get('/emergency-requests/:id', AdminController.getEmergencyRequestDetails);
+router.get('/emergency-requests/:id/responses', AdminController.getEmergencyResponses);
 router.post('/emergency-requests/:id/approve', AdminController.approveEmergencyRequest);
 router.post('/emergency-requests/:id/reject', AdminController.rejectEmergencyRequest);
+router.post('/emergency-requests/:id/broadcast', AdminController.triggerBroadcast);
+router.post('/emergency-requests/:id/close', AdminController.closeEmergencyRequest);
 router.patch('/emergency-requests/:id', AdminController.reviewEmergencyRequest);
 
 // Donations

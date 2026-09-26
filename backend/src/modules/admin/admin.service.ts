@@ -5,6 +5,7 @@ import { BloodRequestService } from '../requests/bloodRequest.service';
 import { DonationRecord } from '../donors/donationRecord.model';
 import { Campaign } from '../campaigns/campaign.model';
 import { PaymentTransaction } from '../payments/payment.model';
+import { NotificationJob } from '../notifications/notificationQueue.model';
 import { AuditLog } from '../audit/auditLog.model';
 import { AuditService } from '../audit/audit.service';
 import { AppError } from '../../core/errors/appError';
@@ -396,6 +397,99 @@ export class AdminService {
     await request.save();
 
     await this.logAudit(actorId, 'REJECT_EMERGENCY_REQUEST', 'BLOOD_REQUEST', requestId);
+    return request;
+  }
+
+  static async getEmergencyRequestDetails(requestId: string) {
+    const request = await BloodRequest.findById(requestId).populate('requesterId', '-passwordHash');
+    if (!request || request.deletedAt) throw new AppError(404, 'NOT_FOUND', 'Emergency request not found');
+
+    const jobs = await NotificationJob.find({ bloodRequestId: requestId });
+    const totalJobs = jobs.length;
+    const sentJobs = jobs.filter(j => j.status === 'SENT').length;
+    const pendingJobs = jobs.filter(j => j.status === 'PENDING').length;
+    const failedJobs = jobs.filter(j => j.status === 'FAILED').length;
+
+    const timeline = await AuditLog.find({
+      entityType: 'BloodRequest',
+      entityId: requestId
+    }).sort({ createdAt: 1 });
+
+    return {
+      request,
+      requester: request.requesterId,
+      broadcast: {
+        isBroadcasted: !!request.broadcastedAt,
+        broadcastedAt: request.broadcastedAt || null,
+        totalJobs,
+        sentJobs,
+        pendingJobs,
+        failedJobs
+      },
+      timeline
+    };
+  }
+
+  static async getEmergencyResponses(requestId: string) {
+    const request = await BloodRequest.findById(requestId);
+    if (!request || request.deletedAt) throw new AppError(404, 'NOT_FOUND', 'Emergency request not found');
+
+    const jobs = await NotificationJob.find({ bloodRequestId: requestId })
+      .populate('recipientId', 'name provinceId districtId cityId')
+      .sort({ createdAt: -1 });
+
+    const safeJobs = jobs.map(j => {
+      const u = j.recipientId as any;
+      return {
+        jobId: j._id,
+        recipientName: u?.name || 'Anonymous Donor',
+        recipientLocation: {
+          provinceId: u?.provinceId,
+          districtId: u?.districtId,
+          cityId: u?.cityId
+        },
+        status: j.status,
+        createdAt: (j as any).createdAt
+      };
+    });
+
+    return {
+      requestId: request._id,
+      bloodGroup: request.bloodGroup,
+      totalNotified: jobs.length,
+      recipients: safeJobs
+    };
+  }
+
+  static async triggerBroadcast(requestId: string, actorId: string) {
+    const request = await BloodRequest.findById(requestId);
+    if (!request || request.deletedAt) throw new AppError(404, 'NOT_FOUND', 'Emergency request not found');
+
+    if (request.status !== 'ACTIVE') {
+      await BloodRequestService.verifyRequest(requestId, actorId, true);
+    }
+
+    const broadcastResult = await BloodRequestService.broadcastEmergency(requestId, actorId);
+    await this.logAudit(actorId, 'TRIGGER_EMERGENCY_BROADCAST', 'BLOOD_REQUEST', requestId);
+    return { success: true, ...broadcastResult };
+  }
+
+  static async closeEmergencyRequest(requestId: string, reason: string | undefined, actorId: string) {
+    const request = await BloodRequest.findById(requestId);
+    if (!request || request.deletedAt) throw new AppError(404, 'NOT_FOUND', 'Emergency request not found');
+
+    request.status = 'FULFILLED';
+    if (reason) {
+      request.additionalInfo = (request.additionalInfo ? request.additionalInfo + ' | ' : '') + `Closed: ${reason}`;
+    }
+    await request.save();
+
+    await NotificationJob.updateMany(
+      { bloodRequestId: requestId, status: 'PENDING' },
+      { $set: { status: 'CANCELLED' } }
+    );
+
+    await this.logAudit(actorId, 'CLOSE_EMERGENCY_REQUEST', 'BLOOD_REQUEST', requestId);
     return request;
   }
 

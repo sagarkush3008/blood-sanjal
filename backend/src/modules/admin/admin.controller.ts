@@ -135,6 +135,35 @@ export class AdminController {
     } catch (error) { next(error); }
   }
 
+  static async getEmergencyRequestDetails(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.getEmergencyRequestDetails(req.params.id as string);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async getEmergencyResponses(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.getEmergencyResponses(req.params.id as string);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async triggerBroadcast(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.triggerBroadcast(req.params.id as string, req.user!.userId);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async closeEmergencyRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { reason } = req.body;
+      const result = await AdminService.closeEmergencyRequest(req.params.id as string, reason, req.user!.userId);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
   static async rejectEmergencyRequest(req: Request, res: Response, next: NextFunction) {
     try {
       const { reason } = req.body;
