@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../theme';
 import {
   HomeScreen,
   FindBloodScreen,
@@ -16,24 +17,26 @@ export const MainTabs = () => {
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#B91C1C',
-        tabBarInactiveTintColor: '#64748B',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: '#94A3B8',
         tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '700',
+          fontSize: 11,
+          fontWeight: '500',
           marginTop: 2,
         },
         tabBarStyle: {
-          backgroundColor: '#FFF1F2',
+          backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
-          borderTopColor: '#FFE4E6',
-          height: Platform.OS === 'ios' ? 88 : 65,
-          paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+          borderTopColor: '#F1F5F9',
+          height: Platform.OS === 'ios' ? 84 : 62,
+          paddingBottom: Platform.OS === 'ios' ? 22 : 8,
           paddingTop: 8,
+          elevation: 0,
+          shadowOpacity: 0,
         },
-        headerStyle: { backgroundColor: '#FFFFFF' },
+        headerStyle: { backgroundColor: '#FFFFFF', elevation: 0, shadowOpacity: 0, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
         headerTintColor: '#0F172A',
-        headerTitleStyle: { fontWeight: '800' },
+        headerTitleStyle: { fontWeight: '600', fontSize: 16 },
       }}
     >
       <Tab.Screen
@@ -43,9 +46,7 @@ export const MainTabs = () => {
           headerShown: false,
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconWrapper, focused && styles.activePill]}>
-              <Ionicons name={focused ? 'home' : 'home-outline'} size={20} color={focused ? '#B91C1C' : color} />
-            </View>
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={21} color={color} />
           ),
         }}
       />
@@ -57,9 +58,7 @@ export const MainTabs = () => {
           headerShown: false,
           tabBarLabel: 'Find Blood',
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconWrapper, focused && styles.activePill]}>
-              <Ionicons name={focused ? 'search' : 'search-outline'} size={20} color={focused ? '#B91C1C' : color} />
-            </View>
+            <Ionicons name={focused ? 'search' : 'search-outline'} size={21} color={color} />
           ),
         }}
       />
@@ -69,11 +68,9 @@ export const MainTabs = () => {
         component={RequestsScreen}
         options={{
           headerShown: false,
-          tabBarLabel: 'Emergency Blood',
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconWrapper, focused && styles.activePill]}>
-              <Ionicons name="notifications" size={21} color="#DC2626" />
-            </View>
+          tabBarLabel: 'Emergency',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'alert-circle' : 'alert-circle-outline'} size={22} color={focused ? colors.primary : color} />
           ),
         }}
       />
@@ -85,9 +82,7 @@ export const MainTabs = () => {
           headerShown: false,
           tabBarLabel: 'Donate',
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconWrapper, focused && styles.activePill]}>
-              <Ionicons name={focused ? 'heart' : 'heart-outline'} size={20} color={focused ? '#B91C1C' : color} />
-            </View>
+            <Ionicons name={focused ? 'heart' : 'heart-outline'} size={21} color={color} />
           ),
         }}
       />
@@ -99,9 +94,7 @@ export const MainTabs = () => {
           headerShown: false,
           tabBarLabel: 'Banks',
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconWrapper, focused && styles.activePill]}>
-              <Ionicons name={focused ? 'medkit' : 'medkit-outline'} size={20} color={focused ? '#B91C1C' : color} />
-            </View>
+            <Ionicons name={focused ? 'medical' : 'medical-outline'} size={21} color={color} />
           ),
         }}
       />
@@ -109,16 +102,4 @@ export const MainTabs = () => {
   );
 };
 
-
-const styles = StyleSheet.create({
-  iconWrapper: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 3,
-    borderRadius: 14,
-  },
-  activePill: {
-    backgroundColor: '#FEE2E2',
-  },
-});
+const styles = StyleSheet.create({});
