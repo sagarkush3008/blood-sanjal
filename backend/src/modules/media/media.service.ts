@@ -110,8 +110,11 @@ export class MediaService {
     const asset = await FileAsset.findById(assetId);
     if (!asset) throw new AppError(404, 'NOT_FOUND', 'Asset not found');
 
-    if (asset.purpose !== 'profile' && asset.purpose !== 'campaign' && asset.userId.toString() !== userId) {
-      // Basic ownership check. A real system might allow admins or doctors.
+    const { User } = await import('../users/user.model');
+    const user = await User.findById(userId);
+    const isAdmin = user?.role === 'ADMIN';
+
+    if (asset.purpose !== 'profile' && asset.purpose !== 'campaign' && asset.userId.toString() !== userId && !isAdmin) {
       throw new AppError(403, 'FORBIDDEN', 'Unauthorized to access this asset');
     }
 

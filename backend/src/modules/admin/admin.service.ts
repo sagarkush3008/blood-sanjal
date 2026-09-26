@@ -137,17 +137,69 @@ export class AdminService {
     const filter: any = {};
     if (query.bloodGroup) filter.bloodGroup = query.bloodGroup;
     if (query.donorStatus) filter.donorStatus = query.donorStatus;
-    if (query.isVerified !== undefined) filter.isVerified = query.isVerified === 'true';
+    if (query.isVerified !== undefined) filter.isVerified = query.isVerified === 'true' || query.isVerified === true;
+
+    // Search by user name/email/phone or filter by location
+    const userFilter: any = {};
+    if (query.provinceId) userFilter.provinceId = query.provinceId;
+    if (query.districtId) userFilter.districtId = query.districtId;
+    if (query.cityId) userFilter.cityId = query.cityId;
+    if (query.search) {
+      userFilter.$or = [
+        { name: { $regex: query.search, $options: 'i' } },
+        { email: { $regex: query.search, $options: 'i' } },
+        { phone: { $regex: query.search, $options: 'i' } }
+      ];
+    }
+
+    if (Object.keys(userFilter).length > 0) {
+      const matchedUsers = await User.find(userFilter).select('_id');
+      const matchedIds = matchedUsers.map(u => u._id);
+      filter.userId = { $in: matchedIds };
+    }
 
     const page = parseInt(query.page || '1');
     const limit = parseInt(query.limit || '10');
 
     const donors = await DonorProfile.find(filter)
-      .populate('userId', 'name email phone status locationCoordinates')
+      .populate('userId', 'name email phone status locationCoordinates provinceId districtId cityId areaId')
       .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(limit)
+      .sort({ createdAt: -1 });
     const total = await DonorProfile.countDocuments(filter);
     return { data: donors, items: donors, results: donors, total, page, limit };
+  }
+
+  static async getDonorDetails(donorIdOrUserId: string) {
+    let donor = await DonorProfile.findById(donorIdOrUserId).populate('userId', '-passwordHash');
+    if (!donor) {
+      donor = await DonorProfile.findOne({ userId: donorIdOrUserId }).populate('userId', '-passwordHash');
+    }
+    if (!donor) throw new AppError(404, 'NOT_FOUND', 'Donor profile not found');
+
+    const recentDonations = await DonationRecord.find({ donorProfileId: donor._id })
+      .sort({ donationDate: -1 })
+      .limit(10);
+
+    return {
+      donor,
+      user: donor.userId,
+      recentDonations
+    };
+  }
+
+  static async verifyDonor(donorIdOrUserId: string, isVerified: boolean, actorId: string) {
+    let donor = await DonorProfile.findById(donorIdOrUserId);
+    if (!donor) {
+      donor = await DonorProfile.findOne({ userId: donorIdOrUserId });
+    }
+    if (!donor) throw new AppError(404, 'NOT_FOUND', 'Donor profile not found');
+
+    donor.isVerified = isVerified;
+    await donor.save();
+
+    await this.logAudit(actorId, isVerified ? 'VERIFY_DONOR' : 'UNVERIFY_DONOR', 'DONOR_PROFILE', donor._id.toString());
+    return donor;
   }
 
   // --- REQUEST MANAGEMENT ---

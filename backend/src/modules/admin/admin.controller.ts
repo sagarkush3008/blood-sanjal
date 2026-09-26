@@ -40,6 +40,21 @@ export class AdminController {
     } catch (error) { next(error); }
   }
 
+  static async getDonorDetails(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.getDonorDetails(req.params.id as string);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async verifyDonor(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { isVerified = true } = req.body;
+      const result = await AdminService.verifyDonor(req.params.id as string, isVerified, req.user!.userId);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
   static async updateDonorStatus(req: Request, res: Response, next: NextFunction) {
     try {
       const { donorStatus, isVerified } = req.body;

@@ -20,7 +20,10 @@ router.delete('/users/:id', AdminController.softDeleteUser);
 
 // Donors
 router.get('/donors', AdminController.listDonors);
+router.get('/donors/:id', AdminController.getDonorDetails);
 router.patch('/donors/:id/status', AdminController.updateDonorStatus);
+router.patch('/donors/:id/verify', AdminController.verifyDonor);
+router.post('/donors/:id/verify', AdminController.verifyDonor);
 
 // Blood Requests
 router.get('/requests', AdminController.listRequests);
