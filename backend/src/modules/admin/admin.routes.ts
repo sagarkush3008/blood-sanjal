@@ -48,6 +48,13 @@ router.post('/emergency-requests/:id/broadcast', AdminController.triggerBroadcas
 router.post('/emergency-requests/:id/close', AdminController.closeEmergencyRequest);
 router.patch('/emergency-requests/:id', AdminController.reviewEmergencyRequest);
 
+// Contact Requests
+router.get('/contact-requests', AdminController.listContactRequests);
+router.get('/contact-requests/:id', AdminController.getContactRequestDetails);
+
+// Email Logs
+router.get('/email-logs', AdminController.getEmailLogs);
+
 // Donations
 router.get('/donations', AdminController.listDonations);
 router.patch('/donations/:id/verify', AdminController.verifyDonation);

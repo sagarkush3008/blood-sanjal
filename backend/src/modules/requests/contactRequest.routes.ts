@@ -7,8 +7,11 @@ const router = Router();
 
 router.use(paymentLimiter); // using paymentLimiter (max 20 per 15 min) for contact requests as per risk
 
+router.get('/', requireAuth, ContactRequestController.list);
+router.get('/:id', requireAuth, ContactRequestController.getById);
 router.post('/', requireAuth, ContactRequestController.create);
 router.post('/:id/accept', requireAuth, ContactRequestController.accept);
 router.post('/:id/decline', requireAuth, ContactRequestController.decline);
+router.post('/:id/cancel', requireAuth, ContactRequestController.cancel);
 
 export default router;

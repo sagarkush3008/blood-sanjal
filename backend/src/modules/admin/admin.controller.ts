@@ -201,4 +201,25 @@ export class AdminController {
       res.json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }
+
+  static async listContactRequests(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.listContactRequests(req.query);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async getContactRequestDetails(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.getContactRequestDetails(req.params.id as string);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async getEmailLogs(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.getEmailLogs(req.query);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
 }

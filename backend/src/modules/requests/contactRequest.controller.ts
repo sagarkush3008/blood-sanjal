@@ -28,4 +28,28 @@ export class ContactRequestController {
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }
+
+  static async list(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const result = await ContactRequestService.listMyRequests(req.user.userId, req.query);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async getById(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const result = await ContactRequestService.getRequestById(req.params.id as string, req.user.userId);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async cancel(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const result = await ContactRequestService.cancelRequest(req.params.id as string, req.user.userId);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
 }

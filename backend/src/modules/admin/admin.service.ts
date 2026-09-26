@@ -6,6 +6,8 @@ import { DonationRecord } from '../donors/donationRecord.model';
 import { Campaign } from '../campaigns/campaign.model';
 import { PaymentTransaction } from '../payments/payment.model';
 import { NotificationJob } from '../notifications/notificationQueue.model';
+import { ContactRequest } from '../requests/contactRequest.model';
+import { EmailEvent } from '../email/emailEvent.model';
 import { AuditLog } from '../audit/auditLog.model';
 import { AuditService } from '../audit/audit.service';
 import { AppError } from '../../core/errors/appError';
@@ -542,5 +544,64 @@ export class AdminService {
 
     await this.logAudit(actorId, `VERIFY_DONATION_${status}`, 'DONATION_RECORD', donationId);
     return donation;
+  }
+
+  // --- CONTACT REQUEST MANAGEMENT ---
+  static async listContactRequests(query: any) {
+    const filter: any = {};
+    if (query.status) filter.status = query.status;
+    if (query.requesterId) filter.requesterId = query.requesterId;
+    if (query.donorId) filter.donorId = query.donorId;
+
+    const page = parseInt(query.page || '1');
+    const limit = parseInt(query.limit || '20');
+
+    const requests = await ContactRequest.find(filter)
+      .populate('requesterId', 'name email phone')
+      .populate('donorId', 'name email phone bloodGroup')
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    const total = await ContactRequest.countDocuments(filter);
+    return { data: requests, items: requests, results: requests, total, page, limit };
+  }
+
+  static async getContactRequestDetails(requestId: string) {
+    const req = await ContactRequest.findById(requestId)
+      .populate('requesterId', 'name email phone')
+      .populate('donorId', 'name email phone bloodGroup');
+    if (!req) throw new AppError(404, 'NOT_FOUND', 'Contact request not found');
+
+    const timeline = await AuditLog.find({
+      entityType: 'ContactRequest',
+      entityId: requestId
+    }).sort({ createdAt: 1 });
+
+    return {
+      request: req,
+      requester: req.requesterId,
+      donor: req.donorId,
+      timeline
+    };
+  }
+
+  // --- EMAIL AUDIT LOGS ---
+  static async getEmailLogs(query: any) {
+    const filter: any = {};
+    if (query.to) filter.to = { $regex: query.to, $options: 'i' };
+    if (query.template) filter.template = query.template;
+    if (query.status) filter.status = query.status;
+
+    const page = parseInt(query.page || '1');
+    const limit = parseInt(query.limit || '50');
+
+    const logs = await EmailEvent.find(filter)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    const total = await EmailEvent.countDocuments(filter);
+    return { data: logs, items: logs, results: logs, total, page, limit };
   }
 }

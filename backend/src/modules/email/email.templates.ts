@@ -63,5 +63,35 @@ export const templates: Record<string, TemplateFunction> = {
     subject: 'Blood Sanjal System Alert',
     text: `System Alert: ${data.message}`,
     html: baseHtml(`<p>System Alert:</p><p>${data.message}</p>`)
+  }),
+  contactRequest: (data: { donorName: string; requesterName: string; bloodGroup?: string }) => ({
+    subject: 'New Blood Sanjal Contact Request',
+    text: `Hi ${data.donorName},\n${data.requesterName} has requested your contact information regarding a blood donation. Please review and respond in your app.`,
+    html: baseHtml(`<p>Hi ${data.donorName},</p><p><b>${data.requesterName}</b> has sent you a contact request regarding a blood donation inquiry.</p><p>Your contact information will remain completely private until you explicitly accept this request.</p>`)
+  }),
+  contactReveal: (data: { requesterName: string; donorName: string; phone?: string; email?: string }) => ({
+    subject: 'Contact Request Accepted - Blood Sanjal',
+    text: `Hi ${data.requesterName},\n${data.donorName} has accepted your contact request. Contact info: ${data.phone || data.email}`,
+    html: baseHtml(`<p>Hi ${data.requesterName},</p><p><b>${data.donorName}</b> has accepted your contact request!</p><p><b>Phone:</b> ${data.phone || 'N/A'}<br><b>Email:</b> ${data.email || 'N/A'}</p>`)
+  }),
+  emergencyAlert: (data: { patientName?: string; bloodGroup: string; hospitalName: string }) => ({
+    subject: `EMERGENCY ALERT: ${data.bloodGroup} Blood Needed Urgently`,
+    text: `Emergency blood request for ${data.bloodGroup} at ${data.hospitalName}. Please open the Blood Sanjal app if you can donate.`,
+    html: baseHtml(`<h3 style="color: #d32f2f;">EMERGENCY BLOOD REQUEST</h3><p>An emergency request for <b>${data.bloodGroup}</b> has been verified at <b>${data.hospitalName}</b>.</p><p>Please open the app to respond if you are eligible to donate.</p>`)
+  }),
+  donationReminder: (data: { donorName: string; lastDonationDate: string }) => ({
+    subject: 'You are eligible to donate blood again! - Blood Sanjal',
+    text: `Hi ${data.donorName},\nIt has been 90 days since your last donation on ${data.lastDonationDate}. You are now eligible to save lives again!`,
+    html: baseHtml(`<p>Hi ${data.donorName},</p><p>Thank you for being a hero. It has been 90 days since your last donation. You are now eligible to donate blood again!</p>`)
+  }),
+  rewardAwarded: (data: { donorName: string; badgeTitle: string }) => ({
+    subject: 'Congratulations! New Milestone Badge Earned - Blood Sanjal',
+    text: `Hi ${data.donorName},\nYou have been awarded the "${data.badgeTitle}" badge for your life-saving donations!`,
+    html: baseHtml(`<p>Hi ${data.donorName},</p><p>Congratulations! You have earned the <b>${data.badgeTitle}</b> badge. Thank you for your continued dedication to saving lives.</p>`)
+  }),
+  certificateIssued: (data: { donorName: string; certificateNumber: string; verifyUrl: string }) => ({
+    subject: 'Your Blood Sanjal Donation Certificate is Ready',
+    text: `Hi ${data.donorName},\nYour official certificate #${data.certificateNumber} is available. Verify here: ${data.verifyUrl}`,
+    html: baseHtml(`<p>Hi ${data.donorName},</p><p>Your verified blood donation certificate <b>#${data.certificateNumber}</b> has been issued.</p><p><a href="${data.verifyUrl}" class="btn">View & Verify Certificate</a></p>`)
   })
 };
