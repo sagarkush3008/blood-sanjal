@@ -22,9 +22,18 @@ export class CertificateController {
 
   static async verifyPublic(req: Request, res: Response, next: NextFunction) {
     try {
-      if (!req.query.code) throw new AppError(400, 'BAD_REQUEST', 'Verification code required');
-      const data = await CertificateService.verifyPublic(req.query.code as string);
+      const code = (req.params.code || req.query.code || req.body.code) as string;
+      if (!code) throw new AppError(400, 'BAD_REQUEST', 'Verification code required');
+      const data = await CertificateService.verifyPublic(code);
       res.status(200).json(SuccessResponse(data, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async getById(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHORIZED', 'Missing user context');
+      const cert = await CertificateService.getCertificateById(req.params.id as string, req.user.userId, req.user.role);
+      res.status(200).json(SuccessResponse(cert, req.id));
     } catch (error) { next(error); }
   }
 

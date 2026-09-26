@@ -87,7 +87,20 @@ router.post('/notifications/:id/cancel', AdminOpsController.cancelBroadcast);
 router.post('/notifications/:id/process', AdminOpsController.processBroadcastSync);
 
 // Rewards
+import { RewardController } from '../rewards/reward.controller';
+import { CertificateController } from '../certificates/certificate.controller';
+
+router.get('/rewards', RewardController.getAll);
+router.get('/rewards/config', RewardController.getConfig);
+router.patch('/rewards/config', RewardController.updateConfig);
 router.post('/rewards', AdminOpsController.issueReward);
+router.post('/rewards/issue', RewardController.issueManual);
+
+// Certificates
+router.get('/certificates', CertificateController.getAll);
+router.get('/certificates/:id', CertificateController.getById);
+router.post('/certificates', CertificateController.issue);
+router.patch('/certificates/:id/revoke', CertificateController.revoke);
 
 import { AdminReportsController } from './adminReports.controller';
 

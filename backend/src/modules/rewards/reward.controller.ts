@@ -43,4 +43,28 @@ export class RewardController {
       res.status(200).json(SuccessResponse(config.value, req.id));
     } catch (error) { next(error); }
   }
+
+  static async getMilestones(req: Request, res: Response, next: NextFunction) {
+    try {
+      const milestones = await RewardService.getAvailableMilestones();
+      res.status(200).json(SuccessResponse(milestones, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async getStats(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const stats = await RewardService.getDonorGamificationStats(req.user.userId);
+      res.status(200).json(SuccessResponse(stats, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async issueManual(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const { donorProfileId, badgeType, notes } = req.body;
+      const reward = await RewardService.issueManualReward(req.user.userId, donorProfileId, badgeType, notes);
+      res.status(201).json(SuccessResponse(reward, req.id));
+    } catch (error) { next(error); }
+  }
 }

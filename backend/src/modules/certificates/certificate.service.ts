@@ -62,28 +62,59 @@ export class CertificateService {
     return cert;
   }
 
-  static async verifyPublic(verificationCode: string) {
-    const cert = await Certificate.findOne({ verificationCode }).populate({
+  static async verifyPublic(code: string) {
+    const cert = await Certificate.findOne({
+      $or: [{ verificationCode: code }, { certificateNumber: code }]
+    }).populate({
       path: 'donorProfileId',
-      populate: { path: 'userId', select: 'firstName lastName' },
+      populate: { path: 'userId', select: 'firstName lastName name' },
       select: 'bloodGroup'
     });
 
     if (!cert) throw new AppError(404, 'NOT_FOUND', 'Invalid verification code');
 
     const donorProfile: any = cert.donorProfileId;
-    const user: any = donorProfile.userId;
-    const donorPublicName = user ? `${user.firstName} ${user.lastName.charAt(0)}.` : 'Anonymous';
+    const user: any = donorProfile?.userId;
+    let donorPublicName = 'Anonymous';
+    if (user) {
+      if (user.firstName && user.lastName) {
+        donorPublicName = `${user.firstName} ${user.lastName.charAt(0)}.`;
+      } else if (user.name) {
+        const parts = user.name.split(' ');
+        donorPublicName = parts.length > 1 ? `${parts[0]} ${parts[1].charAt(0)}.` : parts[0];
+      }
+    }
 
     return {
       certificateNumber: cert.certificateNumber,
+      certificateCode: cert.verificationCode,
+      verificationCode: cert.verificationCode,
       certificateType: cert.certificateType,
       issueDate: cert.issueDate,
       status: cert.status,
       assetUrl: cert.assetUrl,
       recipientName: donorPublicName,
-      bloodGroup: donorProfile.bloodGroup
+      bloodGroup: donorProfile?.bloodGroup
     };
+  }
+
+  static async getCertificateById(certId: string, userId: string, role?: string) {
+    const cert = await Certificate.findById(certId).populate({
+      path: 'donorProfileId',
+      populate: { path: 'userId', select: 'name firstName lastName email' }
+    });
+    if (!cert) throw new AppError(404, 'NOT_FOUND', 'Certificate not found');
+
+    const isStaffOrAdmin = ['ADMIN', 'SUPER_ADMIN', 'HOSPITAL', 'BLOOD_BANK', 'NGO'].includes(role || '');
+    if (!isStaffOrAdmin) {
+      const profile: any = cert.donorProfileId;
+      const ownerId = profile?.userId?._id?.toString() || profile?.userId?.toString();
+      if (ownerId !== userId) {
+        throw new AppError(403, 'FORBIDDEN', 'Access denied to this certificate');
+      }
+    }
+
+    return cert;
   }
 
   static async getUserCertificates(userId: string) {
@@ -97,6 +128,17 @@ export class CertificateService {
     const page = parseInt(filters.page) || 1;
     const skip = (page - 1) * limit;
 
-    return Certificate.find().populate({ path: 'donorProfileId', select: 'bloodGroup' }).sort({ issueDate: -1 }).skip(skip).limit(limit);
+    const query: any = {};
+    if (filters.status) query.status = filters.status;
+    if (filters.certificateType) query.certificateType = filters.certificateType;
+
+    const certs = await Certificate.find(query)
+      .populate({ path: 'donorProfileId', select: 'bloodGroup userId' })
+      .sort({ issueDate: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Certificate.countDocuments(query);
+    return { data: certs, items: certs, results: certs, total, page, limit };
   }
 }

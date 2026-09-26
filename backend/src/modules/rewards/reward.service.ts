@@ -78,6 +78,79 @@ export class RewardService {
     return newRewards;
   }
 
+  static async getAvailableMilestones() {
+    return this.getConfig();
+  }
+
+  static async getDonorGamificationStats(userId: string) {
+    const profile = await DonorProfile.findOne({ userId });
+    if (!profile) {
+      return {
+        totalDonations: 0,
+        livesSaved: 0,
+        earnedBadges: [],
+        nextMilestone: null
+      };
+    }
+
+    const earnedBadges = await Reward.find({ donorProfileId: profile._id }).sort({ milestone: 1 });
+    const milestones = await this.getConfig();
+    const totalDonations = profile.totalDonations || 0;
+
+    const nextRule = milestones.find((m: any) => m.count > totalDonations);
+    const nextMilestone = nextRule
+      ? {
+          badgeType: nextRule.badgeType,
+          name: nextRule.name,
+          requiredCount: nextRule.count,
+          remaining: nextRule.count - totalDonations
+        }
+      : null;
+
+    return {
+      totalDonations,
+      livesSaved: totalDonations * 3,
+      earnedBadges,
+      nextMilestone
+    };
+  }
+
+  static async issueManualReward(adminId: string, donorProfileId: string, badgeType: BadgeType, notes?: string) {
+    const profile = await DonorProfile.findById(donorProfileId);
+    if (!profile) {
+      const { AppError } = await import('../../core/errors/appError');
+      throw new AppError(404, 'NOT_FOUND', 'Donor profile not found');
+    }
+
+    const milestones = await this.getConfig();
+    const rule = milestones.find((m: any) => m.badgeType === badgeType) || { count: 0, name: badgeType };
+
+    const reward = await Reward.create({
+      donorProfileId: profile._id,
+      badgeType,
+      milestone: rule.count,
+      notes: notes || `Special community recognition: ${rule.name}`
+    });
+
+    const { AuditLog } = await import('../audit/auditLog.model');
+    await AuditLog.create({
+      actorId: adminId,
+      action: 'REWARD_ISSUED',
+      entityType: 'Reward',
+      entityId: reward._id.toString()
+    });
+
+    await NotificationService.dispatch({
+      userId: profile.userId.toString(),
+      type: 'REWARD',
+      title: `Badge Awarded: ${rule.name}`,
+      message: `You have been awarded the "${rule.name}" recognition badge. Thank you for your continued contribution!`,
+      dedupeKey: `manual_reward_${reward._id}`
+    });
+
+    return reward;
+  }
+
   static async getUserRewards(donorProfileId: string) {
     return Reward.find({ donorProfileId }).sort({ milestone: -1 });
   }
@@ -88,6 +161,7 @@ export class RewardService {
     const skip = (page - 1) * limit;
 
     const rewards = await Reward.find().populate({ path: 'donorProfileId', select: 'bloodGroup' }).sort({ issuedAt: -1 }).skip(skip).limit(limit);
-    return rewards;
+    const total = await Reward.countDocuments();
+    return { data: rewards, items: rewards, results: rewards, total, page, limit };
   }
 }
