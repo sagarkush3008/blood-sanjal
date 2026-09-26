@@ -70,6 +70,28 @@ export class AdminController {
     } catch (error) { next(error); }
   }
 
+  static async getRequestDetails(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.getRequestDetails(req.params.id as string);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async getMatchingDonors(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.getMatchingDonorsForRequest(req.params.id as string);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async fulfillRequestUnits(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { units = 1 } = req.body;
+      const result = await AdminService.fulfillRequestUnits(req.params.id as string, Number(units), req.user!.userId);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
   static async updateRequestStatus(req: Request, res: Response, next: NextFunction) {
     try {
       const { status, urgency } = req.body;

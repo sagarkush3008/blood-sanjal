@@ -209,6 +209,13 @@ export class AdminService {
     if (query.urgency) filter.urgency = query.urgency;
     if (query.bloodGroup) filter.bloodGroup = query.bloodGroup;
 
+    if (query.search) {
+      filter.$or = [
+        { patientName: { $regex: query.search, $options: 'i' } },
+        { hospitalName: { $regex: query.search, $options: 'i' } }
+      ];
+    }
+
     const page = parseInt(query.page || '1');
     const limit = parseInt(query.limit || '10');
 
@@ -216,9 +223,104 @@ export class AdminService {
       .populate('requesterId', 'name email phone')
       .skip((page - 1) * limit)
       .limit(limit)
-      .sort({ requiredDate: 1 });
+      .sort({ createdAt: -1 });
     const total = await BloodRequest.countDocuments(filter);
     return { data: requests, items: requests, results: requests, total, page, limit };
+  }
+
+  static async getRequestDetails(requestId: string) {
+    const request = await BloodRequest.findById(requestId).populate('requesterId', '-passwordHash');
+    if (!request || request.deletedAt) throw new AppError(404, 'NOT_FOUND', 'Blood request not found');
+
+    const COMPATIBLE_DONOR_MAP: Record<string, string[]> = {
+      'A+': ['A+', 'A-', 'O+', 'O-'],
+      'A-': ['A-', 'O-'],
+      'B+': ['B+', 'B-', 'O+', 'O-'],
+      'B-': ['B-', 'O-'],
+      'AB+': ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+      'AB-': ['AB-', 'A-', 'B-', 'O-'],
+      'O+': ['O+', 'O-'],
+      'O-': ['O-']
+    };
+
+    const compatibleGroups = COMPATIBLE_DONOR_MAP[request.bloodGroup] || [request.bloodGroup];
+    const compatibleDonorsCount = await DonorProfile.countDocuments({
+      donorStatus: 'ACTIVE',
+      bloodGroup: { $in: compatibleGroups }
+    });
+
+    const timeline = await AuditLog.find({
+      entityType: 'BloodRequest',
+      entityId: requestId
+    }).sort({ createdAt: 1 });
+
+    return {
+      request,
+      requester: request.requesterId,
+      compatibility: {
+        requestedGroup: request.bloodGroup,
+        compatibleGroups,
+        availableDonorsCount: compatibleDonorsCount
+      },
+      timeline
+    };
+  }
+
+  static async getMatchingDonorsForRequest(requestId: string) {
+    const request = await BloodRequest.findById(requestId);
+    if (!request || request.deletedAt) throw new AppError(404, 'NOT_FOUND', 'Blood request not found');
+
+    const COMPATIBLE_DONOR_MAP: Record<string, string[]> = {
+      'A+': ['A+', 'A-', 'O+', 'O-'],
+      'A-': ['A-', 'O-'],
+      'B+': ['B+', 'B-', 'O+', 'O-'],
+      'B-': ['B-', 'O-'],
+      'AB+': ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+      'AB-': ['AB-', 'A-', 'B-', 'O-'],
+      'O+': ['O+', 'O-'],
+      'O-': ['O-']
+    };
+
+    const compatibleGroups = COMPATIBLE_DONOR_MAP[request.bloodGroup] || [request.bloodGroup];
+
+    const donors = await DonorProfile.find({
+      donorStatus: 'ACTIVE',
+      bloodGroup: { $in: compatibleGroups }
+    })
+      .populate('userId', 'name provinceId districtId cityId areaId')
+      .limit(50);
+
+    const safeDonors = donors.map(donor => {
+      const u = donor.userId as any;
+      return {
+        donorId: donor._id,
+        bloodGroup: donor.bloodGroup,
+        donorStatus: donor.donorStatus,
+        isVerified: donor.isVerified,
+        totalDonations: donor.totalDonations,
+        lastDonationDate: donor.lastDonationDate,
+        name: u?.name || 'Anonymous Donor',
+        location: {
+          provinceId: u?.provinceId,
+          districtId: u?.districtId,
+          cityId: u?.cityId
+        }
+      };
+    });
+
+    return {
+      requestId: request._id,
+      bloodGroup: request.bloodGroup,
+      compatibleGroups,
+      matchingDonors: safeDonors,
+      totalMatched: safeDonors.length
+    };
+  }
+
+  static async fulfillRequestUnits(requestId: string, units: number, actorId: string) {
+    const request = await BloodRequestService.fulfillUnits(requestId, units, actorId);
+    await this.logAudit(actorId, 'ADMIN_FULFILL_UNITS', 'BLOOD_REQUEST', requestId);
+    return request;
   }
 
   static async updateRequestStatus(requestId: string, status: string, urgency: string, actorId: string) {
