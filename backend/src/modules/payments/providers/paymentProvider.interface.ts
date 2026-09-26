@@ -5,7 +5,7 @@ export interface IPaymentProvider {
     rawResponse?: any;
   }>;
 
-  verifyPayment(gatewayTxId: string, expectedAmountMinor: number): Promise<{
+  verifyPayment(gatewayTxId: string, expectedAmountMinor: number, rawPayload?: any): Promise<{
     status: 'SUCCESS' | 'FAILED' | 'PENDING' | 'CANCELLED';
     gatewayTxId: string;
     rawResponse?: any;

@@ -102,6 +102,14 @@ router.get('/certificates/:id', CertificateController.getById);
 router.post('/certificates', CertificateController.issue);
 router.patch('/certificates/:id/revoke', CertificateController.revoke);
 
+import { PaymentController } from '../payments/payment.controller';
+
+// Payments & Financials
+router.get('/payments', PaymentController.getAdminReport);
+router.get('/payments/summary', PaymentController.getAdminSummary);
+router.get('/payments/:id', PaymentController.getAdminPaymentById);
+router.post('/payments/:id/refund', PaymentController.adminRefund);
+
 import { AdminReportsController } from './adminReports.controller';
 
 // Reports
