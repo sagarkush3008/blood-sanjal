@@ -17,17 +17,18 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { EmergencyRequestsAPI } from '../../api/requests.api';
 import { InputField } from '../../components/forms/InputField';
-import { PrimaryButton } from '../../components/common/PrimaryButton';
-import { spacing } from '../../theme';
+import { PrimaryButton, BloodGroupChip } from '../../components/common';
+import { colors, spacing } from '../../theme';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 const emergencySchema = z.object({
   patientName: z.string().min(2, 'Patient name is required'),
-  bloodGroup: z.string().min(1, 'Please choose a blood group'),
-  hospitalName: z.string().min(3, 'Hospital and ward location is required'),
-  contactPhone: z.string().min(10, 'Valid 10-digit emergency phone is required'),
-  reason: z.string().min(5, 'Please provide the medical emergency reason'),
+  bloodGroup: z.string().min(1, 'Please select a blood group'),
+  unitsRequired: z.coerce.number().min(1, 'At least 1 unit').max(10, 'Max 10 units'),
+  hospitalName: z.string().min(3, 'Hospital, ICU or trauma ward is required'),
+  contactPhone: z.string().min(10, 'Valid 10-digit emergency contact phone is required'),
+  reason: z.string().min(5, 'Clinical emergency diagnosis / reason is required'),
 });
 
 type EmergencyFormData = z.infer<typeof emergencySchema>;
@@ -36,41 +37,42 @@ export const CreateEmergencyRequestScreen = () => {
   const queryClient = useQueryClient();
   const navigation = useNavigation<any>();
   const [apiError, setApiError] = useState<string | null>(null);
+  const [selectedBloodGroup, setSelectedBloodGroup] = useState<string>('O+');
 
   const {
     control,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<EmergencyFormData>({
     resolver: zodResolver(emergencySchema),
     defaultValues: {
       patientName: '',
       bloodGroup: 'O+',
+      unitsRequired: 2,
       hospitalName: '',
       contactPhone: '',
       reason: '',
     },
   });
 
-  const selectedBloodGroup = watch('bloodGroup');
-
   const createMutation = useMutation({
     mutationFn: (data: EmergencyFormData) =>
-      EmergencyRequestsAPI.create(data),
+      EmergencyRequestsAPI.create({
+        ...data,
+        bloodGroup: selectedBloodGroup,
+        urgency: 'EMERGENCY',
+      }),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blood-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['platform-metrics'] });
       Alert.alert(
-        'Emergency Broadcast Dispatched! 🚨',
-        'Your critical emergency request has been queued for immediate priority verification and push dispatch to all nearby compatible donors.',
+        'Emergency Request Submitted for Verification 🚨',
+        'Your critical emergency request has been received with highest priority. Blood Sanjal administrators review clinical evidence before dispatching emergency broadcast notifications to nearby donors.',
         [
           {
-            text: 'Understood',
-            onPress: () => {
-              queryClient.invalidateQueries({ queryKey: ['my-requests'] });
-              queryClient.invalidateQueries({ queryKey: ['blood-requests'] });
-              navigation.goBack();
-            },
+            text: 'View Requests',
+            onPress: () => navigation.goBack(),
           },
         ]
       );
@@ -79,8 +81,7 @@ export const CreateEmergencyRequestScreen = () => {
       const message =
         error.response?.data?.error?.message ||
         error.response?.data?.message ||
-        error.message ||
-        'Failed to submit emergency broadcast.';
+        'Failed to submit emergency request. Please try again.';
       setApiError(message);
     },
   });
@@ -90,30 +91,47 @@ export const CreateEmergencyRequestScreen = () => {
     createMutation.mutate(data);
   };
 
+  const handleSelectBloodGroup = (bg: string) => {
+    setSelectedBloodGroup(bg);
+    setValue('bloodGroup', bg);
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        {/* Warning Alert Banner */}
-        <View style={styles.criticalHeader}>
-          <View style={styles.beaconDot} />
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.alertIconCircle}>
+            <Ionicons name="alert" size={28} color="#FFFFFF" />
+          </View>
+          <Text style={styles.headerTitle}>Emergency Blood Broadcast</Text>
+          <Text style={styles.headerSubtitle}>
+            Fast-track submission for critical ICU, trauma, or massive hemorrhage cases.
+          </Text>
+        </View>
+
+        {/* Verification Rule Notice */}
+        <View style={styles.verificationBanner}>
+          <Ionicons name="shield-half" size={22} color={colors.danger} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.criticalTitle}>CRITICAL EMERGENCY BROADCAST</Text>
-            <Text style={styles.criticalDesc}>
-              Use this ONLY for life-threatening emergencies. This will trigger push alerts to registered donors nearby.
+            <Text style={styles.verificationTitle}>Admin Verification Policy</Text>
+            <Text style={styles.verificationText}>
+              To prevent false alarms and donor panic, emergency alerts are verified by the platform team before mobile push broadcasts are triggered.
             </Text>
           </View>
         </View>
 
+        {/* Form Card */}
         <View style={styles.card}>
           {apiError && (
             <View style={styles.errorBanner}>
-              <Ionicons name="alert-circle" size={18} color="#DC2626" />
-              <Text style={styles.errorBannerText}>{apiError}</Text>
+              <Ionicons name="alert-circle" size={18} color={colors.danger} />
+              <Text style={styles.errorText}>{apiError}</Text>
             </View>
           )}
 
@@ -123,7 +141,7 @@ export const CreateEmergencyRequestScreen = () => {
             render={({ field: { onChange, onBlur, value } }) => (
               <InputField
                 label="Patient Name"
-                placeholder="Patient Full Name"
+                placeholder="Critical patient full name"
                 leftIcon="person-outline"
                 onBlur={onBlur}
                 onChangeText={onChange}
@@ -133,53 +151,50 @@ export const CreateEmergencyRequestScreen = () => {
             )}
           />
 
-          {/* Blood Group Selector */}
-          <View style={styles.bloodSelectContainer}>
-            <Text style={styles.fieldLabel}>Blood Group Needed Urgently</Text>
-            <View style={styles.bloodGrid}>
-              {BLOOD_GROUPS.map((bg) => {
-                const isSelected = selectedBloodGroup === bg;
-                return (
-                  <TouchableOpacity
-                    key={bg}
-                    activeOpacity={0.8}
-                    style={[
-                      styles.bloodPill,
-                      isSelected && styles.bloodPillActive,
-                    ]}
-                    onPress={() => setValue('bloodGroup', bg)}
-                  >
-                    <Ionicons
-                      name="water"
-                      size={14}
-                      color={isSelected ? '#FFFFFF' : '#DC2626'}
-                    />
-                    <Text
-                      style={[
-                        styles.bloodPillText,
-                        isSelected && styles.bloodPillTextActive,
-                      ]}
-                    >
-                      {bg}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            {errors.bloodGroup?.message && (
-              <Text style={styles.errorText}>
-                {errors.bloodGroup?.message}
-              </Text>
-            )}
+          {/* Blood Group Chips */}
+          <View style={styles.fieldSection}>
+            <Text style={styles.fieldLabel}>Blood Group Needed</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chipsRow}
+            >
+              {BLOOD_GROUPS.map((bg) => (
+                <BloodGroupChip
+                  key={bg}
+                  bloodGroup={bg}
+                  selected={selectedBloodGroup === bg}
+                  onPress={handleSelectBloodGroup}
+                  style={styles.chipMargin}
+                />
+              ))}
+            </ScrollView>
           </View>
+
+          <Controller
+            control={control}
+            name="unitsRequired"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <InputField
+                label="Units / Bags Needed Urgently"
+                placeholder="2"
+                keyboardType="numeric"
+                leftIcon="water-outline"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={String(value || 2)}
+                error={errors.unitsRequired?.message}
+              />
+            )}
+          />
 
           <Controller
             control={control}
             name="hospitalName"
             render={({ field: { onChange, onBlur, value } }) => (
               <InputField
-                label="Hospital, Ward & Bed Number"
-                placeholder="e.g. Teaching Hospital, ICU Ward 2, Bed 14"
+                label="Hospital, ICU / Trauma Center & City"
+                placeholder="e.g. Tribhuvan University Teaching Hospital, ICU Bay 2"
                 leftIcon="business-outline"
                 onBlur={onBlur}
                 onChangeText={onChange}
@@ -191,29 +206,13 @@ export const CreateEmergencyRequestScreen = () => {
 
           <Controller
             control={control}
-            name="reason"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <InputField
-                label="Medical Emergency Reason"
-                placeholder="e.g. Critical trauma surgery, acute hemorrhage"
-                leftIcon="medical-outline"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                error={errors.reason?.message}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
             name="contactPhone"
             render={({ field: { onChange, onBlur, value } }) => (
               <InputField
-                label="Emergency Direct Contact Phone"
+                label="Emergency Doctor / Staff Direct Phone"
                 placeholder="98XXXXXXXX"
                 keyboardType="phone-pad"
-                leftIcon="call"
+                leftIcon="call-outline"
                 onBlur={onBlur}
                 onChangeText={onChange}
                 value={value}
@@ -222,11 +221,29 @@ export const CreateEmergencyRequestScreen = () => {
             )}
           />
 
+          <Controller
+            control={control}
+            name="reason"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <InputField
+                label="Emergency Clinical Reason / Context"
+                placeholder="Severe internal hemorrhage, trauma surgery, urgent platelets needed..."
+                leftIcon="warning-outline"
+                multiline
+                numberOfLines={3}
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+                error={errors.reason?.message}
+              />
+            )}
+          />
+
           <View style={{ marginTop: spacing.m }}>
             <PrimaryButton
-              title="Broadcast Emergency Alert"
-              icon="alert-circle"
+              title="Submit for Emergency Verification"
               variant="danger"
+              icon="alert-circle"
               onPress={handleSubmit(onSubmit)}
               loading={createMutation.isPending}
             />
@@ -242,115 +259,108 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
-  container: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 16,
+  scrollContent: {
+    padding: 16,
     paddingBottom: 36,
   },
-  criticalHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#FFF1F2',
-    padding: 16,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: '#FECACA',
-    marginBottom: 18,
-    gap: 12,
+  header: {
+    alignItems: 'center',
+    marginBottom: 16,
+    marginTop: 4,
   },
-  beaconDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: '#DC2626',
-    marginTop: 3,
+  alertIconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    shadowColor: colors.danger,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  criticalTitle: {
-    fontSize: 14,
-    fontWeight: '900',
-    color: '#991B1B',
-    letterSpacing: 0.5,
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#0F172A',
     marginBottom: 4,
   },
-  criticalDesc: {
+  headerSubtitle: {
+    fontSize: 13,
+    color: '#64748B',
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    lineHeight: 18,
+  },
+  verificationBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 16,
+    gap: 12,
+  },
+  verificationTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#991B1B',
+    marginBottom: 3,
+  },
+  verificationText: {
     fontSize: 12,
     color: '#7F1D1D',
-    lineHeight: 17,
+    lineHeight: 16,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    padding: 22,
-    borderWidth: 1.5,
-    borderColor: '#FCA5A5',
-    shadowColor: '#DC2626',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
+    borderRadius: 18,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
     elevation: 2,
   },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEE2E2',
-    padding: 12,
-    borderRadius: 12,
+    backgroundColor: colors.dangerLight,
     borderWidth: 1,
-    borderColor: '#FCA5A5',
-    marginBottom: 16,
+    borderColor: '#FECACA',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 14,
     gap: 8,
   },
-  errorBannerText: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '600',
+  errorText: {
     color: '#991B1B',
+    fontSize: 13,
+    fontWeight: '500',
+    flex: 1,
+  },
+  fieldSection: {
+    marginBottom: 16,
   },
   fieldLabel: {
     fontSize: 13,
     fontWeight: '700',
     color: '#334155',
     marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
-  bloodSelectContainer: {
-    marginBottom: 16,
+  chipsRow: {
+    paddingVertical: 2,
   },
-  bloodGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  bloodPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF1F2',
-    borderWidth: 1,
-    borderColor: '#FFE4E6',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    gap: 4,
-    minWidth: 68,
-    justifyContent: 'center',
-  },
-  bloodPillActive: {
-    backgroundColor: '#DC2626',
-    borderColor: '#B91C1C',
-  },
-  bloodPillText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#991B1B',
-  },
-  bloodPillTextActive: {
-    color: '#FFFFFF',
-  },
-  errorText: {
-    color: '#DC2626',
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 4,
+  chipMargin: {
+    marginRight: 8,
   },
 });
-

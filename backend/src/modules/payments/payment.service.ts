@@ -51,6 +51,7 @@ export class PaymentService {
     return { 
       status: 'PENDING', 
       transactionId: tx._id, 
+      gatewayTransactionId: tx.gatewayTransactionId,
       paymentUrl: initData.paymentUrl,
       amountMinor: tx.amountMinor, 
       currency: tx.currency,
@@ -121,7 +122,12 @@ export class PaymentService {
   }
 
   static async handleWebhook(gatewayTxId: string, rawPayload?: any) {
-    const tx = await PaymentTransaction.findOne({ gatewayTransactionId: gatewayTxId });
+    const tx = await PaymentTransaction.findOne({
+      $or: [
+        { gatewayTransactionId: gatewayTxId },
+        { _id: mongoose.isValidObjectId(gatewayTxId) ? new mongoose.Types.ObjectId(gatewayTxId) : null }
+      ].filter(Boolean)
+    });
     if (!tx) throw new AppError(404, 'NOT_FOUND', 'Transaction not found');
     
     if (tx.status === 'SUCCESS' || tx.status === 'REFUNDED') {

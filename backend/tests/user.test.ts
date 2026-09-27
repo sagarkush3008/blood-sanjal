@@ -1,10 +1,12 @@
 import request from 'supertest';
 import app from '../src/app';
 import { User } from '../src/modules/users/user.model';
+import { AdminService } from '../src/modules/admin/admin.service';
 import jwt from 'jsonwebtoken';
 import { env } from '../src/config/env.config';
 
 jest.mock('../src/modules/users/user.model');
+jest.mock('../src/modules/admin/admin.service');
 
 describe('User Profile & RBAC', () => {
   afterEach(() => {
@@ -67,13 +69,14 @@ describe('User Profile & RBAC', () => {
     });
 
     it('should allow admin to access admin routes', async () => {
+      (AdminService.getDashboardSummary as jest.Mock).mockResolvedValue({ totalUsers: 10 });
       const token = generateToken('admin123', 'ADMIN');
       const res = await request(app)
         .get('/api/v1/admin/dashboard')
         .set('Authorization', `Bearer ${token}`);
 
       expect(res.status).toBe(200);
-      expect(res.body.data.message).toBe('Welcome Admin');
+      expect(res.body.data.totalUsers).toBe(10);
     });
   });
 });

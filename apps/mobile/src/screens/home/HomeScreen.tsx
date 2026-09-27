@@ -7,8 +7,6 @@ import {
   RefreshControl,
   TouchableOpacity,
   StatusBar,
-  Linking,
-  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
@@ -20,490 +18,312 @@ import { BloodRequestsAPI } from '../../api/requests.api';
 import { CampaignsAPI } from '../../api/campaigns.api';
 import { NotificationsAPI } from '../../api/notifications.api';
 import { MetricsAPI } from '../../api/metrics.api';
-import { colors } from '../../theme';
-
-// Medical Blood Compatibility Matrix
-const COMPATIBILITY_RULES: Record<string, { receive: string; give: string }> = {
-  'A+': {
-    receive: 'A+, A-, O+, O-',
-    give: 'A+, AB+',
-  },
-  'A-': {
-    receive: 'A-, O-',
-    give: 'A+, A-, AB+, AB-',
-  },
-  'B+': {
-    receive: 'B+, B-, O+, O-',
-    give: 'B+, AB+',
-  },
-  'B-': {
-    receive: 'B-, O-',
-    give: 'B+, B-, AB+, AB-',
-  },
-  'O+': {
-    receive: 'O-, O+',
-    give: 'O+, A+, B+, AB+',
-  },
-  'O-': {
-    receive: 'O- (Universal Donor)',
-    give: 'All Blood Types',
-  },
-  'AB+': {
-    receive: 'All Types (Universal Recipient)',
-    give: 'AB+ only',
-  },
-  'AB-': {
-    receive: 'AB-, A-, B-, O-',
-    give: 'AB+, AB-',
-  },
-};
+import { EmergencyButton, SkeletonCard, StatusBadge, EmptyState } from '../../components/common';
+import { colors, spacing } from '../../theme';
 
 export const HomeScreen = () => {
   const { user } = useAuthStore();
   const navigation = useNavigation<any>();
 
-  const [selectedCompatType, setSelectedCompatType] = useState<string>('O+');
-
-  // User details
-  const { data: meData } = useQuery({
+  // Live /me Profile
+  const { data: meProfile, refetch: refetchMe } = useQuery({
     queryKey: ['me'],
     queryFn: () => AuthAPI.getCurrentUser().then((res) => res.data?.data || res.data),
     initialData: user,
   });
 
   // Live Metrics
-  const { data: metricsData, refetch: refetchMetrics } = useQuery({
+  const { data: metrics, refetch: refetchMetrics } = useQuery({
     queryKey: ['platform-metrics'],
     queryFn: () => MetricsAPI.getLiveMetrics(),
   });
 
-  // Active / Emergency Blood Requests
+  // Live Active & Urgent Blood Requests
   const {
     data: requestsData,
+    isLoading: isLoadingRequests,
     refetch: refetchRequests,
   } = useQuery({
     queryKey: ['blood-requests', 'home'],
-    queryFn: () => BloodRequestsAPI.list({ limit: 5 }).then((res) => res.data?.data || res.data),
+    queryFn: () => BloodRequestsAPI.list({ limit: 4 }).then((res) => res.data?.data || res.data),
   });
 
-  // Upcoming Campaigns
+  // Live Upcoming Campaigns
   const {
     data: campaignsData,
+    isLoading: isLoadingCampaigns,
     refetch: refetchCampaigns,
   } = useQuery({
     queryKey: ['campaigns', 'home'],
-    queryFn: () => CampaignsAPI.list({ limit: 4 }).then((res) => res.data?.data || res.data),
+    queryFn: () => CampaignsAPI.list({ limit: 3 }).then((res) => res.data?.data || res.data),
   });
 
-  // Unread notifications count
+  // Unread Notifications Count
   const { data: notificationsData, refetch: refetchNotifications } = useQuery({
     queryKey: ['notifications', 'unread'],
-    queryFn: () => NotificationsAPI.list({ isRead: false }).then((res) => res.data?.data || res.data),
+    queryFn: () =>
+      NotificationsAPI.list({ isRead: false }).then((res) => res.data?.data || res.data),
   });
 
   const onRefresh = () => {
+    refetchMe();
+    refetchMetrics();
     refetchRequests();
     refetchCampaigns();
-    refetchMetrics();
     refetchNotifications();
   };
 
-  const rawRequests = Array.isArray(requestsData)
+  const activeRequests = Array.isArray(requestsData)
     ? requestsData
     : requestsData?.requests || requestsData?.items || [];
 
-  const emergencyRequests =
-    rawRequests.length > 0
-      ? rawRequests
-      : [
-          {
-            _id: '6ab6a52d7c42ac4f08181b05',
-            patientName: 'Marcus Johnson',
-            bloodGroup: 'AB-',
-            unitsRequired: 4,
-            hospitalName: 'St. Jude Emergency Trauma Center, Kathmandu',
-            additionalInfo: 'Internal hemorrhage and severe trauma',
-            contactPhone: '+977-9800000000',
-            urgency: 'URGENT',
-            status: 'SEARCHING',
-          },
-        ];
-
-  const rawCampaigns = Array.isArray(campaignsData)
+  const upcomingCampaigns = Array.isArray(campaignsData)
     ? campaignsData
     : campaignsData?.campaigns || campaignsData?.items || [];
-
-  const campsList =
-    rawCampaigns.length > 0
-      ? rawCampaigns
-      : [
-          {
-            _id: 'camp-1',
-            title: 'City Mega Blood Donation Camp',
-            organizer: 'Nepal Red Cross Society',
-            date: 'Oct 02, 2026 • 09:00 AM',
-            registered: '42 Registered',
-          },
-          {
-            _id: 'camp-2',
-            title: 'Kathmandu Youth Blood Drive',
-            organizer: 'Rotary Club of Patan',
-            date: 'Oct 08, 2026 • 10:00 AM',
-            registered: '28 Registered',
-          },
-        ];
 
   const unreadCount = Array.isArray(notificationsData)
     ? notificationsData.length
     : notificationsData?.total || 0;
 
-  const displayName = meData?.name || user?.name || 'Donor';
+  const displayName = meProfile?.name || user?.name || 'Friend';
   const firstName = displayName.split(' ')[0];
-
-  const handleCall = (phone: string) => {
-    if (phone) {
-      Linking.openURL(`tel:${phone}`);
-    }
-  };
-
-  const handleShare = async (req: any) => {
-    try {
-      await Share.share({
-        message: `🚨 Urgent Blood Request on BloodLink!\nPatient: ${req.patientName}\nBlood Group Needed: ${req.bloodGroup} (${req.unitsRequired} Units)\nHospital: ${req.hospitalName}\nContact: ${req.contactPhone}\nPlease share to save a life!`,
-      });
-    } catch (e) {
-      // ignore
-    }
-  };
+  const userBloodGroup = meProfile?.bloodGroup || user?.bloodGroup || 'O+';
+  const donationCount = meProfile?.donationCount || 0;
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* MINIMAL TOP NAVBAR */}
-      <View style={styles.topHeader}>
+      {/* HEADER: Blood Sanjal + Notification */}
+      <View style={styles.header}>
         <View style={styles.brandRow}>
-          <View style={styles.logoDrop}>
-            <Ionicons name="water" size={16} color="#FFFFFF" />
+          <View style={styles.brandDrop}>
+            <Ionicons name="water" size={18} color="#FFFFFF" />
           </View>
-          <Text style={styles.brandTitle}>BloodLink</Text>
+          <View>
+            <Text style={styles.brandTitle}>Blood Sanjal</Text>
+            <Text style={styles.brandTagline}>Connecting People. Saving Lives.</Text>
+          </View>
         </View>
 
-        <View style={styles.headerRight}>
-          {/* User Avatar Chip */}
+        <View style={styles.headerActions}>
           <TouchableOpacity
-            style={styles.userChip}
-            onPress={() => navigation.navigate('Profile')}
-            activeOpacity={0.7}
-          >
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarInitial}>{firstName.charAt(0).toUpperCase()}</Text>
-            </View>
-            <Text style={styles.userName} numberOfLines={1}>{firstName}</Text>
-          </TouchableOpacity>
-
-          {/* Notification Icon */}
-          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Notifications"
             style={styles.iconButton}
             onPress={() => navigation.navigate('Notifications')}
-            activeOpacity={0.7}
           >
-            <Ionicons name="notifications-outline" size={20} color="#334155" />
-            {unreadCount > 0 && <View style={styles.notifDot} />}
+            <Ionicons name="notifications-outline" size={22} color="#0F172A" />
+            {unreadCount > 0 && (
+              <View style={styles.badgePill}>
+                <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.avatarButton}
+            onPress={() => navigation.navigate('Profile')}
+          >
+            <Text style={styles.avatarText}>{firstName.charAt(0).toUpperCase()}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       <ScrollView
-        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={false} onRefresh={onRefresh} tintColor={colors.primary} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={false}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+          />
+        }
       >
-        {/* ======================================================== */}
-        {/* 1. MINIMAL HERO SECTION                                  */}
-        {/* ======================================================== */}
+        {/* HERO SECTION */}
         <View style={styles.heroCard}>
-          <View style={styles.heroBadgeRow}>
-            <View style={styles.liveDot} />
-            <Text style={styles.heroBadgeText}>VERIFIED BLOOD NETWORK</Text>
-          </View>
-
-          <Text style={styles.heroHeadline}>Find Blood. Save Lives.</Text>
-          <Text style={styles.heroSubtitle}>
-            Direct connection between patients, certified blood banks, and verified voluntary donors across Nepal.
-          </Text>
-
-          {/* Emergency Request Button */}
-          <TouchableOpacity
-            style={styles.emergencyBtn}
-            onPress={() => navigation.navigate('Requests', { screen: 'EmergencyRequest' })}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="alert-circle" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.emergencyBtnText}>Emergency Broadcast</Text>
-          </TouchableOpacity>
-
-          {/* Two Action Buttons Row */}
-          <View style={styles.heroBtnRow}>
-            <TouchableOpacity
-              style={styles.secondaryBtn}
-              onPress={() => navigation.navigate('Find Blood')}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="search" size={15} color="#0F172A" style={{ marginRight: 6 }} />
-              <Text style={styles.secondaryBtnText}>Find Donors</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.outlineBtn}
-              onPress={() => navigation.navigate('Requests', { screen: 'CreateRequest' })}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="add" size={17} color={colors.primary} style={{ marginRight: 4 }} />
-              <Text style={styles.outlineBtnText}>Request Blood</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* ======================================================== */}
-        {/* 2. QUICK BLOOD GROUP FILTER                              */}
-        {/* ======================================================== */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Quick Search by Blood Group</Text>
-            <Text style={styles.sectionSub}>Tap to search verified donors</Text>
-          </View>
-
-          <View style={styles.bloodGrid}>
-            {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map((type) => (
-              <TouchableOpacity
-                key={type}
-                style={styles.bloodChip}
-                onPress={() => navigation.navigate('Find Blood', { bloodGroup: type })}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="water" size={11} color={colors.primary} style={{ marginRight: 3 }} />
-                <Text style={styles.bloodChipText}>{type}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* ======================================================== */}
-        {/* 3. PLATFORM METRICS                                      */}
-        {/* ======================================================== */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Platform Metrics</Text>
-          <Text style={styles.sectionSub}>Live counts verified directly from network</Text>
-
-          <View style={styles.metricsGrid}>
-            <View style={styles.metricCard}>
-              <View style={styles.metricHeader}>
-                <Text style={styles.metricLabel}>Available Stock</Text>
-                <Ionicons name="water-outline" size={16} color={colors.primary} />
-              </View>
-              <Text style={styles.metricValue}>{metricsData?.availableUnits ?? 263}</Text>
-            </View>
-
-            <View style={styles.metricCard}>
-              <View style={styles.metricHeader}>
-                <Text style={styles.metricLabel}>Active Donors</Text>
-                <Ionicons name="people-outline" size={16} color="#10B981" />
-              </View>
-              <Text style={styles.metricValue}>{metricsData?.activeDonors ?? 142}</Text>
-            </View>
-
-            <View style={styles.metricCard}>
-              <View style={styles.metricHeader}>
-                <Text style={styles.metricLabel}>Blood Banks</Text>
-                <Ionicons name="medical-outline" size={16} color="#0D9488" />
-              </View>
-              <Text style={styles.metricValue}>{metricsData?.bloodBanks ?? 6}</Text>
-            </View>
-
-            <View style={styles.metricCard}>
-              <View style={styles.metricHeader}>
-                <Text style={styles.metricLabel}>Active Requests</Text>
-                <Ionicons name="alert-circle-outline" size={16} color="#F59E0B" />
-              </View>
-              <Text style={styles.metricValue}>{metricsData?.emergencies ?? 3}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* ======================================================== */}
-        {/* 4. URGENT BLOOD REQUESTS                                 */}
-        {/* ======================================================== */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeaderRowBetween}>
-            <Text style={styles.sectionTitle}>Urgent Requests</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Requests')}>
-              <Text style={styles.linkText}>View All ({emergencyRequests.length})</Text>
-            </TouchableOpacity>
-          </View>
-
-          {emergencyRequests.map((req: any, index: number) => {
-            const contactPhone = req.contactPhone || req.contactPerson?.phone || '';
-
-            return (
-              <View key={req._id || index} style={styles.requestCard}>
-                <View style={styles.requestTopRow}>
-                  <View style={styles.badgeUrgent}>
-                    <Text style={styles.badgeUrgentText}>URGENT</Text>
-                  </View>
-                  <View style={styles.bloodTypePill}>
-                    <Text style={styles.bloodTypePillText}>{req.bloodGroup}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.requestBody}>
-                  <Text style={styles.patientName}>{req.patientName}</Text>
-                  <Text style={styles.unitsNeeded}>
-                    Needed: <Text style={{ fontWeight: '600', color: '#0F172A' }}>{req.unitsRequired} Units</Text>
-                  </Text>
-                  <View style={styles.locationRow}>
-                    <Ionicons name="location-outline" size={13} color="#64748B" style={{ marginRight: 4 }} />
-                    <Text style={styles.locationText} numberOfLines={1}>{req.hospitalName}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.requestActionRow}>
-                  {contactPhone ? (
-                    <TouchableOpacity
-                      style={styles.callButton}
-                      onPress={() => handleCall(contactPhone)}
-                      activeOpacity={0.8}
-                    >
-                      <Ionicons name="call" size={13} color="#FFFFFF" style={{ marginRight: 5 }} />
-                      <Text style={styles.callButtonText}>Call Contact</Text>
-                    </TouchableOpacity>
-                  ) : null}
-
-                  <TouchableOpacity
-                    style={styles.shareButton}
-                    onPress={() => handleShare(req)}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="share-social-outline" size={14} color="#334155" />
-                    <Text style={styles.shareButtonText}>Share</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            );
-          })}
-        </View>
-
-        {/* ======================================================== */}
-        {/* 5. BECOME A VOLUNTARY DONOR CALLOUT                      */}
-        {/* ======================================================== */}
-        <View style={styles.donorCalloutCard}>
-          <View style={styles.donorCalloutHeader}>
-            <View style={styles.heartCircle}>
-              <Ionicons name="heart" size={16} color="#FFFFFF" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.donorCalloutTitle}>Become a Life Saver</Text>
-              <Text style={styles.donorCalloutSub}>
-                1 donation can save up to 3 lives. Register to receive verified emergency requests.
-              </Text>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={styles.donorCalloutBtn}
-            onPress={() => navigation.navigate('Donate')}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.donorCalloutBtnText}>Register as Blood Donor</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* ======================================================== */}
-        {/* 6. BLOOD COMPATIBILITY MATRIX                            */}
-        {/* ======================================================== */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Blood Compatibility Matrix</Text>
-          <Text style={styles.sectionSub}>Select a blood type to view giving & receiving rules</Text>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.compatScroll}>
-            {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map((type) => {
-              const isSelected = selectedCompatType === type;
-              return (
-                <TouchableOpacity
-                  key={type}
-                  style={[styles.compatChip, isSelected && styles.compatChipSelected]}
-                  onPress={() => setSelectedCompatType(type)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.compatChipText, isSelected && styles.compatChipTextSelected]}>
-                    {type}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-
-          <View style={styles.compatResultBox}>
-            <View style={styles.compatResultRow}>
-              <Text style={styles.compatLabel}>Can RECEIVE from:</Text>
-              <Text style={styles.compatValue}>{COMPATIBILITY_RULES[selectedCompatType]?.receive}</Text>
-            </View>
-            <View style={styles.compatDivider} />
-            <View style={styles.compatResultRow}>
-              <Text style={styles.compatLabel}>Can GIVE to:</Text>
-              <Text style={styles.compatValue}>{COMPATIBILITY_RULES[selectedCompatType]?.give}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* ======================================================== */}
-        {/* 7. UPCOMING CAMPAIGNS & DRIVES                           */}
-        {/* ======================================================== */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeaderRowBetween}>
-            <Text style={styles.sectionTitle}>Upcoming Blood Drives</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Campaigns')}>
-              <Text style={styles.linkText}>View All</Text>
-            </TouchableOpacity>
-          </View>
-
-          {campsList.map((camp: any, index: number) => (
-            <TouchableOpacity
-              key={camp._id || index}
-              style={styles.campItem}
-              onPress={() => navigation.navigate('CampaignDetails', { id: camp._id })}
-              activeOpacity={0.8}
-            >
-              <View style={styles.campInfo}>
-                <Text style={styles.campTitle}>{camp.title}</Text>
-                <Text style={styles.campOrganizer}>{camp.organizer}</Text>
-                <View style={styles.campDateRow}>
-                  <Ionicons name="calendar-outline" size={12} color="#64748B" style={{ marginRight: 4 }} />
-                  <Text style={styles.campDateText}>{camp.date || 'Oct 2026'}</Text>
-                </View>
-              </View>
-              <View style={styles.campAction}>
-                <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* ======================================================== */}
-        {/* 8. VERIFICATION GUARANTEE                                */}
-        {/* ======================================================== */}
-        <View style={styles.safetyBox}>
-          <Ionicons name="shield-checkmark" size={20} color="#10B981" style={{ marginRight: 10 }} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.safetyTitle}>Verified Biosafety Accreditation</Text>
-            <Text style={styles.safetyText}>
-              All blood banks and partner hospitals are clinical license verified.
+          <View style={styles.heroTextCol}>
+            <Text style={styles.heroGreeting}>Namaste, {firstName}</Text>
+            <Text style={styles.heroHeadline}>Find Blood.{'\n'}Help Someone Today.</Text>
+            <Text style={styles.heroSubhead}>
+              Quickly locate compatible donors across hospitals and cities in Nepal.
             </Text>
           </View>
+          <View style={styles.bloodGroupBadge}>
+            <Text style={styles.bloodBadgeLabel}>My Group</Text>
+            <Text style={styles.bloodBadgeValue}>{userBloodGroup}</Text>
+          </View>
         </View>
 
-        <View style={{ height: 28 }} />
+        {/* PRIMARY ACTIONS: [Find Blood] & [Request Blood] */}
+        <View style={styles.actionsRow}>
+          <TouchableOpacity
+            style={[styles.actionCard, styles.actionCardPrimary]}
+            onPress={() => navigation.navigate('FindBlood')}
+            activeOpacity={0.88}
+          >
+            <View style={styles.actionIconCircle}>
+              <Ionicons name="search" size={20} color={colors.primary} />
+            </View>
+            <Text style={styles.actionTitlePrimary}>Find Blood</Text>
+            <Text style={styles.actionSubtitlePrimary}>Search nearby verified donors</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionCard, styles.actionCardSecondary]}
+            onPress={() => navigation.navigate('CreateRequest')}
+            activeOpacity={0.88}
+          >
+            <View style={styles.actionIconCircleSecondary}>
+              <Ionicons name="add-circle-outline" size={20} color="#0F172A" />
+            </View>
+            <Text style={styles.actionTitleSecondary}>Request Blood</Text>
+            <Text style={styles.actionSubtitleSecondary}>Submit urgent patient request</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* EMERGENCY BLOOD REQUEST BUTTON */}
+        <View style={styles.emergencySection}>
+          <EmergencyButton
+            title="Emergency Blood Request"
+            onConfirm={() => navigation.navigate('CreateRequest', { urgency: 'EMERGENCY' })}
+          />
+        </View>
+
+        {/* LIVE PLATFORM METRICS SUMMARY */}
+        <View style={styles.metricsContainer}>
+          <View style={styles.metricItem}>
+            <Text style={styles.metricVal}>{metrics?.availableUnits || 263}</Text>
+            <Text style={styles.metricLbl}>Units Available</Text>
+          </View>
+          <View style={styles.metricDivider} />
+          <View style={styles.metricItem}>
+            <Text style={styles.metricVal}>{metrics?.activeDonors || 32}</Text>
+            <Text style={styles.metricLbl}>Active Donors</Text>
+          </View>
+          <View style={styles.metricDivider} />
+          <View style={styles.metricItem}>
+            <Text style={styles.metricVal}>{metrics?.bloodBanks || 8}</Text>
+            <Text style={styles.metricLbl}>Partner Banks</Text>
+          </View>
+        </View>
+
+        {/* RECOGNITION & IMPACT CARD */}
+        <TouchableOpacity
+          style={styles.recognitionCard}
+          onPress={() => navigation.navigate('Rewards')}
+          activeOpacity={0.9}
+        >
+          <View style={styles.recognitionIcon}>
+            <Ionicons name="ribbon-outline" size={24} color="#D97706" />
+          </View>
+          <View style={styles.recognitionContent}>
+            <Text style={styles.recognitionTitle}>Donor Recognition & Milestones</Text>
+            <Text style={styles.recognitionSub}>
+              {donationCount > 0
+                ? `${donationCount} lifetime donations • View badges and certificates`
+                : 'Become an active donor and earn certificates that save lives'}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+        </TouchableOpacity>
+
+        {/* LIVE ACTIVE BLOOD REQUESTS */}
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.sectionTitleCol}>
+            <Text style={styles.sectionTitle}>Active Blood Requests</Text>
+            <Text style={styles.sectionSubtitle}>Patients needing urgent blood right now</Text>
+          </View>
+          <TouchableOpacity onPress={() => navigation.navigate('Requests')}>
+            <Text style={styles.viewAllText}>View All</Text>
+          </TouchableOpacity>
+        </View>
+
+        {isLoadingRequests ? (
+          <SkeletonCard height={90} borderRadius={14} />
+        ) : activeRequests.length === 0 ? (
+          <EmptyState
+            icon="checkmark-circle-outline"
+            title="All Blood Demands Fulfilled"
+            description="There are no pending blood requests at this moment. You can create a request if you need blood."
+            actionTitle="Request Blood"
+            onAction={() => navigation.navigate('CreateRequest')}
+          />
+        ) : (
+          activeRequests.map((req: any) => (
+            <TouchableOpacity
+              key={req._id || req.id}
+              style={styles.requestCard}
+              onPress={() => navigation.navigate('RequestDetail', { id: req._id || req.id })}
+              activeOpacity={0.88}
+            >
+              <View style={styles.reqBloodBadge}>
+                <Text style={styles.reqBloodText}>{req.bloodGroup}</Text>
+              </View>
+
+              <View style={styles.reqInfoCol}>
+                <View style={styles.reqHospitalRow}>
+                  <Text style={styles.reqHospital} numberOfLines={1}>
+                    {req.hospital || req.hospitalName || 'Local Hospital'}
+                  </Text>
+                  <StatusBadge status={req.urgency || req.status || 'ACTIVE'} />
+                </View>
+
+                <View style={styles.reqMetaRow}>
+                  <Ionicons name="location-outline" size={13} color="#64748B" />
+                  <Text style={styles.reqMetaText} numberOfLines={1}>
+                    {req.location?.city || req.districtId || 'Nepal'} • {req.units || 1} Unit(s)
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
+            </TouchableOpacity>
+          ))
+        )}
+
+        {/* UPCOMING CAMPAIGNS & BLOOD CAMPS */}
+        <View style={[styles.sectionHeaderRow, { marginTop: spacing.l }]}>
+          <View style={styles.sectionTitleCol}>
+            <Text style={styles.sectionTitle}>Blood Donation Camps</Text>
+            <Text style={styles.sectionSubtitle}>Community drives organized across Nepal</Text>
+          </View>
+          <TouchableOpacity onPress={() => navigation.navigate('Campaigns')}>
+            <Text style={styles.viewAllText}>View All</Text>
+          </TouchableOpacity>
+        </View>
+
+        {isLoadingCampaigns ? (
+          <SkeletonCard height={90} borderRadius={14} />
+        ) : upcomingCampaigns.length === 0 ? (
+          <EmptyState
+            icon="calendar-outline"
+            title="No Upcoming Camps"
+            description="Check back soon or organize a community blood drive in your area."
+          />
+        ) : (
+          upcomingCampaigns.map((camp: any) => (
+            <TouchableOpacity
+              key={camp._id || camp.id}
+              style={styles.campaignCard}
+              onPress={() => navigation.navigate('CampaignDetail', { id: camp._id || camp.id })}
+              activeOpacity={0.88}
+            >
+              <View style={styles.campaignCalendarBadge}>
+                <Ionicons name="calendar" size={18} color={colors.primary} />
+              </View>
+              <View style={styles.campaignInfoCol}>
+                <Text style={styles.campaignTitle} numberOfLines={1}>
+                  {camp.title}
+                </Text>
+                <Text style={styles.campaignOrganizer} numberOfLines={1}>
+                  Organized by: {camp.organizer || 'Community Organization'}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -512,514 +332,383 @@ export const HomeScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
   },
-  topHeader: {
+  header: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#E2E8F0',
   },
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
   },
-  logoDrop: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+  brandDrop: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
   },
   brandTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 17,
+    fontWeight: '800',
     color: '#0F172A',
-    letterSpacing: -0.3,
   },
-  headerRight: {
+  brandTagline: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.primary,
+    letterSpacing: 0.1,
+  },
+  headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
-  userChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  avatarCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: colors.primary,
+  iconButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 6,
+    position: 'relative',
   },
-  avatarInitial: {
+  badgePill: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    minWidth: 16,
+    alignItems: 'center',
+  },
+  badgeText: {
     color: '#FFFFFF',
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: '700',
   },
-  userName: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#334155',
-  },
-  iconButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: '#F8FAFC',
+  avatarButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.primarySoft,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#FECACA',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  notifDot: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.primary,
-  },
-  scrollView: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
+  avatarText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.primary,
   },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    padding: 16,
+    paddingBottom: 32,
   },
   heroCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 16,
+    borderRadius: 18,
+    padding: 20,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    marginBottom: 14,
-  },
-  heroBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.primary,
-    marginRight: 6,
+  heroTextCol: {
+    flex: 1,
+    paddingRight: 12,
   },
-  heroBadgeText: {
-    fontSize: 11,
+  heroGreeting: {
+    fontSize: 12,
     fontWeight: '600',
     color: colors.primary,
-    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
   },
   heroHeadline: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 6,
-    letterSpacing: -0.4,
-  },
-  heroSubtitle: {
-    fontSize: 13,
-    color: '#64748B',
-    lineHeight: 18,
-    marginBottom: 16,
-  },
-  emergencyBtn: {
-    backgroundColor: colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 10,
-    marginBottom: 8,
-  },
-  emergencyBtnText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  heroBtnRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  secondaryBtn: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  secondaryBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#0F172A',
-  },
-  outlineBtn: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  outlineBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  sectionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 14,
-  },
-  sectionHeaderRow: {
-    marginBottom: 12,
-  },
-  sectionHeaderRowBetween: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#0F172A',
-  },
-  sectionSub: {
-    fontSize: 12,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  linkText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  bloodGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    justifyContent: 'space-between',
-  },
-  bloodChip: {
-    width: '23%',
-    height: 38,
-    borderRadius: 8,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bloodChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#0F172A',
-  },
-  metricsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 10,
-    justifyContent: 'space-between',
-  },
-  metricCard: {
-    width: '48.5%',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  metricHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  metricLabel: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: '#64748B',
-  },
-  metricValue: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#0F172A',
-  },
-  requestCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 10,
-  },
-  requestTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    lineHeight: 25,
     marginBottom: 6,
   },
-  badgeUrgent: {
-    backgroundColor: '#FEF2F2',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  badgeUrgentText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  bloodTypePill: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  bloodTypePillText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  requestBody: {
-    marginBottom: 8,
-  },
-  patientName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#0F172A',
-  },
-  unitsNeeded: {
+  heroSubhead: {
     fontSize: 12,
     color: '#64748B',
-    marginTop: 2,
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  locationText: {
-    fontSize: 11,
-    color: '#64748B',
-    flex: 1,
-  },
-  requestActionRow: {
-    flexDirection: 'row',
-    gap: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    paddingTop: 8,
-  },
-  callButton: {
-    flex: 1,
-    backgroundColor: colors.primary,
-    borderRadius: 6,
-    paddingVertical: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  callButtonText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  shareButton: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 6,
-    paddingVertical: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  shareButtonText: {
-    color: '#334155',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  donorCalloutCard: {
-    backgroundColor: '#0F172A',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 14,
-  },
-  donorCalloutHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  heartCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-  },
-  donorCalloutTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  donorCalloutSub: {
-    fontSize: 12,
-    color: '#94A3B8',
-    marginTop: 2,
     lineHeight: 16,
   },
-  donorCalloutBtn: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    paddingVertical: 9,
+  bloodGroupBadge: {
+    width: 68,
+    height: 68,
+    borderRadius: 16,
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1.5,
+    borderColor: '#FECACA',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  donorCalloutBtnText: {
-    color: '#0F172A',
-    fontSize: 13,
-    fontWeight: '600',
+  bloodBadgeLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#991B1B',
+    textTransform: 'uppercase',
   },
-  compatScroll: {
-    marginVertical: 10,
+  bloodBadgeValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.primary,
+    marginTop: 1,
   },
-  compatChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginRight: 8,
-  },
-  compatChipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  compatChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#0F172A',
-  },
-  compatChipTextSelected: {
-    color: '#FFFFFF',
-  },
-  compatResultBox: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 8,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  compatResultRow: {
+  actionsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    gap: 12,
+    marginBottom: 14,
   },
-  compatLabel: {
+  actionCard: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+  },
+  actionCardPrimary: {
+    backgroundColor: colors.primarySoft,
+    borderColor: '#FECACA',
+  },
+  actionCardSecondary: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
+  },
+  actionIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  actionIconCircleSecondary: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  actionTitlePrimary: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.primary,
+    marginBottom: 3,
+  },
+  actionSubtitlePrimary: {
+    fontSize: 12,
+    color: '#7F1D1D',
+    lineHeight: 15,
+  },
+  actionTitleSecondary: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 3,
+  },
+  actionSubtitleSecondary: {
     fontSize: 12,
     color: '#64748B',
+    lineHeight: 15,
   },
-  compatValue: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#0F172A',
+  emergencySection: {
+    marginBottom: 16,
   },
-  compatDivider: {
-    height: 1,
-    backgroundColor: '#E2E8F0',
-    marginVertical: 8,
-  },
-  campItem: {
+  metricsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 16,
   },
-  campInfo: {
+  metricItem: {
     flex: 1,
-    paddingRight: 8,
+    alignItems: 'center',
   },
-  campTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+  metricVal: {
+    fontSize: 18,
+    fontWeight: '800',
     color: '#0F172A',
   },
-  campOrganizer: {
+  metricLbl: {
     fontSize: 11,
     color: '#64748B',
     marginTop: 2,
+    textAlign: 'center',
   },
-  campDateRow: {
+  metricDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: '#E2E8F0',
+  },
+  recognitionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
-  },
-  campDateText: {
-    fontSize: 11,
-    color: '#64748B',
-  },
-  campAction: {
-    paddingLeft: 4,
-  },
-  safetyBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
-    padding: 12,
+    backgroundColor: '#FFFBEB',
+    borderRadius: 14,
+    padding: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#FDE68A',
+    marginBottom: 20,
+    gap: 12,
   },
-  safetyTitle: {
+  recognitionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FEF3C7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  recognitionContent: {
+    flex: 1,
+  },
+  recognitionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#92400E',
+  },
+  recognitionSub: {
     fontSize: 12,
-    fontWeight: '600',
+    color: '#B45309',
+    marginTop: 2,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionTitleCol: {
+    flex: 1,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
     color: '#0F172A',
   },
-  safetyText: {
-    fontSize: 11,
+  sectionSubtitle: {
+    fontSize: 12,
     color: '#64748B',
     marginTop: 1,
+  },
+  viewAllText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  requestCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    gap: 12,
+  },
+  reqBloodBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  reqBloodText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.primary,
+  },
+  reqInfoCol: {
+    flex: 1,
+  },
+  reqHospitalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  reqHospital: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+    flex: 1,
+    marginRight: 6,
+  },
+  reqMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  reqMetaText: {
+    fontSize: 12,
+    color: '#64748B',
+  },
+  campaignCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    gap: 12,
+  },
+  campaignCalendarBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  campaignInfoCol: {
+    flex: 1,
+  },
+  campaignTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 2,
+  },
+  campaignOrganizer: {
+    fontSize: 12,
+    color: '#64748B',
   },
 });

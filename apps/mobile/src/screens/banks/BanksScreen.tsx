@@ -8,10 +8,14 @@ import {
   TouchableOpacity,
   Linking,
   StatusBar,
+  RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
+import { LocationsAPI } from '../../api/locations.api';
 import { colors } from '../../theme';
 
 interface BloodBank {
@@ -99,7 +103,29 @@ export const BanksScreen = () => {
   const navigation = useNavigation<any>();
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredBanks = BLOOD_BANKS_DATA.filter(
+  const { data, isLoading, refetch, isRefetching } = useQuery({
+    queryKey: ['blood-banks-directory'],
+    queryFn: async () => {
+      const res = await LocationsAPI.getBloodBanks();
+      return res.data?.data || res.data;
+    },
+  });
+
+  const bloodBanksList: BloodBank[] = Array.isArray(data) && data.length > 0
+    ? data.map((b: any) => ({
+        id: b.id || b._id || String(Math.random()),
+        name: b.name || 'Blood Center',
+        type: b.type || 'Blood Transfusion Center',
+        address: b.address || 'Kathmandu, Nepal',
+        distance: b.distance || 'Central',
+        phone: b.phone || '+97714225344',
+        hours: b.hours || '24 Hours / 7 Days',
+        status: (b.status === 'AMPLE' || b.status === 'MODERATE' || b.status === 'URGENT') ? b.status : 'AMPLE',
+        availableGroups: Array.isArray(b.availableGroups) ? b.availableGroups : ['A+', 'B+', 'O+', 'AB+'],
+      }))
+    : BLOOD_BANKS_DATA;
+
+  const filteredBanks = bloodBanksList.filter(
     (b) =>
       b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       b.address.toLowerCase().includes(searchQuery.toLowerCase())
@@ -187,6 +213,9 @@ export const BanksScreen = () => {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />
+        }
         renderItem={({ item }) => {
           const status = getStatusBadge(item.status);
           return (

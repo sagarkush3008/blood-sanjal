@@ -10,6 +10,6 @@ router.get('/search', requireAuth, DonorController.search);
 // Private profile management
 router.get('/me/profile', requireAuth, DonorController.getMe);
 router.post('/me/profile', requireAuth, DonorController.upsertMe);
-
+router.get('/:id', requireAuth, DonorController.getById);
 
 export default router;

@@ -19,6 +19,7 @@ interface PrimaryButtonProps {
   style?: ViewStyle;
   textStyle?: TextStyle;
   icon?: string | React.ReactNode;
+  accessibilityLabel?: string;
 }
 
 export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
@@ -30,6 +31,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   style,
   textStyle,
   icon,
+  accessibilityLabel,
 }) => {
   const isOutline = variant === 'outline';
   const isDanger = variant === 'danger';
@@ -61,6 +63,9 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 
   return (
     <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel || title}
+      accessibilityState={{ disabled: !!(disabled || loading) }}
       style={[
         styles.button,
         isOutline && styles.buttonOutline,
@@ -74,7 +79,10 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       activeOpacity={0.85}
     >
       {loading ? (
-        <ActivityIndicator color={isOutline ? colors.primary : '#FFFFFF'} />
+        <ActivityIndicator
+          size="small"
+          color={isOutline ? colors.primary : '#FFFFFF'}
+        />
       ) : (
         <>
           {renderIcon()}
@@ -94,20 +102,20 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   );
 };
 
-
 const styles = StyleSheet.create({
   button: {
     backgroundColor: colors.primary,
-    paddingVertical: 12,
+    minHeight: 48, // Accessibility standard ≥44px
+    paddingVertical: 13,
     paddingHorizontal: 18,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
     width: '100%',
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.06,
     shadowRadius: 2,
     elevation: 1,
   },
@@ -128,11 +136,11 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   disabled: {
-    opacity: 0.5,
+    opacity: 0.55,
   },
   text: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
     letterSpacing: 0.1,
   },

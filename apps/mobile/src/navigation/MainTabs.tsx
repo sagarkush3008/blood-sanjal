@@ -52,7 +52,7 @@ export const MainTabs = () => {
       />
 
       <Tab.Screen
-        name="Find Blood"
+        name="FindBlood"
         component={FindBloodScreen}
         options={{
           headerShown: false,

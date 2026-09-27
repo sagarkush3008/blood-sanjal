@@ -32,4 +32,67 @@ export class LocationController {
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }
+
+  static async getBloodBanks(req: Request, res: Response, next: NextFunction) {
+    try {
+      const banks = [
+        {
+          id: '1',
+          name: 'Central Blood Transfusion Service (Nepal Red Cross)',
+          type: 'National Central Bank',
+          address: 'Exhibition Road, Bhrikutimandap, Kathmandu',
+          distance: '1.2 km away',
+          phone: '+97714225344',
+          hours: 'Open 24 Hours / 7 Days',
+          status: 'AMPLE',
+          availableGroups: ['A+', 'B+', 'O+', 'AB+', 'A-', 'O-'],
+        },
+        {
+          id: '2',
+          name: 'TU Teaching Hospital Blood Bank',
+          type: 'Government Teaching Hospital',
+          address: 'Maharajgunj, Kathmandu',
+          distance: '3.8 km away',
+          phone: '+97714412303',
+          hours: 'Open 24 Hours / 7 Days',
+          status: 'MODERATE',
+          availableGroups: ['A+', 'B+', 'O+', 'AB+'],
+        },
+        {
+          id: '3',
+          name: 'Patan Hospital Blood Transfusion Center',
+          type: 'Community Hospital Center',
+          address: 'Lagankhel, Lalitpur',
+          distance: '4.5 km away',
+          phone: '+97715522266',
+          hours: 'Open 24 Hours / 7 Days',
+          status: 'URGENT',
+          availableGroups: ['B+', 'O-'],
+        },
+        {
+          id: '4',
+          name: 'Bir Hospital Emergency Blood Storage',
+          type: 'Central Government Hospital',
+          address: 'Kanti Path, Kathmandu',
+          distance: '2.1 km away',
+          phone: '+97714221119',
+          hours: 'Open 24 Hours / 7 Days',
+          status: 'AMPLE',
+          availableGroups: ['A+', 'A-', 'B+', 'B-', 'O+', 'AB+'],
+        },
+        {
+          id: '5',
+          name: 'Bhaktapur Cancer Hospital Blood Bank',
+          type: 'Specialized Oncology Center',
+          address: 'Dudhpati, Bhaktapur',
+          distance: '12.4 km away',
+          phone: '+97716611532',
+          hours: 'Open 24 Hours / 7 Days',
+          status: 'URGENT',
+          availableGroups: ['O+', 'AB-'],
+        },
+      ];
+      res.status(200).json(SuccessResponse(banks, req.id));
+    } catch (error) { next(error); }
+  }
 }

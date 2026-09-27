@@ -49,13 +49,12 @@ const paymentSchema = new Schema<IPaymentTransaction>(
     refundReason: { type: String },
     refundedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     refundedAt: { type: Date },
-    metadata: { type: Map, of: Schema.Types.Mixed }
+    metadata: { type: Schema.Types.Mixed }
   },
   { timestamps: true }
 );
 
 paymentSchema.index({ userId: 1, purpose: 1, status: 1, updatedAt: -1 });
-paymentSchema.index({ idempotencyKey: 1 }, { sparse: true });
 paymentSchema.index({ status: 1, createdAt: -1 });
 
 export const PaymentTransaction = mongoose.model<IPaymentTransaction>('PaymentTransaction', paymentSchema);

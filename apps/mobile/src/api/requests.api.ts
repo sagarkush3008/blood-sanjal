@@ -5,6 +5,8 @@ export const BloodRequestsAPI = {
   list: (params?: any) => apiClient.get('/requests', { params }),
   getById: (id: string) => apiClient.get(`/requests/${id}`),
   update: (id: string, data: any) => apiClient.patch(`/requests/${id}`, data),
+  cancel: (id: string) => apiClient.post(`/requests/${id}/cancel`),
+  fulfill: (id: string, units: number = 1) => apiClient.post(`/requests/${id}/fulfill`, { units }),
 };
 
 export const EmergencyRequestsAPI = {

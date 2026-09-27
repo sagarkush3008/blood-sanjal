@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { DonorService } from './donor.service';
+import { DonorProfile } from './donorProfile.model';
 import { PaymentService } from '../payments/payment.service';
 import { SuccessResponse } from '../../core/http/result';
 import { AppError } from '../../core/errors/appError';
@@ -21,6 +22,17 @@ export class DonorController {
     } catch (error) { next(error); }
   }
 
+  static async getById(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const donor = await DonorProfile.findOne({
+        $or: [{ _id: req.params.id }, { userId: req.params.id }]
+      }).populate('userId');
+      if (!donor) throw new AppError(404, 'NOT_FOUND', 'Donor profile not found');
+      const { toPublicDonorDTO } = await import('./donor.dto');
+      res.status(200).json(SuccessResponse(toPublicDonorDTO(donor, donor.userId as any), req.id));
+    } catch (error) { next(error); }
+  }
 
 
   static async search(req: Request, res: Response, next: NextFunction) {

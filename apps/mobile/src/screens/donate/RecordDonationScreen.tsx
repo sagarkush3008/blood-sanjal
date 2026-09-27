@@ -6,6 +6,7 @@ import {
   ScrollView,
   Alert,
   StatusBar,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
@@ -17,12 +18,27 @@ import { Ionicons } from '@expo/vector-icons';
 import { DonationsAPI } from '../../api/donations.api';
 import { InputField } from '../../components/forms/InputField';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
-import { spacing } from '../../theme';
+import { colors, spacing } from '../../theme';
+
+const DONATION_TYPES = [
+  { label: 'Whole Blood', value: 'WHOLE_BLOOD' },
+  { label: 'Platelets', value: 'PLATELETS' },
+  { label: 'Plasma', value: 'PLASMA' },
+];
 
 const donationSchema = z.object({
   hospitalName: z.string().min(3, 'Hospital or donation center name is required'),
-  donationDate: z.string().min(10, 'Use YYYY-MM-DD format'),
+  donationDate: z
+    .string()
+    .min(10, 'Use YYYY-MM-DD format')
+    .refine((val) => {
+      const d = new Date(val);
+      return !isNaN(d.getTime()) && d <= new Date();
+    }, 'Donation date cannot be in the future'),
+  donationType: z.string(),
+  location: z.string().min(2, 'Location/City is required'),
   units: z.coerce.number().min(1, 'At least 1 unit'),
+  notes: z.string().optional(),
 });
 
 type DonationFormData = z.infer<typeof donationSchema>;
@@ -35,26 +51,39 @@ export const RecordDonationScreen = () => {
   const {
     control,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<DonationFormData>({
     resolver: zodResolver(donationSchema),
     defaultValues: {
       hospitalName: '',
       donationDate: new Date().toISOString().split('T')[0],
+      donationType: 'WHOLE_BLOOD',
+      location: '',
       units: 1,
+      notes: '',
     },
   });
 
+  const selectedType = watch('donationType');
+
   const createMutation = useMutation({
     mutationFn: (data: DonationFormData) =>
-      DonationsAPI.create({ ...data, donationType: 'WHOLE_BLOOD' }),
+      DonationsAPI.create({
+        hospitalName: data.hospitalName,
+        donationDate: data.donationDate,
+        donationType: data.donationType,
+        location: data.location,
+        notes: data.notes ? `${data.units} Pint(s) - ${data.notes}` : `${data.units} Pint(s)`,
+      }),
     onSuccess: () => {
       Alert.alert(
         'Donation Recorded! 🎖️',
-        'Thank you for your life-saving contribution! Your donation certificate and hero points will be credited upon medical center verification.',
+        'Thank you for your life-saving contribution! Your donation certificate and hero points will be credited upon hospital verification.',
         [
           {
-            text: 'Great!',
+            text: 'View My Impact',
             onPress: () => {
               queryClient.invalidateQueries({ queryKey: ['my-donations'] });
               queryClient.invalidateQueries({ queryKey: ['donation-metrics'] });
@@ -66,7 +95,9 @@ export const RecordDonationScreen = () => {
     },
     onError: (error: any) => {
       setApiError(
-        error.response?.data?.message || 'Failed to record donation.'
+        error.response?.data?.error?.message ||
+          error.response?.data?.message ||
+          'Failed to record donation. Please check your donor profile.'
       );
     },
   });
@@ -107,8 +138,8 @@ export const RecordDonationScreen = () => {
             name="hospitalName"
             render={({ field: { onChange, onBlur, value } }) => (
               <InputField
-                label="Donation Hospital or Blood Center"
-                placeholder="e.g. Teaching Hospital Blood Bank, Ward 4"
+                label="Donation Hospital or Blood Bank *"
+                placeholder="e.g. Teaching Hospital Blood Bank, Kathmandu"
                 leftIcon="business-outline"
                 onBlur={onBlur}
                 onChangeText={onChange}
@@ -123,13 +154,49 @@ export const RecordDonationScreen = () => {
             name="donationDate"
             render={({ field: { onChange, onBlur, value } }) => (
               <InputField
-                label="Donation Date (YYYY-MM-DD)"
+                label="Donation Date (YYYY-MM-DD) *"
                 placeholder="2026-10-25"
                 leftIcon="calendar-outline"
                 onBlur={onBlur}
                 onChangeText={onChange}
                 value={value}
                 error={errors.donationDate?.message}
+              />
+            )}
+          />
+
+          {/* Donation Type Selector */}
+          <Text style={styles.fieldLabel}>Donation Type</Text>
+          <View style={styles.typeSelectorRow}>
+            {DONATION_TYPES.map((type) => {
+              const isSelected = selectedType === type.value;
+              return (
+                <TouchableOpacity
+                  key={type.value}
+                  style={[styles.typeChip, isSelected && styles.typeChipActive]}
+                  onPress={() => setValue('donationType', type.value)}
+                  activeOpacity={0.75}
+                >
+                  <Text style={[styles.typeChipText, isSelected && styles.typeChipTextActive]}>
+                    {type.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <Controller
+            control={control}
+            name="location"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <InputField
+                label="City / District *"
+                placeholder="e.g. Kathmandu, Bagmati"
+                leftIcon="location-outline"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+                error={errors.location?.message}
               />
             )}
           />
@@ -147,6 +214,22 @@ export const RecordDonationScreen = () => {
                 onChangeText={onChange}
                 value={value?.toString()}
                 error={errors.units?.message}
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="notes"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <InputField
+                label="Optional Remarks / Campaign Name"
+                placeholder="e.g. Nepal Red Cross Youth Camp 2026"
+                leftIcon="document-text-outline"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+                error={errors.notes?.message}
               />
             )}
           />
@@ -192,8 +275,8 @@ const styles = StyleSheet.create({
     borderColor: '#FECACA',
   },
   title: {
-    fontSize: 24,
-    fontWeight: '900',
+    fontSize: 22,
+    fontWeight: '800',
     color: '#0F172A',
     marginBottom: 6,
   },
@@ -206,14 +289,14 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    padding: 22,
+    borderRadius: 18,
+    padding: 20,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
-    shadowRadius: 14,
+    shadowRadius: 10,
     elevation: 2,
   },
   errorBanner: {
@@ -232,6 +315,41 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#991B1B',
+  },
+  fieldLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#334155',
+    marginBottom: 6,
+    marginTop: 4,
+  },
+  typeSelectorRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  typeChip: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F8FAFC',
+  },
+  typeChipActive: {
+    backgroundColor: '#FEF2F2',
+    borderColor: colors.primary,
+  },
+  typeChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  typeChipTextActive: {
+    color: colors.primary,
+    fontWeight: '700',
   },
 });
 

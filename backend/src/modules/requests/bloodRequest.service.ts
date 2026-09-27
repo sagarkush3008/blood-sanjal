@@ -3,6 +3,7 @@ import { AuditLog } from '../audit/auditLog.model';
 import { AppError } from '../../core/errors/appError';
 import { DonorProfile } from '../donors/donorProfile.model';
 import { NotificationJob } from '../notifications/notificationQueue.model';
+import { PaymentTransaction } from '../payments/payment.model';
 
 export class BloodRequestService {
   static async listRequests(userId: string, query: any) {
@@ -77,8 +78,29 @@ export class BloodRequestService {
       contactPerson,
       requiredDate,
       additionalInfo,
+      urgencyWindow: data.urgencyWindow,
+      paymentReference: data.paymentReference,
+      paymentProvider: data.paymentProvider,
+      platformFeeNpr: data.platformFeeNpr,
       status: 'PENDING_VERIFICATION'
     });
+
+    if (data.paymentReference) {
+      try {
+        await PaymentTransaction.create({
+          userId,
+          amountMinor: Math.round((Number(data.platformFeeNpr) || 15) * 100),
+          currency: 'NPR',
+          purpose: 'SEARCH_PLATFORM_FEE',
+          status: 'SUCCESS',
+          gateway: (data.paymentProvider || 'esewa').toLowerCase(),
+          gatewayTransactionId: data.paymentReference,
+          metadata: { requestId: request._id.toString(), patientName: data.patientName }
+        });
+      } catch (e) {
+        // Silently continue if payment ledger fails
+      }
+    }
 
     await AuditLog.create({
       actorId: userId,

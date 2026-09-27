@@ -1,79 +1,130 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { StatusBadge } from '../common/StatusBadge';
+import { BloodGroupChip } from '../common/BloodGroupChip';
 import { colors, spacing } from '../../theme';
 
 interface CampaignCardProps {
-  title: string;
-  organizer: string;
-  date: string;
-  location: string;
-  participantsCount?: number;
-  onPress?: () => void;
+  campaign: {
+    _id: string;
+    title: string;
+    organizer: string;
+    location: string;
+    date: string | Date;
+    startTime: string;
+    endTime: string;
+    description?: string;
+    bloodGroupsNeeded?: string[];
+    status?: string;
+    participantsCount?: number;
+  };
+  isRegistered?: boolean;
+  onPress: () => void;
+  onRsvpToggle?: () => void;
+  isRsvpLoading?: boolean;
 }
 
 export const CampaignCard: React.FC<CampaignCardProps> = ({
-  title,
-  organizer,
-  date,
-  location,
-  participantsCount = 12,
+  campaign,
+  isRegistered,
   onPress,
+  onRsvpToggle,
+  isRsvpLoading,
 }) => {
-  // Extract month and day if possible, or fallback
-  const dateObj = new Date(date);
-  const isValidDate = !isNaN(dateObj.getTime());
-  const dayStr = isValidDate ? dateObj.getDate().toString() : '15';
-  const monthStr = isValidDate
-    ? dateObj.toLocaleString('en-US', { month: 'short' }).toUpperCase()
-    : 'OCT';
+  const campaignDate = new Date(campaign.date);
+  const monthName = campaignDate.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+  const dayNum = campaignDate.getDate();
 
   return (
     <TouchableOpacity
-      activeOpacity={0.88}
-      onPress={onPress}
       style={styles.card}
+      onPress={onPress}
+      activeOpacity={0.88}
     >
       <View style={styles.topRow}>
-        {/* Date Box */}
         <View style={styles.dateBadge}>
-          <Text style={styles.dateDay}>{dayStr}</Text>
-          <Text style={styles.dateMonth}>{monthStr}</Text>
+          <Text style={styles.dateMonth}>{monthName}</Text>
+          <Text style={styles.dateDay}>{dayNum}</Text>
         </View>
 
-        {/* Info */}
-        <View style={styles.infoCol}>
-          <View style={styles.organizerRow}>
-            <Ionicons name="medical" size={13} color="#DC2626" />
-            <Text style={styles.organizerText} numberOfLines={1}>
-              {organizer}
-            </Text>
+        <View style={styles.headerInfo}>
+          <View style={styles.badgeRow}>
+            <StatusBadge status={campaign.status || 'PUBLISHED'} />
+            {isRegistered && (
+              <View style={styles.registeredPill}>
+                <Ionicons name="checkmark-circle" size={12} color="#059669" />
+                <Text style={styles.registeredText}>RSVP'd</Text>
+              </View>
+            )}
           </View>
           <Text style={styles.title} numberOfLines={2}>
-            {title}
+            {campaign.title}
+          </Text>
+          <Text style={styles.organizer} numberOfLines={1}>
+            by {campaign.organizer}
           </Text>
         </View>
       </View>
 
-      <View style={styles.metaRow}>
-        <View style={styles.metaItem}>
+      <View style={styles.detailsRow}>
+        <View style={styles.detailItem}>
           <Ionicons name="location-outline" size={14} color="#64748B" />
-          <Text style={styles.metaText} numberOfLines={1}>
-            {location}
+          <Text style={styles.detailText} numberOfLines={1}>
+            {campaign.location}
           </Text>
         </View>
 
-        <View style={styles.registeredPill}>
-          <Ionicons name="people-outline" size={12} color="#047857" />
-          <Text style={styles.registeredText}>
-            {participantsCount} joined
+        <View style={styles.detailItem}>
+          <Ionicons name="time-outline" size={14} color="#64748B" />
+          <Text style={styles.detailText}>
+            {campaign.startTime} - {campaign.endTime}
           </Text>
         </View>
       </View>
+
+      {campaign.bloodGroupsNeeded && campaign.bloodGroupsNeeded.length > 0 && (
+        <View style={styles.groupsRow}>
+          <Text style={styles.groupsLabel}>Needed:</Text>
+          <View style={styles.groupsList}>
+            {campaign.bloodGroupsNeeded.slice(0, 4).map((bg) => (
+              <BloodGroupChip key={bg} bloodGroup={bg} />
+            ))}
+            {campaign.bloodGroupsNeeded.length > 4 && (
+              <Text style={styles.moreGroupsText}>
+                +{campaign.bloodGroupsNeeded.length - 4} more
+              </Text>
+            )}
+          </View>
+        </View>
+      )}
 
       <View style={styles.actionRow}>
-        <Text style={styles.viewDetailsText}>View Camp Details</Text>
-        <Ionicons name="arrow-forward-circle" size={18} color="#DC2626" />
+        <TouchableOpacity
+          style={[styles.rsvpBtn, isRegistered && styles.rsvpBtnActive]}
+          onPress={onRsvpToggle}
+          disabled={isRsvpLoading}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name={isRegistered ? 'checkmark-circle' : 'add-circle-outline'}
+            size={16}
+            color={isRegistered ? '#059669' : colors.primary}
+          />
+          <Text
+            style={[
+              styles.rsvpBtnText,
+              isRegistered && styles.rsvpBtnTextActive,
+            ]}
+          >
+            {isRsvpLoading ? 'Updating...' : isRegistered ? 'Attending' : 'RSVP to Donate'}
+          </Text>
+        </TouchableOpacity>
+
+        <View style={styles.viewMoreRow}>
+          <Text style={styles.viewMoreText}>Details</Text>
+          <Ionicons name="chevron-forward" size={14} color="#64748B" />
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -82,115 +133,160 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 16,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    marginBottom: 14,
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
     elevation: 2,
   },
   topRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
+    alignItems: 'flex-start',
+    gap: 12,
   },
   dateBadge: {
-    width: 50,
+    width: 48,
     height: 52,
-    borderRadius: 14,
-    backgroundColor: '#FEE2E2',
-    borderWidth: 1,
-    borderColor: '#FECACA',
+    backgroundColor: '#FEF2F2',
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
-  },
-  dateDay: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#B91C1C',
-    lineHeight: 22,
+    borderWidth: 1,
+    borderColor: '#FECACA',
   },
   dateMonth: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#991B1B',
+    color: colors.primary,
     letterSpacing: 0.5,
   },
-  infoCol: {
-    flex: 1,
-  },
-  organizerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: 3,
-  },
-  organizerText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#DC2626',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  title: {
-    fontSize: 15,
-    fontWeight: '800',
+  dateDay: {
+    fontSize: 18,
+    fontWeight: '900',
     color: '#0F172A',
-    lineHeight: 20,
+    lineHeight: 22,
   },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#F1F5F9',
-    marginBottom: 10,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
+  headerInfo: {
     flex: 1,
-    marginRight: 8,
   },
-  metaText: {
-    fontSize: 12,
-    color: '#64748B',
-    fontWeight: '500',
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
   },
   registeredPill: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ECFDF5',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
-    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    gap: 3,
   },
   registeredText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
-    color: '#065F46',
+    color: '#059669',
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0F172A',
+    lineHeight: 20,
+  },
+  organizer: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  detailsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    marginTop: 12,
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    maxWidth: '55%',
+  },
+  detailText: {
+    fontSize: 11,
+    color: '#475569',
+    fontWeight: '500',
+  },
+  groupsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    gap: 8,
+  },
+  groupsLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  groupsList: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  moreGroupsText: {
+    fontSize: 10,
+    color: '#94A3B8',
+    fontWeight: '500',
   },
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 2,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    paddingTop: 12,
+    marginTop: 12,
   },
-  viewDetailsText: {
-    fontSize: 13,
+  rsvpBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 5,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  rsvpBtnActive: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#A7F3D0',
+  },
+  rsvpBtnText: {
+    fontSize: 12,
     fontWeight: '700',
-    color: '#DC2626',
+    color: colors.primary,
+  },
+  rsvpBtnTextActive: {
+    color: '#059669',
+  },
+  viewMoreRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  viewMoreText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748B',
   },
 });
-

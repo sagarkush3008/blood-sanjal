@@ -82,7 +82,9 @@ router.patch('/campaigns/:id/participants/:participantId', AdminOpsController.up
 router.post('/campaigns/:id/notify', AdminOpsController.notifyCampaignAudience);
 
 // Notifications
+router.get('/notifications', AdminOpsController.listBroadcasts);
 router.post('/notifications', AdminOpsController.createBroadcast);
+router.post('/notifications/schedule', AdminOpsController.createBroadcast);
 router.post('/notifications/:id/cancel', AdminOpsController.cancelBroadcast);
 router.post('/notifications/:id/process', AdminOpsController.processBroadcastSync);
 
@@ -115,6 +117,7 @@ import { AdminReportsController } from './adminReports.controller';
 // Reports
 router.get('/reports/kpis', AdminReportsController.getDashboardKPIs);
 router.get('/reports/aggregations/:type', AdminReportsController.getAggregations);
+router.get('/reports/:type', AdminReportsController.getAggregations);
 router.post('/reports/export', AdminReportsController.requestExport);
 router.post('/reports/export/:jobId/process', AdminReportsController.processExportSync);
 

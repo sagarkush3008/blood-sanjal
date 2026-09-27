@@ -4,17 +4,18 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  ActivityIndicator,
   TouchableOpacity,
   StatusBar,
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { DonationsAPI } from '../../api/donations.api';
+import { StatusBadge } from '../../components/common/StatusBadge';
+import { EmptyState } from '../../components/common/EmptyState';
+import { SkeletonCard } from '../../components/common/SkeletonCard';
 import { colors } from '../../theme';
 
 export const DonateScreen = () => {
@@ -25,24 +26,17 @@ export const DonateScreen = () => {
     queryFn: () => DonationsAPI.list().then((res) => res.data?.data || res.data),
   });
 
-  const rawDonations = Array.isArray(data) ? data : data?.items || [];
+  const donations: any[] = Array.isArray(data)
+    ? data
+    : data?.items || data?.results || (Array.isArray(data?.data) ? data.data : []);
 
-  const donations =
-    rawDonations.length > 0
-      ? rawDonations
-      : [
-          {
-            _id: 'don-demo-1',
-            hospitalName: 'Nepal Red Cross Society Central Blood Bank',
-            donationDate: new Date('2026-08-15'),
-            units: 1,
-            donationType: 'WHOLE_BLOOD',
-            status: 'VERIFIED',
-          },
-        ];
-
-  const totalDonations = donations.length;
-  const livesSaved = totalDonations * 3;
+  const verifiedDonations = donations.filter(
+    (d) => (d.verificationStatus || d.status) === 'VERIFIED'
+  ).length;
+  const pendingDonations = donations.filter(
+    (d) => (d.verificationStatus || d.status) === 'PENDING'
+  ).length;
+  const livesSaved = verifiedDonations * 3;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -75,8 +69,15 @@ export const DonateScreen = () => {
               <Text style={styles.impactCardTitle}>Your Life-Saving Impact</Text>
               <View style={styles.impactRow}>
                 <View style={styles.impactCol}>
-                  <Text style={styles.impactValue}>{totalDonations}</Text>
-                  <Text style={styles.impactLabel}>Donations</Text>
+                  <Text style={styles.impactValue}>{verifiedDonations}</Text>
+                  <Text style={styles.impactLabel}>Verified</Text>
+                </View>
+
+                <View style={styles.impactDivider} />
+
+                <View style={styles.impactCol}>
+                  <Text style={[styles.impactValue, { color: '#D97706' }]}>{pendingDonations}</Text>
+                  <Text style={styles.impactLabel}>Pending</Text>
                 </View>
 
                 <View style={styles.impactDivider} />
@@ -84,13 +85,6 @@ export const DonateScreen = () => {
                 <View style={styles.impactCol}>
                   <Text style={[styles.impactValue, { color: '#15803D' }]}>~{livesSaved}</Text>
                   <Text style={styles.impactLabel}>Lives Saved</Text>
-                </View>
-
-                <View style={styles.impactDivider} />
-
-                <View style={styles.impactCol}>
-                  <Text style={[styles.impactValue, { color: '#0D9488' }]}>Eligible</Text>
-                  <Text style={styles.impactLabel}>Status</Text>
                 </View>
               </View>
 
@@ -100,7 +94,7 @@ export const DonateScreen = () => {
                 activeOpacity={0.88}
               >
                 <Ionicons name="add-circle" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
-                <Text style={styles.recordDonationBtnText}>Record New Donation</Text>
+                <Text style={styles.recordDonationBtnText}>Record Blood Donation</Text>
               </TouchableOpacity>
             </View>
 
@@ -119,52 +113,77 @@ export const DonateScreen = () => {
             <Text style={styles.sectionTitle}>Donation History</Text>
           </>
         }
-        renderItem={({ item }) => (
-          <View style={styles.donationCard}>
-            <View style={styles.donationTopRow}>
-              <View style={styles.hospitalInfo}>
-                <Ionicons name="business" size={16} color="#B91C1C" style={{ marginRight: 6 }} />
-                <Text style={styles.hospitalName} numberOfLines={1}>
-                  {item.hospitalName || 'Certified Blood Bank'}
-                </Text>
+        renderItem={({ item }) => {
+          const status = item.verificationStatus || item.status || 'PENDING';
+          const donationDate = item.donationDate ? new Date(item.donationDate).toLocaleDateString() : 'N/A';
+          return (
+            <View style={styles.donationCard}>
+              <View style={styles.donationTopRow}>
+                <View style={styles.hospitalInfo}>
+                  <Ionicons name="business" size={16} color="#B91C1C" style={{ marginRight: 6 }} />
+                  <Text style={styles.hospitalName} numberOfLines={1}>
+                    {item.hospitalName || 'Certified Blood Bank'}
+                  </Text>
+                </View>
+                <StatusBadge status={status} />
               </View>
-              <View style={styles.verifiedPill}>
-                <Ionicons name="checkmark-circle" size={12} color="#15803D" style={{ marginRight: 3 }} />
-                <Text style={styles.verifiedText}>{item.status || 'VERIFIED'}</Text>
+
+              {item.location && (
+                <View style={styles.locationRow}>
+                  <Ionicons name="location-outline" size={13} color="#64748B" style={{ marginRight: 4 }} />
+                  <Text style={styles.locationText}>{item.location}</Text>
+                </View>
+              )}
+
+              <View style={styles.donationDetailsRow}>
+                <View style={styles.detailItem}>
+                  <Text style={styles.detailLabel}>Type</Text>
+                  <Text style={styles.detailValue}>
+                    {item.donationType ? item.donationType.replace(/_/g, ' ') : 'Whole Blood'}
+                  </Text>
+                </View>
+
+                <View style={styles.detailItem}>
+                  <Text style={styles.detailLabel}>Date</Text>
+                  <Text style={styles.detailValue}>{donationDate}</Text>
+                </View>
+
+                <View style={styles.detailItem}>
+                  <Text style={styles.detailLabel}>Verification</Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      { color: status === 'VERIFIED' ? '#15803D' : status === 'REJECTED' ? '#DC2626' : '#D97706' },
+                    ]}
+                  >
+                    {status}
+                  </Text>
+                </View>
               </View>
+
+              {item.rejectionReason && status === 'REJECTED' && (
+                <View style={styles.rejectionBox}>
+                  <Ionicons name="warning-outline" size={14} color="#991B1B" style={{ marginRight: 4 }} />
+                  <Text style={styles.rejectionText}>Reason: {item.rejectionReason}</Text>
+                </View>
+              )}
             </View>
-
-            <View style={styles.donationDetailsRow}>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Units</Text>
-                <Text style={styles.detailValue}>{item.units || 1} Pint</Text>
-              </View>
-
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Type</Text>
-                <Text style={styles.detailValue}>{item.donationType || 'Whole Blood'}</Text>
-              </View>
-
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Date</Text>
-                <Text style={styles.detailValue}>
-                  {new Date(item.donationDate).toLocaleDateString()}
-                </Text>
-              </View>
-            </View>
-          </View>
-        )}
+          );
+        }}
         ListEmptyComponent={
-          !isLoading ? (
-            <View style={styles.emptyContainer}>
-              <Ionicons name="heart-outline" size={40} color="#94A3B8" />
-              <Text style={styles.emptyTitle}>No Recorded Donations Yet</Text>
-              <Text style={styles.emptySub}>
-                Record your first donation above to start saving lives and unlocking certificates!
-              </Text>
+          isLoading ? (
+            <View style={{ gap: 10 }}>
+              <SkeletonCard height={85} />
+              <SkeletonCard height={85} />
             </View>
           ) : (
-            <ActivityIndicator size="large" color="#B91C1C" style={{ marginTop: 30 }} />
+            <EmptyState
+              icon="heart-outline"
+              title="No Recorded Donations Yet"
+              description="Record your blood donations to build your verified donor record, earn certificates, and save lives in Nepal."
+              actionTitle="Record Your First Donation"
+              onAction={() => navigation.navigate('RecordDonation')}
+            />
           )
         }
       />
@@ -374,10 +393,29 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 2,
   },
-  emptySub: {
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  locationText: {
     fontSize: 11,
     color: '#64748B',
-    textAlign: 'center',
-    paddingHorizontal: 20,
+  },
+  rejectionBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    padding: 6,
+    borderRadius: 6,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+  },
+  rejectionText: {
+    fontSize: 11,
+    color: '#991B1B',
+    fontWeight: '500',
+    flex: 1,
   },
 });

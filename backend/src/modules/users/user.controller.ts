@@ -26,4 +26,20 @@ export class UserController {
       res.status(200).json(SuccessResponse(updated, req.id));
     } catch (error) { next(error); }
   }
+
+  static async getPrivacy(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const privacy = await UserService.getPrivacy(req.user.userId);
+      res.status(200).json(SuccessResponse(privacy, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async updatePrivacy(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const updated = await UserService.updatePrivacy(req.user.userId, req.body);
+      res.status(200).json(SuccessResponse(updated, req.id));
+    } catch (error) { next(error); }
+  }
 }

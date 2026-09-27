@@ -73,6 +73,13 @@ export class AdminOpsController {
   }
 
   // Notifications
+  static async listBroadcasts(req: Request, res: Response, next: any) {
+    try {
+      const result = await AdminOpsService.listBroadcasts(req.query);
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
   static async createBroadcast(req: Request, res: Response, next: any) {
     try {
       const result = await AdminOpsService.createBroadcast(req.body, req.user!.userId);

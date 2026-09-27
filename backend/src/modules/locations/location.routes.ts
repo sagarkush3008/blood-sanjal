@@ -6,6 +6,7 @@ import { requireAdmin } from '../../core/middleware/role.middleware';
 const router = Router();
 
 router.get('/', LocationController.getHierarchy);
+router.get('/banks', LocationController.getBloodBanks);
 router.get('/donors/search', LocationController.searchDonors);
 
 router.post('/', requireAuth, requireAdmin, LocationController.createLocation);

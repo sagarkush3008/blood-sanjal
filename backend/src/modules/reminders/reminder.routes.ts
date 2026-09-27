@@ -5,8 +5,8 @@ import { requireRoles } from '../../core/middleware/role.middleware';
 
 const router = Router();
 
-router.get('/config', requireAuth, requireRoles(['ADMIN']), ReminderController.getConfig);
-router.post('/config', requireAuth, requireRoles(['ADMIN']), ReminderController.updateConfig);
-router.post('/trigger', requireAuth, requireRoles(['ADMIN']), ReminderController.triggerJobs);
+router.get('/config', requireAuth, requireRoles(['ADMIN', 'SUPER_ADMIN']), ReminderController.getConfig);
+router.post('/config', requireAuth, requireRoles(['ADMIN', 'SUPER_ADMIN']), ReminderController.updateConfig);
+router.post('/trigger', requireAuth, requireRoles(['ADMIN', 'SUPER_ADMIN']), ReminderController.triggerJobs);
 
 export default router;

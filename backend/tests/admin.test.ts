@@ -14,6 +14,10 @@ jest.mock('../src/modules/donors/donorProfile.model');
 jest.mock('../src/modules/requests/bloodRequest.model');
 jest.mock('../src/modules/donors/donationRecord.model');
 jest.mock('../src/modules/audit/auditLog.model');
+jest.mock('../src/modules/admin/systemConfig.model');
+jest.mock('../src/modules/rewards/reward.service');
+jest.mock('../src/modules/certificates/certificate.service');
+jest.mock('../src/modules/notifications/notification.service');
 
 describe('Admin API', () => {
   let adminToken: string;
@@ -99,6 +103,7 @@ describe('Admin API', () => {
       const mockDonor = { _id: 'profile123', totalDonations: 1, save: jest.fn() };
       
       (DonationRecord.findById as jest.Mock).mockResolvedValue(mockDonation);
+      (DonationRecord.countDocuments as jest.Mock).mockResolvedValue(2);
       (DonorProfile.findById as jest.Mock).mockResolvedValue(mockDonor);
 
       const res = await request(app).patch('/api/v1/admin/donations/don123/verify')

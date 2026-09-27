@@ -10,7 +10,7 @@ export interface IBroadcastNotification extends Document {
   message: string;
   target: ITargetCriteria;
   scheduleAt?: Date;
-  channels: ('EMAIL' | 'SMS' | 'PUSH')[];
+  channels: ('IN_APP' | 'EMAIL' | 'SMS' | 'PUSH')[];
   status: 'DRAFT' | 'SCHEDULED' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED' | 'FAILED';
   createdBy: mongoose.Types.ObjectId;
   executionLog?: string;
@@ -27,7 +27,7 @@ const broadcastNotificationSchema = new Schema<IBroadcastNotification>(
     message: { type: String, required: true },
     target: { type: targetSchema, required: true },
     scheduleAt: { type: Date },
-    channels: [{ type: String, enum: ['EMAIL', 'SMS', 'PUSH'] }],
+    channels: [{ type: String, enum: ['IN_APP', 'EMAIL', 'SMS', 'PUSH'] }],
     status: { type: String, enum: ['DRAFT', 'SCHEDULED', 'PROCESSING', 'COMPLETED', 'CANCELLED', 'FAILED'], default: 'DRAFT' },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     executionLog: { type: String }

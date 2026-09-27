@@ -1,5 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, ScrollView, TouchableOpacity, StatusBar, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  ScrollView,
+  TouchableOpacity,
+  StatusBar,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useMutation } from '@tanstack/react-query';
@@ -7,74 +16,138 @@ import { Ionicons } from '@expo/vector-icons';
 import { AuthAPI } from '../../api/auth.api';
 import { InputField } from '../../components/forms/InputField';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
-import { spacing } from '../../theme';
+import { colors, spacing } from '../../theme';
 
 export const VerifyEmailScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const [code, setCode] = useState('');
-  
-  // The userId should be passed from the RegisterScreen navigation params
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [timer, setTimer] = useState<number>(60);
+  const [canResend, setCanResend] = useState<boolean>(false);
+
+  // userId passed from RegisterScreen
   const userId = route.params?.userId;
+  const email = route.params?.email || 'your email';
+
+  useEffect(() => {
+    let interval: any = null;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    } else {
+      setCanResend(true);
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [timer]);
 
   const verifyMutation = useMutation({
     mutationFn: (data: any) => AuthAPI.verifyEmail(data),
     onSuccess: () => {
-      Alert.alert('Email Verified! 🎉', 'Your BloodLink account is now fully active. You can now log in.', [
-        { text: 'Go to Login', onPress: () => navigation.navigate('Login') }
-      ]);
+      Alert.alert(
+        'Account Activated! 🎉',
+        'Your Blood Sanjal account is now active. Please sign in to continue.',
+        [{ text: 'Sign In', onPress: () => navigation.navigate('Login') }]
+      );
     },
     onError: (error: any) => {
-      Alert.alert('Verification Failed', error.response?.data?.message || 'Invalid or expired code.');
-    }
+      const msg =
+        error.response?.data?.error?.message ||
+        error.response?.data?.message ||
+        'The verification code is invalid or has expired.';
+      setApiError(msg);
+    },
   });
 
   const handleVerify = () => {
-    if (!code) {
-      Alert.alert('Missing Code', 'Please enter the 6-digit verification code.');
+    setApiError(null);
+    if (!code || code.trim().length !== 6) {
+      setApiError('Please enter a valid 6-digit verification code.');
       return;
     }
     if (!userId) {
-      Alert.alert('Error', 'Missing user ID. Please register again.');
+      setApiError('Missing user session reference. Please register again.');
       return;
     }
-    verifyMutation.mutate({ userId, code: code.trim(), purpose: 'REGISTRATION' });
+    verifyMutation.mutate({
+      userId,
+      code: code.trim(),
+      purpose: 'REGISTRATION',
+    });
+  };
+
+  const handleResend = () => {
+    if (!canResend) return;
+    setTimer(60);
+    setCanResend(false);
+    setApiError(null);
+    Alert.alert(
+      'Code Resent',
+      `A fresh verification code has been dispatched to ${email}.`
+    );
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.header}>
           <View style={styles.iconCircle}>
-            <Ionicons name="mail-open-outline" size={32} color="#DC2626" />
+            <Ionicons name="mail-open-outline" size={32} color={colors.primary} />
           </View>
-          <Text style={styles.title}>Verify Your Email</Text>
+          <Text style={styles.brandTitle}>Blood Sanjal</Text>
+          <Text style={styles.title}>Verify Your Account</Text>
           <Text style={styles.subtitle}>
-            We've sent a 6-digit confirmation code to your email address to activate your donor profile.
+            Enter the 6-digit verification code sent to{'\n'}
+            <Text style={styles.emailHighlight}>{email}</Text>
           </Text>
         </View>
 
         <View style={styles.card}>
+          {apiError && (
+            <View style={styles.errorBanner}>
+              <Ionicons name="alert-circle" size={18} color={colors.danger} />
+              <Text style={styles.errorText}>{apiError}</Text>
+            </View>
+          )}
+
           <InputField
             label="6-Digit Verification Code"
-            placeholder="e.g. 123456"
+            placeholder="• • • • • •"
             value={code}
-            onChangeText={setCode}
+            onChangeText={(val) => {
+              setCode(val);
+              if (apiError) setApiError(null);
+            }}
             keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'numeric'}
             maxLength={6}
             autoCapitalize="none"
             autoCorrect={false}
-            textContentType="oneTimeCode"
-            autoComplete="sms-otp"
             leftIcon="shield-checkmark-outline"
           />
 
+          <View style={styles.timerRow}>
+            {canResend ? (
+              <TouchableOpacity onPress={handleResend}>
+                <Text style={styles.resendActiveText}>Resend Code</Text>
+              </TouchableOpacity>
+            ) : (
+              <Text style={styles.timerText}>
+                Resend code in <Text style={styles.timerCount}>{timer}s</Text>
+              </Text>
+            )}
+          </View>
+
           <View style={{ marginTop: spacing.m }}>
-            <PrimaryButton 
-              title="Verify & Continue" 
-              icon="checkmark-done"
-              onPress={handleVerify} 
+            <PrimaryButton
+              title="Verify & Activate"
+              icon="checkmark-done-circle-outline"
+              onPress={handleVerify}
               loading={verifyMutation.isPending}
             />
           </View>
@@ -108,19 +181,27 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   iconCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 20,
-    backgroundColor: '#FEE2E2',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#FECACA',
   },
+  brandTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
   title: {
-    fontSize: 26,
-    fontWeight: '900',
+    fontSize: 24,
+    fontWeight: '800',
     color: '#0F172A',
     marginBottom: 8,
   },
@@ -131,17 +212,55 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     lineHeight: 18,
   },
+  emailHighlight: {
+    fontWeight: '700',
+    color: '#0F172A',
+  },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 22,
+    borderRadius: 18,
     padding: 24,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.05,
-    shadowRadius: 16,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.dangerLight,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: 10,
+    padding: spacing.s + 4,
+    marginBottom: spacing.m,
+    gap: 8,
+  },
+  errorText: {
+    color: '#991B1B',
+    fontSize: 13,
+    fontWeight: '500',
+    flex: 1,
+  },
+  timerRow: {
+    alignItems: 'center',
+    marginVertical: 12,
+  },
+  timerText: {
+    fontSize: 13,
+    color: '#64748B',
+  },
+  timerCount: {
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  resendActiveText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.primary,
   },
   backButton: {
     alignItems: 'center',
@@ -150,8 +269,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#B91C1C',
+    fontWeight: '600',
+    color: '#64748B',
   },
 });
-

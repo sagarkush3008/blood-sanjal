@@ -31,9 +31,11 @@ export const AdminAuditScreen = () => {
                 <Text style={styles.action}>{item.action}</Text>
                 <Text style={styles.time}>{new Date(item.createdAt).toLocaleString()}</Text>
               </View>
-              <Text style={styles.adminEmail}>Admin: {item.adminId?.email || item.adminId || 'System'}</Text>
+              <Text style={styles.adminEmail}>
+                Actor: {item.actorId?.name || item.actorId?.email || item.actorId || item.adminId || 'System'}
+              </Text>
               <Text style={styles.details}>
-                Target: {item.targetModel} ({item.targetId})
+                Target: {item.entityType || item.targetModel || 'System'} ({item.entityId || item.targetId || 'N/A'})
               </Text>
             </View>
           )}

@@ -15,4 +15,4 @@ export const requireRoles = (roles: string[]) => {
   };
 };
 
-export const requireAdmin = requireRoles(['ADMIN']);
+export const requireAdmin = requireRoles(['ADMIN', 'SUPER_ADMIN']);

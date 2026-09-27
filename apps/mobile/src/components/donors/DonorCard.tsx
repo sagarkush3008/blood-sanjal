@@ -2,134 +2,225 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme';
+import { StatusBadge } from '../common/StatusBadge';
 
-interface DonorCardProps {
+export interface DonorCardProps {
   name: string;
   bloodGroup: string;
-  location: string;
-  status: string;
+  location?: string;
+  donorStatus?: string;
+  totalDonations?: number;
+  lastDonationDate?: string | Date | null;
   onRequestContact: () => void;
+  isRequested?: boolean;
 }
 
-export const DonorCard: React.FC<DonorCardProps> = ({ name, bloodGroup, location, status, onRequestContact }) => {
-  const isVerified = status === 'Verified' || status === 'ACTIVE';
+export const DonorCard: React.FC<DonorCardProps> = ({
+  name,
+  bloodGroup,
+  location,
+  donorStatus = 'ACTIVE',
+  totalDonations = 0,
+  lastDonationDate,
+  onRequestContact,
+  isRequested = false,
+}) => {
+  const isAvailable = donorStatus === 'ACTIVE';
+
+  const formatLastDonation = (dateStr: any) => {
+    if (!dateStr) return 'First-time Donor';
+    try {
+      const d = new Date(dateStr);
+      return `Last donated: ${d.toLocaleDateString()}`;
+    } catch {
+      return 'Regular Donor';
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      {/* Blood Badge */}
-      <View style={styles.bloodBadge}>
-        <Ionicons name="water" size={14} color="#FFFFFF" style={{ marginBottom: 1 }} />
-        <Text style={styles.bloodText}>{bloodGroup}</Text>
-      </View>
-
-      {/* Info Column */}
-      <View style={styles.content}>
-        <View style={styles.nameRow}>
-          <Text style={styles.name} numberOfLines={1}>{name}</Text>
-          {isVerified && (
-            <View style={styles.verifiedBadge}>
-              <Ionicons name="checkmark-circle" size={12} color="#15803D" style={{ marginRight: 3 }} />
-              <Text style={styles.verifiedText}>Verified</Text>
-            </View>
-          )}
+    <View style={styles.card}>
+      <View style={styles.topRow}>
+        {/* Blood Group Badge */}
+        <View style={styles.bloodBadge}>
+          <Text style={styles.bloodText}>{bloodGroup}</Text>
         </View>
 
-        <View style={styles.locationRow}>
-          <Ionicons name="location-sharp" size={13} color="#64748B" style={{ marginRight: 4 }} />
-          <Text style={styles.location} numberOfLines={1}>{location || 'Nepal'}</Text>
+        {/* Core Info */}
+        <View style={styles.infoCol}>
+          <View style={styles.nameRow}>
+            <Text style={styles.name} numberOfLines={1}>
+              {name}
+            </Text>
+            <StatusBadge status={isAvailable ? 'ACTIVE' : 'SUSPENDED'} />
+          </View>
+
+          <View style={styles.locationRow}>
+            <Ionicons name="location-outline" size={14} color="#64748B" />
+            <Text style={styles.locationText} numberOfLines={1}>
+              {location || 'Nepal (Broad Area)'}
+            </Text>
+          </View>
         </View>
       </View>
 
-      {/* Request Contact Button */}
-      <TouchableOpacity style={styles.actionButton} onPress={onRequestContact} activeOpacity={0.8}>
-        <Ionicons name="call" size={13} color="#FFFFFF" style={{ marginRight: 4 }} />
-        <Text style={styles.actionText}>Contact</Text>
-      </TouchableOpacity>
+      {/* Meta Stats Row */}
+      <View style={styles.statsRow}>
+        <View style={styles.statItem}>
+          <Ionicons name="heart-circle-outline" size={14} color={colors.primary} />
+          <Text style={styles.statText}>
+            {totalDonations > 0 ? `${totalDonations} Donations` : 'New Donor'}
+          </Text>
+        </View>
+
+        <View style={styles.statItem}>
+          <Ionicons name="calendar-outline" size={14} color="#64748B" />
+          <Text style={styles.statText}>{formatLastDonation(lastDonationDate)}</Text>
+        </View>
+      </View>
+
+      {/* Action and Privacy Note */}
+      <View style={styles.actionRow}>
+        <View style={styles.privacyNoteBox}>
+          <Ionicons name="shield-checkmark" size={13} color="#10B981" />
+          <Text style={styles.privacyNote}>
+            Contact details visible only after donor consent
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.contactButton, isRequested && styles.contactButtonDisabled]}
+          onPress={onRequestContact}
+          disabled={isRequested}
+          activeOpacity={0.85}
+        >
+          <Ionicons
+            name={isRequested ? 'checkmark' : 'paper-plane-outline'}
+            size={14}
+            color="#FFFFFF"
+            style={{ marginRight: 6 }}
+          />
+          <Text style={styles.contactButtonText}>
+            {isRequested ? 'Requested' : 'Request Contact'}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  card: {
     backgroundColor: '#FFFFFF',
-    padding: 14,
-    borderRadius: 12,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
+    marginBottom: 12,
   },
   bloodBadge: {
-    backgroundColor: '#FEF2F2',
-    height: 40,
-    width: 40,
-    borderRadius: 10,
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
     borderWidth: 1,
-    borderColor: '#FEE2E2',
+    borderColor: '#FECACA',
   },
   bloodText: {
+    fontSize: 18,
+    fontWeight: '800',
     color: colors.primary,
-    fontSize: 13,
-    fontWeight: '700',
   },
-  content: {
+  infoCol: {
     flex: 1,
-    marginRight: 10,
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 3,
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 4,
   },
   name: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
     color: '#0F172A',
-    marginRight: 6,
-  },
-  verifiedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ECFDF5',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  verifiedText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#10B981',
+    flex: 1,
+    marginRight: 8,
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
   },
-  location: {
-    fontSize: 12,
+  locationText: {
+    fontSize: 13,
     color: '#64748B',
-    fontWeight: '400',
   },
-  actionButton: {
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    gap: 16,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  statText: {
+    fontSize: 12,
+    color: '#475569',
+    fontWeight: '500',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  privacyNoteBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  privacyNote: {
+    fontSize: 11,
+    color: '#64748B',
+    lineHeight: 14,
+    flex: 1,
+  },
+  contactButton: {
     backgroundColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 7,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    minHeight: 40,
   },
-  actionText: {
+  contactButtonDisabled: {
+    backgroundColor: '#94A3B8',
+  },
+  contactButtonText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
   },
 });

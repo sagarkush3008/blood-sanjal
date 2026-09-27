@@ -18,12 +18,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { AuthAPI } from '../../api/auth.api';
 import { useAuthStore } from '../../store/authStore';
 import { InputField } from '../../components/forms/InputField';
-import { PrimaryButton } from '../../components/common/PrimaryButton';
-import { colors, spacing, typography } from '../../theme';
+import { PrimaryButton } from '../../components/common';
+import { colors, spacing } from '../../theme';
 import { useNavigation } from '@react-navigation/native';
 
 const loginSchema = z.object({
-  email: z.string().email('Valid email is required'),
+  email: z.string().min(3, 'Email or phone number is required'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
@@ -45,21 +45,27 @@ export const LoginScreen = () => {
   });
 
   const loginMutation = useMutation({
-    mutationFn: (data: LoginFormData) => AuthAPI.login(data),
-    onSuccess: (response) => {
-      const { accessToken, refreshToken, user } =
-        response.data?.data || response.data || {};
+    mutationFn: (data: LoginFormData) => {
+      const isEmail = data.email.includes('@');
+      const payload = isEmail
+        ? { email: data.email.trim(), password: data.password }
+        : { phone: data.email.trim(), password: data.password };
+      return AuthAPI.login(payload);
+    },
+    onSuccess: async (response) => {
+      const data = response.data?.data || response.data || {};
+      const { accessToken, refreshToken, user } = data;
       if (accessToken) {
-        setAuth(accessToken, user, refreshToken);
+        await setAuth(accessToken, user, refreshToken);
       } else {
-        setApiError('Login failed: Token missing from response');
+        setApiError('Authentication failed: Missing token in response.');
       }
     },
     onError: (error: any) => {
       const message =
         error.response?.data?.error?.message ||
         error.response?.data?.message ||
-        'Invalid email or password. Please verify credentials.';
+        'Invalid credentials. Please verify your email/phone and password.';
       setApiError(message);
     },
   });
@@ -72,6 +78,7 @@ export const LoginScreen = () => {
   const fillAdmin = () => {
     setValue('email', 'admin@bloodsanjal.org');
     setValue('password', 'Password123!');
+    setApiError(null);
   };
 
   return (
@@ -86,37 +93,23 @@ export const LoginScreen = () => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* BloodLink Brand Header */}
-          <View style={styles.brandHeader}>
-            <View style={styles.logoRow}>
-              <View style={styles.logoBadge}>
-                <Ionicons name="water" size={30} color="#DC2626" />
-              </View>
-              <View>
-                <View style={styles.titleRow}>
-                  <Text style={styles.brandTitle}>Blood</Text>
-                  <Text style={[styles.brandTitle, { color: '#DC2626' }]}>Link</Text>
-                </View>
-                <Text style={styles.brandTagline}>NATIONAL BLOOD NETWORK</Text>
-              </View>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.logoBadge}>
+              <Ionicons name="water" size={32} color={colors.primary} />
             </View>
-
-            <View style={styles.accreditPill}>
-              <Ionicons name="shield-checkmark" size={14} color="#059669" />
-              <Text style={styles.accreditText}>Certified Safe Medical Portal</Text>
-            </View>
+            <Text style={styles.brandTitle}>Blood Sanjal</Text>
+            <Text style={styles.brandTagline}>Connecting People. Saving Lives.</Text>
+            <Text style={styles.subtitle}>
+              Sign in to manage blood requests, donor connections, and emergency alerts.
+            </Text>
           </View>
 
-          {/* Main Card */}
+          {/* Form Card */}
           <View style={styles.card}>
-            <Text style={styles.welcomeTitle}>Welcome Back</Text>
-            <Text style={styles.welcomeSubtitle}>
-              Sign in to manage blood requests, connect with donors, and save lives.
-            </Text>
-
             {apiError && (
               <View style={styles.errorBanner}>
-                <Ionicons name="alert-circle" size={18} color="#DC2626" />
+                <Ionicons name="alert-circle" size={20} color={colors.danger} />
                 <Text style={styles.errorBannerText}>{apiError}</Text>
               </View>
             )}
@@ -126,13 +119,15 @@ export const LoginScreen = () => {
               name="email"
               render={({ field: { onChange, onBlur, value } }) => (
                 <InputField
-                  label="Email Address"
-                  placeholder="name@example.com"
+                  label="Email or Phone Number"
+                  placeholder="admin@bloodsanjal.org or 98XXXXXXXX"
                   autoCapitalize="none"
-                  keyboardType="email-address"
                   leftIcon="mail-outline"
                   onBlur={onBlur}
-                  onChangeText={onChange}
+                  onChangeText={(val) => {
+                    onChange(val);
+                    if (apiError) setApiError(null);
+                  }}
                   value={value}
                   error={errors.email?.message}
                 />
@@ -149,22 +144,17 @@ export const LoginScreen = () => {
                   secureTextEntry
                   leftIcon="lock-closed-outline"
                   onBlur={onBlur}
-                  onChangeText={onChange}
+                  onChangeText={(val) => {
+                    onChange(val);
+                    if (apiError) setApiError(null);
+                  }}
                   value={value}
                   error={errors.password?.message}
                 />
               )}
             />
 
-            <View style={styles.optionsRow}>
-              <TouchableOpacity
-                onPress={fillAdmin}
-                style={styles.demoPill}
-              >
-                <Ionicons name="key-outline" size={14} color="#DC2626" />
-                <Text style={styles.demoPillText}>Demo Admin Fill</Text>
-              </TouchableOpacity>
-
+            <View style={styles.forgotRow}>
               <TouchableOpacity
                 onPress={() => navigation.navigate('ForgotPassword')}
               >
@@ -172,47 +162,31 @@ export const LoginScreen = () => {
               </TouchableOpacity>
             </View>
 
-            <View style={{ marginTop: spacing.m }}>
+            <View style={{ marginTop: spacing.s }}>
               <PrimaryButton
-                title="Sign In to BloodLink"
-                icon="arrow-forward"
+                title="Sign In"
+                icon="log-in-outline"
                 onPress={handleSubmit(onSubmit)}
                 loading={loginMutation.isPending}
               />
             </View>
 
-            {/* Quick Register CTA */}
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR</Text>
-              <View style={styles.dividerLine} />
+            {/* Demo Quick Fill for Ease of Testing */}
+            <View style={styles.demoSection}>
+              <Text style={styles.demoLabel}>Demo Quick Credentials</Text>
+              <TouchableOpacity style={styles.demoButton} onPress={fillAdmin}>
+                <Ionicons name="shield-checkmark" size={16} color={colors.primary} />
+                <Text style={styles.demoButtonText}>Auto-fill Admin (admin@bloodsanjal.org)</Text>
+              </TouchableOpacity>
             </View>
-
-            <TouchableOpacity
-              style={styles.registerButton}
-              onPress={() => navigation.navigate('Register')}
-            >
-              <Ionicons name="person-add-outline" size={18} color="#0F172A" />
-              <Text style={styles.registerButtonText}>Create New Account</Text>
-            </TouchableOpacity>
           </View>
 
-          {/* Footer Security Badges */}
-          <View style={styles.securityFooter}>
-            <View style={styles.badgeItem}>
-              <Ionicons name="lock-closed" size={14} color="#64748B" />
-              <Text style={styles.badgeLabel}>256-bit Encryption</Text>
-            </View>
-            <View style={styles.badgeDot} />
-            <View style={styles.badgeItem}>
-              <Ionicons name="checkmark-done-circle" size={14} color="#64748B" />
-              <Text style={styles.badgeLabel}>WHO Certified</Text>
-            </View>
-            <View style={styles.badgeDot} />
-            <View style={styles.badgeItem}>
-              <Ionicons name="medkit" size={14} color="#64748B" />
-              <Text style={styles.badgeLabel}>Emergency Ready</Text>
-            </View>
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>New to Blood Sanjal? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+              <Text style={styles.footerLink}>Create an Account</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -226,178 +200,129 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 28,
-    justifyContent: 'center',
+    padding: spacing.l,
+    paddingBottom: spacing.xxl,
   },
-  brandHeader: {
+  header: {
     alignItems: 'center',
-    marginBottom: 20,
-  },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: spacing.l,
+    marginTop: spacing.m,
   },
   logoBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: colors.primary,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
-  },
-  titleRow: {
-    flexDirection: 'row',
+    marginBottom: spacing.s,
+    borderWidth: 1,
+    borderColor: '#FECACA',
   },
   brandTitle: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: 26,
+    fontWeight: '800',
     color: '#0F172A',
-    letterSpacing: -0.3,
+    letterSpacing: -0.4,
   },
   brandTagline: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: '#64748B',
-    marginTop: 1,
-  },
-  accreditPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ECFDF5',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    gap: 4,
-    marginTop: 6,
-  },
-  accreditText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '600',
-    color: '#065F46',
+    color: colors.primary,
+    marginTop: 2,
+    letterSpacing: 0.2,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 18,
+    paddingHorizontal: 24,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 18,
+    borderRadius: 18,
+    padding: spacing.l,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-  },
-  welcomeTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 4,
-  },
-  welcomeSubtitle: {
-    fontSize: 12,
-    color: '#64748B',
-    lineHeight: 16,
-    marginBottom: 16,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
   },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF2F2',
-    padding: 10,
-    borderRadius: 8,
+    backgroundColor: colors.dangerLight,
     borderWidth: 1,
     borderColor: '#FECACA',
-    marginBottom: 12,
-    gap: 6,
-  },
-  errorBannerText: {
-    flex: 1,
-    fontSize: 12,
-    fontWeight: '500',
-    color: colors.primary,
-  },
-  optionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 4,
-    marginBottom: 8,
-  },
-  demoPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    gap: 4,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  demoPillText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#334155',
-  },
-  forgotText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: colors.primary,
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 14,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#F1F5F9',
-  },
-  dividerText: {
-    paddingHorizontal: 10,
-    fontSize: 11,
-    fontWeight: '500',
-    color: '#94A3B8',
-  },
-  registerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 42,
     borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    gap: 6,
-  },
-  registerButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#0F172A',
-  },
-  securityFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
+    padding: spacing.m,
+    marginBottom: spacing.m,
     gap: 8,
   },
-  badgeItem: {
+  errorBannerText: {
+    color: '#991B1B',
+    fontSize: 13,
+    fontWeight: '500',
+    flex: 1,
+  },
+  forgotRow: {
+    alignItems: 'flex-end',
+    marginBottom: spacing.m,
+    marginTop: -4,
+  },
+  forgotText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  demoSection: {
+    marginTop: spacing.l,
+    paddingTop: spacing.m,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    alignItems: 'center',
+  },
+  demoLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  demoButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
   },
-  badgeLabel: {
-    fontSize: 11,
-    fontWeight: '500',
+  demoButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: spacing.xl,
+  },
+  footerText: {
+    fontSize: 14,
     color: '#64748B',
   },
-  badgeDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: '#CBD5E1',
+  footerLink: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.primary,
   },
 });
-

@@ -81,6 +81,20 @@ export class AdminOpsService {
   }
 
   // --- NOTIFICATIONS ---
+  static async listBroadcasts(filters: any = {}) {
+    const query: any = {};
+    if (filters.status) query.status = filters.status;
+    const page = parseInt(filters.page || '1');
+    const limit = parseInt(filters.limit || '20');
+    const broadcasts = await BroadcastNotification.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate('createdBy', 'name email');
+    const total = await BroadcastNotification.countDocuments(query);
+    return { data: broadcasts, total, page, limit };
+  }
+
   static async createBroadcast(data: any, adminId: string) {
     const notification = await BroadcastNotification.create({ ...data, createdBy: new mongoose.Types.ObjectId(adminId) });
     await AdminService.logAudit(adminId, 'CREATE_BROADCAST', 'BROADCAST_NOTIFICATION', notification._id.toString());

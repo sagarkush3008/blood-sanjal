@@ -162,7 +162,46 @@ export const ProfileScreen = () => {
             <Text style={styles.menuItemTitle}>Rewards & Milestone Badges</Text>
             <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
           </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('Settings')}
+          >
+            <View style={[styles.menuIconCircle, { backgroundColor: '#F1F5F9' }]}>
+              <Ionicons name="settings-outline" size={18} color="#475569" />
+            </View>
+            <Text style={styles.menuItemTitle}>App Settings & Preferences</Text>
+            <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+          </TouchableOpacity>
         </View>
+
+        {/* Section: Admin Portal (Gated by Admin Role) */}
+        {['ADMIN', 'SUPER_ADMIN'].includes(role) && (
+          <>
+            <Text style={[styles.sectionHeading, { color: '#DC2626' }]}>Administrative Operations</Text>
+            <View style={[styles.menuCard, { borderColor: '#FECACA' }]}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => navigation.navigate('Admin')}
+              >
+                <View style={[styles.menuIconCircle, { backgroundColor: '#FEE2E2' }]}>
+                  <Ionicons name="shield-half" size={18} color="#DC2626" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.menuItemTitle, { color: '#DC2626', fontWeight: '700' }]}>
+                    Admin Control Panel
+                  </Text>
+                  <Text style={{ fontSize: 11, color: '#64748B' }}>
+                    Verify requests, manage users, audits & settings
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#DC2626" />
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
 
         {/* Sign Out Button */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.85}>
@@ -170,7 +209,7 @@ export const ProfileScreen = () => {
           <Text style={styles.logoutBtnText}>Sign Out</Text>
         </TouchableOpacity>
 
-        <Text style={styles.appVersion}>BloodLink • Official Blood Network Nepal v1.0.0</Text>
+        <Text style={styles.appVersion}>Blood Sanjal • Official Blood Network Nepal v1.0.0</Text>
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,11 +1,13 @@
 import request from 'supertest';
 import app from '../src/app';
 import { FileAsset } from '../src/modules/media/fileAsset.model';
+import { User } from '../src/modules/users/user.model';
 import cloudinary from '../src/config/cloudinary.config';
 import jwt from 'jsonwebtoken';
 import { env } from '../src/config/env.config';
 
 jest.mock('../src/modules/media/fileAsset.model');
+jest.mock('../src/modules/users/user.model');
 jest.mock('../src/config/cloudinary.config', () => ({
   uploader: {
     upload_stream: jest.fn(),
@@ -25,6 +27,15 @@ describe('Media API', () => {
     userToken = jwt.sign({ userId: '507f1f77bcf86cd799439011', role: 'USER' }, env.JWT_ACCESS_SECRET);
     otherUserToken = jwt.sign({ userId: '507f1f77bcf86cd799439022', role: 'USER' }, env.JWT_ACCESS_SECRET);
     adminToken = jwt.sign({ userId: '507f1f77bcf86cd799439033', role: 'SUPER_ADMIN' }, env.JWT_ACCESS_SECRET);
+  });
+
+  beforeEach(() => {
+    (User.findById as jest.Mock).mockImplementation((id: string) => {
+      return Promise.resolve({
+        _id: id,
+        role: id === '507f1f77bcf86cd799439033' ? 'ADMIN' : 'USER'
+      });
+    });
   });
 
   afterEach(() => {

@@ -3,6 +3,7 @@ import { DonorProfile } from '../donors/donorProfile.model';
 import { BloodRequest } from '../requests/bloodRequest.model';
 import { DonationRecord } from '../donors/donationRecord.model';
 import { PaymentTransaction } from '../payments/payment.model';
+import { Campaign } from '../campaigns/campaign.model';
 import { ReportJob } from './reportJob.model';
 import { AppError } from '../../core/errors/appError';
 import { AdminService } from './admin.service';
@@ -49,15 +50,15 @@ export class AdminReportsService {
     };
   }
 
-  static async getAggregations(type: string, query: any) {
-    if (type === 'bloodGroupDemand') {
+  static async getAggregations(type: string, query: any = {}) {
+    if (type === 'bloodGroupDemand' || type === 'demand') {
       return await BloodRequest.aggregate([
         { $match: { deletedAt: { $exists: false } } },
         { $group: { _id: '$bloodGroup', count: { $sum: 1 }, unitsRequired: { $sum: '$unitsRequired' } } },
         { $sort: { count: -1 } }
       ]);
     }
-    if (type === 'donorGrowth') {
+    if (type === 'donorGrowth' || type === 'donors') {
       return await DonorProfile.aggregate([
         { $match: { deletedAt: { $exists: false } } },
         { $group: { 
@@ -68,14 +69,48 @@ export class AdminReportsService {
         { $sort: { '_id.year': 1, '_id.month': 1 } }
       ]);
     }
-    if (type === 'locationDistribution') {
+    if (type === 'locationDistribution' || type === 'locations') {
       return await BloodRequest.aggregate([
         { $match: { deletedAt: { $exists: false } } },
         { $group: { _id: '$hospitalLocation.cityId', count: { $sum: 1 } } },
         { $sort: { count: -1 } }
       ]);
     }
-    throw new AppError(400, 'BAD_REQUEST', 'Unknown aggregation type');
+    if (type === 'users') {
+      return await User.aggregate([
+        { $match: { deletedAt: { $exists: false } } },
+        { $group: { _id: { role: '$role', status: '$status' }, count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]);
+    }
+    if (type === 'donations') {
+      return await DonationRecord.aggregate([
+        { $match: { deletedAt: { $exists: false } } },
+        { $group: { _id: '$verificationStatus', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]);
+    }
+    if (type === 'payments') {
+      return await PaymentTransaction.aggregate([
+        { $group: { _id: { status: '$status', gateway: '$gateway' }, count: { $sum: 1 }, totalMinor: { $sum: '$amountMinor' } } },
+        { $sort: { count: -1 } }
+      ]);
+    }
+    if (type === 'requests') {
+      return await BloodRequest.aggregate([
+        { $match: { deletedAt: { $exists: false } } },
+        { $group: { _id: { status: '$status', urgency: '$urgency' }, count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]);
+    }
+    if (type === 'campaigns') {
+      return await Campaign.aggregate([
+        { $match: { deletedAt: { $exists: false } } },
+        { $group: { _id: '$status', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]);
+    }
+    throw new AppError(400, 'BAD_REQUEST', `Unknown aggregation type: ${type}`);
   }
 
   static async requestExport(reportType: 'USERS' | 'DONORS' | 'REQUESTS' | 'DONATIONS', query: any, adminId: string) {

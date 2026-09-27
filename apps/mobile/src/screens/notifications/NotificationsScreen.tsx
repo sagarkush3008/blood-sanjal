@@ -148,10 +148,16 @@ export const NotificationsScreen = () => {
                 <View style={styles.contentContainer}>
                   <View style={styles.notifTopRow}>
                     <Text style={styles.typeBadge}>
-                      {item.type?.replace('_', ' ') || 'SYSTEM'}
+                      {item.type?.replace(/_/g, ' ') || 'SYSTEM'}
                     </Text>
                     <Text style={styles.time}>{timeStr}</Text>
                   </View>
+
+                  {item.title && (
+                    <Text style={[styles.notifTitle, !item.isRead && styles.unreadNotifTitle]}>
+                      {item.title}
+                    </Text>
+                  )}
 
                   <Text
                     style={[
@@ -305,6 +311,15 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#94A3B8',
     letterSpacing: 0.5,
+  },
+  notifTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 2,
+  },
+  unreadNotifTitle: {
+    color: '#B91C1C',
   },
   message: {
     fontSize: 13,
