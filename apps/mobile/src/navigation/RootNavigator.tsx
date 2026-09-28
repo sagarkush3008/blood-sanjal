@@ -33,7 +33,7 @@ const AppNavigator = ({ role }: { role?: string }) => {
       )}
       {/* Shared Screens for Modals or Deep Linking */}
       {!isAdmin && <Stack.Screen name="Admin" component={AdminNavigator} />}
-      {!isAdmin && <Stack.Screen name="MainTabs" component={MainTabs} />}
+      {isAdmin && <Stack.Screen name="MainTabs" component={MainTabs} />}
       <Stack.Screen name="Profile" component={ProfileNavigator} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: true, title: 'Notifications' }} />
       <Stack.Screen name="CreateRequest" component={CreateRequestScreen} options={{ headerShown: false }} />

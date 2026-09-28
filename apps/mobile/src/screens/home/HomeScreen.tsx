@@ -7,6 +7,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   StatusBar,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
@@ -19,11 +20,14 @@ import { CampaignsAPI } from '../../api/campaigns.api';
 import { NotificationsAPI } from '../../api/notifications.api';
 import { MetricsAPI } from '../../api/metrics.api';
 import { EmergencyButton, SkeletonCard, StatusBadge, EmptyState } from '../../components/common';
+import { SideDrawer } from '../../components/SideDrawer';
 import { colors, spacing } from '../../theme';
 
 export const HomeScreen = () => {
   const { user } = useAuthStore();
   const navigation = useNavigation<any>();
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [bloodUnitsModalVisible, setBloodUnitsModalVisible] = useState(false);
 
   // Live /me Profile
   const { data: meProfile, refetch: refetchMe } = useQuery({
@@ -96,14 +100,26 @@ export const HomeScreen = () => {
 
       {/* HEADER: Blood Sanjal + Notification */}
       <View style={styles.header}>
-        <View style={styles.brandRow}>
-          <View style={styles.brandDrop}>
-            <Ionicons name="water" size={18} color="#FFFFFF" />
-          </View>
-          <View>
-            <Text style={styles.brandTitle}>Blood Sanjal</Text>
-            <Text style={styles.brandTagline}>Connecting People. Saving Lives.</Text>
-          </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity 
+            style={styles.menuButton} 
+            onPress={() => setDrawerVisible(true)}
+          >
+            <Ionicons name="menu" size={26} color="#0F172A" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.brandRow}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Home')}
+          >
+            <View style={styles.brandDrop}>
+              <Ionicons name="water" size={18} color="#FFFFFF" />
+            </View>
+            <View>
+              <Text style={styles.brandTitle}>Blood Sanjal</Text>
+              <Text style={styles.brandTagline}>Connecting People. Saving Lives.</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.headerActions}>
@@ -193,10 +209,14 @@ export const HomeScreen = () => {
 
         {/* LIVE PLATFORM METRICS SUMMARY */}
         <View style={styles.metricsContainer}>
-          <View style={styles.metricItem}>
+          <TouchableOpacity 
+            style={styles.metricItem}
+            activeOpacity={0.7}
+            onPress={() => setBloodUnitsModalVisible(true)}
+          >
             <Text style={styles.metricVal}>{metrics?.availableUnits || 263}</Text>
             <Text style={styles.metricLbl}>Units Available</Text>
-          </View>
+          </TouchableOpacity>
           <View style={styles.metricDivider} />
           <View style={styles.metricItem}>
             <Text style={styles.metricVal}>{metrics?.activeDonors || 32}</Text>
@@ -325,6 +345,40 @@ export const HomeScreen = () => {
           ))
         )}
       </ScrollView>
+
+      <Modal
+        visible={bloodUnitsModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setBloodUnitsModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Available Blood Units</Text>
+              <TouchableOpacity onPress={() => setBloodUnitsModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#0F172A" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.bloodGroupRow}>
+                <Text style={styles.bloodGroupText}>All Groups (Total)</Text>
+                <Text style={styles.bloodGroupVal}>{metrics?.availableUnits || 263} Units</Text>
+              </View>
+              {metrics?.availableUnitsByGroup && Object.entries(metrics.availableUnitsByGroup).map(([group, count]) => (
+                <View key={group} style={styles.bloodGroupRow}>
+                  <View style={styles.bloodGroupBadgeSmall}>
+                    <Text style={styles.bloodGroupBadgeSmallText}>{group}</Text>
+                  </View>
+                  <Text style={styles.bloodGroupVal}>{count} Units</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      <SideDrawer visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
     </SafeAreaView>
   );
 };
@@ -343,6 +397,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
+  },
+  menuButton: {
+    marginRight: 12,
+    padding: 4,
   },
   brandRow: {
     flexDirection: 'row',
@@ -710,5 +768,61 @@ const styles = StyleSheet.create({
   campaignOrganizer: {
     fontSize: 12,
     color: '#64748B',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: '70%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  bloodGroupRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  bloodGroupText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  bloodGroupVal: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  bloodGroupBadgeSmall: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  bloodGroupBadgeSmallText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: colors.primary,
   },
 });

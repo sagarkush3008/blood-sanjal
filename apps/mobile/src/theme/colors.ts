@@ -1,8 +1,8 @@
 export const colors = {
-  primary: '#DC2626',
-  primaryDark: '#B91C1C',
-  primaryLight: '#FEE2E2',
-  primarySoft: '#FEF2F2',
+  primary: '#C8102E', // Deep Blood Red from logo
+  primaryDark: '#9A0B22',
+  primaryLight: '#FDDDE1',
+  primarySoft: '#FEF0F2',
   surfaceSoft: '#F8FAFC',
   navyDark: '#0F172A',
   text: '#0F172A',
@@ -14,8 +14,8 @@ export const colors = {
   successLight: '#ECFDF5',
   warning: '#F59E0B',
   warningLight: '#FFFBEB',
-  danger: '#DC2626',
-  dangerLight: '#FEF2F2',
+  danger: '#C8102E',
+  dangerLight: '#FEF0F2',
   teal: '#0D9488',
   tealLight: '#CCFBF1',
   orange: '#EA580C',

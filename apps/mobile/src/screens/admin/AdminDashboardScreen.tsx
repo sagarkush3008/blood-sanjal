@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, RefreshControl, Dimensions, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, RefreshControl, Dimensions, Alert, Image } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { AdminAPI } from '../../api/admin.api';
@@ -63,19 +63,20 @@ export const AdminDashboardScreen = () => {
   }
 
   const statBoxes = [
-    { label: 'Total Users', value: stats?.users ?? 0, sub: `${stats?.activeUsers ?? 0} active`, color: colors.primary, icon: 'people' },
-    { label: 'Donors', value: stats?.activeDonors ?? 0, sub: `${stats?.donors ?? 0} total`, color: colors.navyDark, icon: 'water' },
-    { label: 'Requests', value: stats?.activeRequests ?? 0, sub: `${stats?.requests ?? 0} total`, color: '#D97706', icon: 'document-text' },
+    { label: 'Total Users', value: stats?.users ?? 0, sub: `${stats?.activeUsers ?? 0} active`, color: colors.primary, icon: 'people', route: 'AdminUsers' },
+    { label: 'Donors', value: stats?.activeDonors ?? 0, sub: `${stats?.donors ?? 0} total`, color: colors.navyDark, icon: 'water', route: 'AdminUsers' },
+    { label: 'Requests', value: stats?.activeRequests ?? 0, sub: `${stats?.requests ?? 0} total`, color: '#D97706', icon: 'document-text', route: 'AdminRequests' },
     { 
       label: 'Emergencies', 
       value: stats?.pendingEmergencies ?? 0, 
       sub: (stats?.pendingEmergencies ?? 0) > 0 ? 'Action required!' : 'None pending',
       isCritical: (stats?.pendingEmergencies ?? 0) > 0,
       color: colors.danger,
-      icon: 'warning'
+      icon: 'warning',
+      route: 'EmergencyReview'
     },
-    { label: 'Donations', value: stats?.donations ?? 0, sub: 'Verified logs', color: '#059669', icon: 'medkit' },
-    { label: 'Campaigns', value: stats?.campaigns ?? 0, sub: 'Active drives', color: '#7C3AED', icon: 'calendar' },
+    { label: 'Donations', value: stats?.donations ?? 0, sub: 'Verified logs', color: '#059669', icon: 'medkit', route: 'AdminDonations' },
+    { label: 'Campaigns', value: stats?.campaigns ?? 0, sub: 'Active drives', color: '#7C3AED', icon: 'calendar', route: 'AdminCampaigns' },
   ];
 
   const adminMenuGroups = [
@@ -185,7 +186,9 @@ export const AdminDashboardScreen = () => {
         >
           <View style={styles.headerTop}>
             <View style={styles.headerProfile}>
-              <Ionicons name="shield-checkmark" size={28} color={colors.surface} />
+              <View style={styles.logoContainer}>
+                <Image source={require('../../../assets/icon.png')} style={styles.headerLogo} resizeMode="contain" />
+              </View>
               <Text style={styles.headerGreeting}>Super Admin</Text>
             </View>
             <TouchableOpacity onPress={handleLogout} style={styles.backButton}>
@@ -210,7 +213,12 @@ export const AdminDashboardScreen = () => {
           <Text style={styles.sectionTitle}>Overview</Text>
           <View style={styles.statsGrid}>
             {statBoxes.map((stat, idx) => (
-              <View key={idx} style={[styles.statBox, stat.isCritical && styles.criticalBox]}>
+              <TouchableOpacity 
+                key={idx} 
+                style={[styles.statBox, stat.isCritical && styles.criticalBox]}
+                activeOpacity={0.7}
+                onPress={() => stat.route && navigation.navigate(stat.route)}
+              >
                 <View style={[styles.statIconContainer, { backgroundColor: stat.isCritical ? '#FECACA' : '#F1F5F9' }]}>
                   <Ionicons name={stat.icon as any} size={20} color={stat.isCritical ? colors.danger : stat.color} />
                 </View>
@@ -219,11 +227,17 @@ export const AdminDashboardScreen = () => {
                 </Text>
                 <Text style={styles.statLabel}>{stat.label}</Text>
                 <Text style={[styles.statSub, stat.isCritical && styles.criticalSub]}>{stat.sub}</Text>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={styles.sectionTitle}>Network Analytics</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { marginHorizontal: 0, marginBottom: 0 }]}>Network Analytics</Text>
+            <View style={styles.swipeIndicator}>
+              <Text style={styles.swipeText}>Swipe</Text>
+              <Ionicons name="arrow-forward" size={14} color={colors.textMuted} />
+            </View>
+          </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: spacing.m, gap: spacing.m, marginBottom: spacing.xl }}>
             <View style={styles.chartCard}>
               <Text style={styles.chartTitle}>User Demographics</Text>
@@ -232,6 +246,26 @@ export const AdminDashboardScreen = () => {
                   { name: 'Active Donors', population: stats?.activeDonors ?? 0, color: '#059669', legendFontColor: colors.text, legendFontSize: 11 },
                   { name: 'Regular Users', population: Math.max(0, (stats?.activeUsers ?? 0) - (stats?.activeDonors ?? 0)), color: colors.primary, legendFontColor: colors.text, legendFontSize: 11 },
                   { name: 'Inactive/Suspended', population: Math.max(0, (stats?.users ?? 0) - (stats?.activeUsers ?? 0)), color: '#CBD5E1', legendFontColor: colors.text, legendFontSize: 11 },
+                ]}
+                width={width * 0.8}
+                height={160}
+                chartConfig={{ color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})` }}
+                accessor={"population"}
+                backgroundColor={"transparent"}
+                paddingLeft={"0"}
+                center={[10, 0]}
+                absolute
+              />
+            </View>
+
+            <View style={styles.chartCard}>
+              <Text style={styles.chartTitle}>Platform Operations</Text>
+              <PieChart
+                data={[
+                  { name: 'Users', population: stats?.users ?? 0, color: colors.primary, legendFontColor: colors.text, legendFontSize: 11 },
+                  { name: 'Requests', population: stats?.requests ?? 0, color: '#D97706', legendFontColor: colors.text, legendFontSize: 11 },
+                  { name: 'Donations', population: stats?.donations ?? 0, color: '#059669', legendFontColor: colors.text, legendFontSize: 11 },
+                  { name: 'Campaigns', population: stats?.campaigns ?? 0, color: '#7C3AED', legendFontColor: colors.text, legendFontSize: 11 },
                 ]}
                 width={width * 0.8}
                 height={160}
@@ -419,6 +453,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.s,
   },
+  logoContainer: {
+    backgroundColor: colors.surface,
+    padding: 4,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  headerLogo: {
+    width: 24,
+    height: 24,
+  },
   headerGreeting: {
     ...typography.body2,
     fontFamily: fonts.semiBold,
@@ -485,6 +535,27 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginHorizontal: spacing.m,
     marginBottom: spacing.m,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginHorizontal: spacing.m,
+    marginBottom: spacing.m,
+  },
+  swipeIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  swipeText: {
+    ...typography.caption,
+    color: colors.textMuted,
+    fontFamily: fonts.medium,
   },
   statsGrid: {
     flexDirection: 'row',

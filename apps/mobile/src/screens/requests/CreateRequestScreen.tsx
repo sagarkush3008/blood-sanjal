@@ -16,11 +16,12 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { BloodRequestsAPI } from '../../api/requests.api';
 import { useAuthStore } from '../../store/authStore';
+import { SideDrawer } from '../../components/SideDrawer';
 import { colors, fonts } from '../../theme';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
-interface NotchInputProps {
+interface CleanInputProps {
   label: string;
   value: string;
   onChangeText: (text: string) => void;
@@ -28,10 +29,9 @@ interface NotchInputProps {
   icon?: React.ReactNode;
   keyboardType?: 'default' | 'phone-pad' | 'numeric';
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-  isFocusedDefault?: boolean;
 }
 
-const NotchInput: React.FC<NotchInputProps> = ({
+const CleanInput: React.FC<CleanInputProps> = ({
   label,
   value,
   onChangeText,
@@ -39,23 +39,16 @@ const NotchInput: React.FC<NotchInputProps> = ({
   icon,
   keyboardType = 'default',
   autoCapitalize = 'sentences',
-  isFocusedDefault = false,
 }) => {
-  const [isFocused, setIsFocused] = useState(isFocusedDefault);
-
-  const activeFocus = isFocused || (isFocusedDefault && !value);
+  const [isFocused, setIsFocused] = useState(false);
 
   return (
-    <View style={[styles.notchContainer, activeFocus && styles.notchContainerFocused]}>
-      <View style={styles.notchLabelContainer}>
-        <Text style={[styles.notchLabel, activeFocus && styles.notchLabelFocused]}>
-          {label}
-        </Text>
-      </View>
-      <View style={styles.notchInputRow}>
-        {icon && <View style={styles.notchIcon}>{icon}</View>}
+    <View style={styles.inputContainer}>
+      <Text style={styles.inputLabel}>{label}</Text>
+      <View style={[styles.inputWrapper, isFocused && styles.inputWrapperFocused]}>
+        {icon && <View style={styles.inputIcon}>{icon}</View>}
         <TextInput
-          style={styles.notchTextInput}
+          style={styles.textInput}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -78,6 +71,7 @@ export const CreateRequestScreen = () => {
 
   // App Bar state
   const [isDark, setIsDark] = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
 
   // Form state
   const initialUrgency = route.params?.urgency === 'EMERGENCY' ? 'EMERGENCY' : 'NORMAL';
@@ -186,18 +180,22 @@ export const CreateRequestScreen = () => {
       <View style={styles.appBar}>
         <TouchableOpacity
           style={styles.iconCircle}
-          onPress={() => navigation.goBack()}
+          onPress={() => setDrawerVisible(true)}
           activeOpacity={0.7}
         >
           <Ionicons name="menu" size={22} color="#0F172A" />
         </TouchableOpacity>
 
-        <View style={styles.brandRow}>
+        <TouchableOpacity
+          style={styles.brandRow}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('Home')}
+        >
           <View style={styles.logoCircle}>
             <Ionicons name="water" size={16} color="#FFFFFF" />
           </View>
-          <Text style={styles.brandText}>BloodLink</Text>
-        </View>
+          <Text style={styles.brandText}>Blood Sanjal</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.themeToggle}
@@ -315,13 +313,12 @@ export const CreateRequestScreen = () => {
           <Text style={styles.sectionHeader}>Patient & Blood Details</Text>
 
           {/* Patient Full Name */}
-          <NotchInput
-            label="Patient Full Name *"
+          <CleanInput
+            label="Patient Full Name"
             value={patientName}
             onChangeText={setPatientName}
             placeholder="e.g. John Doe"
-            icon={<Ionicons name="person" size={18} color="#DC2626" />}
-            isFocusedDefault={true}
+            icon={<Ionicons name="person-outline" size={18} color="#64748B" />}
           />
 
           {/* Required Blood Group */}
@@ -407,39 +404,35 @@ export const CreateRequestScreen = () => {
           <Text style={styles.sectionHeader}>Hospital Location & Timing</Text>
 
           {/* Hospital Name */}
-          <NotchInput
-            label="Hospital Name *"
+          <CleanInput
+            label="Hospital Name"
             value={hospitalName}
             onChangeText={setHospitalName}
             placeholder="e.g. Kathmandu Medical College"
-            icon={
-              <View style={styles.redCrossIcon}>
-                <Ionicons name="add" size={14} color="#FFFFFF" />
-              </View>
-            }
+            icon={<Ionicons name="medkit-outline" size={18} color="#64748B" />}
           />
 
           {/* Hospital Address / Ward / Room */}
-          <NotchInput
-            label="Hospital Address / Ward / Room *"
+          <CleanInput
+            label="Hospital Address / Ward / Room"
             value={hospitalAddress}
             onChangeText={setHospitalAddress}
-            placeholder="e.g. Ward 4, ICU Bed 12, Sinamangal"
+            placeholder="e.g. Ward 4, ICU Bed 12"
           />
 
           {/* City & Date side-by-side */}
           <View style={styles.twoColRow}>
             <View style={{ flex: 1 }}>
-              <NotchInput
-                label="City *"
+              <CleanInput
+                label="City"
                 value={city}
                 onChangeText={setCity}
                 placeholder="City"
               />
             </View>
             <View style={{ flex: 1.1 }}>
-              <NotchInput
-                label="Date (YYYY-MM-DD)"
+              <CleanInput
+                label="Required Date"
                 value={requiredDate}
                 onChangeText={setRequiredDate}
                 placeholder="YYYY-MM-DD"
@@ -449,8 +442,8 @@ export const CreateRequestScreen = () => {
           </View>
 
           {/* Required Time / Urgency Window */}
-          <NotchInput
-            label="Required Time / Urgency Window"
+          <CleanInput
+            label="Required Time / Window"
             value={urgencyWindow}
             onChangeText={setUrgencyWindow}
             placeholder="e.g. Immediate / Within 3 hours"
@@ -462,38 +455,38 @@ export const CreateRequestScreen = () => {
           <Text style={styles.sectionHeader}>Contact Person & Medical Reason</Text>
 
           {/* Attendant / Doctor Name */}
-          <NotchInput
-            label="Attendant / Doctor Name *"
+          <CleanInput
+            label="Attendant / Doctor Name"
             value={attendantName}
             onChangeText={setAttendantName}
             placeholder="e.g. Dr. Koirala / Relative Name"
-            icon={<Ionicons name="person" size={16} color="#64748B" />}
+            icon={<Ionicons name="person-outline" size={16} color="#64748B" />}
           />
 
           {/* Contact Phone Number */}
-          <NotchInput
-            label="Contact Phone Number (Required for Donors to Reach You) *"
+          <CleanInput
+            label="Contact Phone Number"
             value={contactPhone}
             onChangeText={setContactPhone}
             placeholder="+977-98XXXXXXXX"
             keyboardType="phone-pad"
-            icon={<Ionicons name="call" size={16} color="#64748B" />}
+            icon={<Ionicons name="call-outline" size={16} color="#64748B" />}
           />
 
           {/* Reason / Medical Condition */}
-          <NotchInput
-            label="Reason / Medical Condition *"
+          <CleanInput
+            label="Reason / Medical Condition"
             value={reason}
             onChangeText={setReason}
-            placeholder="e.g. Emergency bypass surgery / Dengue platelet support"
+            placeholder="e.g. Emergency bypass surgery"
           />
 
           {/* Additional Clinical Instructions */}
-          <NotchInput
-            label="Additional Clinical Instructions (Optional)"
+          <CleanInput
+            label="Additional Instructions (Optional)"
             value={clinicalInstructions}
             onChangeText={setClinicalInstructions}
-            placeholder="Any specific donor requirement or hospital instructions"
+            placeholder="Any specific requirement"
           />
         </View>
 
@@ -561,7 +554,7 @@ export const CreateRequestScreen = () => {
           {/* Instructions Box */}
           <View style={styles.walletInfoBox}>
             <Text style={styles.walletIdText}>
-              {walletProvider === 'eSewa' ? 'eSewa' : 'Khalti'} ID: 9801234567 • BloodLink Network
+              {walletProvider === 'eSewa' ? 'eSewa' : 'Khalti'} ID: 9801234567 • Blood Sanjal Network
             </Text>
             <Text style={styles.walletInstructionText}>
               Transfer NPR {platformFee} and paste the Transaction Reference Number below.
@@ -569,8 +562,8 @@ export const CreateRequestScreen = () => {
           </View>
 
           {/* Transaction Reference ID / Code */}
-          <NotchInput
-            label="Transaction Reference ID / Code *"
+          <CleanInput
+            label="Transaction Reference ID"
             value={transactionRef}
             onChangeText={setTransactionRef}
             placeholder="e.g. TXN-89472648"
@@ -599,6 +592,7 @@ export const CreateRequestScreen = () => {
 
         <View style={{ height: 32 }} />
       </ScrollView>
+      <SideDrawer visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
     </SafeAreaView>
   );
 };
@@ -1005,53 +999,43 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
 
-  // Notch Input Styles
-  notchContainer: {
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 14,
-    paddingTop: 10,
-    paddingBottom: 8,
-    marginBottom: 14,
-    position: 'relative',
+  // Clean Input Styles
+  inputContainer: {
+    marginBottom: 16,
   },
-  notchContainerFocused: {
-    borderColor: '#DC2626',
+  inputLabel: {
+    fontSize: 13,
+    color: '#334155',
+    fontFamily: fonts.medium,
+    marginBottom: 6,
   },
-  notchLabelContainer: {
-    position: 'absolute',
-    top: -9,
-    left: 14,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 4,
-    zIndex: 1,
-  },
-  notchLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#64748B',
-    fontFamily: fonts.semiBold,
-  },
-  notchLabelFocused: {
-    color: '#DC2626',
-  },
-  notchInputRow: {
+  inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    minHeight: 50,
   },
-  notchIcon: {
-    justifyContent: 'center',
-    alignItems: 'center',
+  inputWrapperFocused: {
+    borderColor: '#3B82F6',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  notchTextInput: {
+  inputIcon: {
+    marginRight: 10,
+  },
+  textInput: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 15,
     color: '#0F172A',
-    fontFamily: fonts.medium,
-    padding: 0,
-    minHeight: 24,
+    fontFamily: fonts.regular,
+    paddingVertical: 12,
   },
 });
