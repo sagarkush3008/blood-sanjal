@@ -49,6 +49,21 @@ export class DonorService {
     }
     
     await profile.save();
+
+    const { AuditLog } = await import('../audit/auditLog.model');
+    await AuditLog.create({
+      actorId: userId,
+      action: data.status === 'ACTIVE' ? 'DONOR_AVAILABLE' : 'DONOR_UNAVAILABLE',
+      entityType: 'DonorProfile',
+      entityId: profile._id,
+      metadata: { 
+        status: data.status,
+        durationHours: data.durationHours,
+        durationDays: data.durationDays,
+        reason: data.reason ? 'REDACTED' : undefined 
+      }
+    });
+
     return profile;
   }
 
