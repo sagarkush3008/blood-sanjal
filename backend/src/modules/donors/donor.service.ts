@@ -82,7 +82,7 @@ export class DonorService {
       actorId: userId,
       action: data.status === 'ACTIVE' ? 'DONOR_AVAILABLE' : 'DONOR_UNAVAILABLE',
       entityType: 'DonorProfile',
-      entityId: profile._id,
+      entityId: profile._id.toString(),
       metadata: { 
         status: data.status,
         durationHours: data.durationHours,
