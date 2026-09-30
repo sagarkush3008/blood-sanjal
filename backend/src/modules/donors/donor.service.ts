@@ -37,7 +37,13 @@ export class DonorService {
       if (data.reason) profile.inactiveReason = data.reason;
       
       let inactiveUntil = undefined;
-      if (data.durationHours || data.durationDays) {
+      if (data.durationHours !== undefined || data.durationDays !== undefined) {
+        if (data.durationHours !== undefined && (data.durationHours < 1 || data.durationHours > 72)) {
+          throw new AppError(400, 'VALIDATION_ERROR', 'durationHours must be between 1 and 72');
+        }
+        if (data.durationDays !== undefined && (data.durationDays < 1 || data.durationDays > 90)) {
+          throw new AppError(400, 'VALIDATION_ERROR', 'durationDays must be between 1 and 90');
+        }
         const now = new Date();
         if (data.durationHours) now.setHours(now.getHours() + data.durationHours);
         if (data.durationDays) now.setDate(now.getDate() + data.durationDays);

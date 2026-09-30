@@ -248,8 +248,8 @@ const spec = {
                 type: "object",
                 properties: {
                   status: { type: "string", enum: ["ACTIVE", "INACTIVE"] },
-                  durationHours: { type: "integer", description: "Hours to remain inactive (if status is INACTIVE)" },
-                  durationDays: { type: "integer", description: "Days to remain inactive (if status is INACTIVE)" },
+                  durationHours: { type: "integer", description: "Hours to remain inactive (if status is INACTIVE)", minimum: 1, maximum: 72 },
+                  durationDays: { type: "integer", description: "Days to remain inactive (if status is INACTIVE)", minimum: 1, maximum: 90 },
                   reason: { type: "string", description: "Optional private reason for inactivity" }
                 },
                 required: ["status"]
