@@ -141,7 +141,7 @@ export const LoginScreen = () => {
                 <InputField
                   label="Password"
                   placeholder="Enter your password"
-                  secureTextEntry
+                  isPassword
                   leftIcon="lock-closed-outline"
                   onBlur={onBlur}
                   onChangeText={(val) => {

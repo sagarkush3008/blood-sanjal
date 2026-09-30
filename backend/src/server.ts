@@ -13,8 +13,26 @@ const startServer = async () => {
       logger.info(`Server listening on port ${env.PORT} in ${env.NODE_ENV} mode`);
     });
 
+    // Helper cron: automatically revert INACTIVE donors to ACTIVE if their scheduled inactivity period has expired.
+    const availabilityCron = setInterval(async () => {
+      try {
+        const { DonorProfile } = await import('./modules/donors/donorProfile.model');
+        const result = await DonorProfile.updateMany(
+          { donorStatus: 'INACTIVE', inactiveUntil: { $lt: new Date() } },
+          { $set: { donorStatus: 'ACTIVE' }, $unset: { inactiveUntil: 1, inactiveReason: 1 } }
+        );
+        if (result.modifiedCount > 0) {
+          logger.info(`Cron: Restored ${result.modifiedCount} donors to ACTIVE status.`);
+        }
+      } catch (err) {
+        logger.error('Error in availability cron helper', err);
+      }
+    }, 60 * 1000 * 5); // Run every 5 minutes
+
+
     // Graceful Shutdown
     const shutdown = async () => {
+      clearInterval(availabilityCron);
       logger.info('Shutting down server...');
       server.close(async () => {
         logger.info('HTTP server closed.');

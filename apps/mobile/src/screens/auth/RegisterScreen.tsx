@@ -202,7 +202,7 @@ export const RegisterScreen = () => {
                 <InputField
                   label="Password (min 8 characters)"
                   placeholder="Create a secure password"
-                  secureTextEntry
+                  isPassword
                   leftIcon="lock-closed-outline"
                   onBlur={onBlur}
                   onChangeText={onChange}

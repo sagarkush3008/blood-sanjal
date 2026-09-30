@@ -6,7 +6,9 @@ export interface IDonorProfile extends Document {
   lastDonationDate?: Date;
   reminderDate?: Date;
   totalDonations: number;
-  donorStatus: 'ACTIVE' | 'UNAVAILABLE' | 'HIDDEN';
+  donorStatus: 'ACTIVE' | 'UNAVAILABLE' | 'HIDDEN' | 'INACTIVE';
+  inactiveUntil?: Date;
+  inactiveReason?: string;
   contactPreference: 'PHONE' | 'EMAIL' | 'WHATSAPP' | 'SYSTEM_ONLY';
   notificationPreference: 'ALL' | 'EMERGENCY_ONLY' | 'NONE';
   isVerified: boolean;
@@ -19,7 +21,9 @@ const donorProfileSchema = new Schema<IDonorProfile>(
     lastDonationDate: { type: Date },
     reminderDate: { type: Date },
     totalDonations: { type: Number, default: 0 },
-    donorStatus: { type: String, enum: ['ACTIVE', 'UNAVAILABLE', 'HIDDEN'], default: 'UNAVAILABLE' },
+    donorStatus: { type: String, enum: ['ACTIVE', 'UNAVAILABLE', 'HIDDEN', 'INACTIVE'], default: 'UNAVAILABLE' },
+    inactiveUntil: { type: Date },
+    inactiveReason: { type: String },
     contactPreference: { type: String, enum: ['PHONE', 'EMAIL', 'WHATSAPP', 'SYSTEM_ONLY'], default: 'SYSTEM_ONLY' },
     notificationPreference: { type: String, enum: ['ALL', 'EMERGENCY_ONLY', 'NONE'], default: 'ALL' },
     isVerified: { type: Boolean, default: false },
@@ -30,3 +34,10 @@ const donorProfileSchema = new Schema<IDonorProfile>(
 donorProfileSchema.index({ bloodGroup: 1, donorStatus: 1 });
 
 export const DonorProfile = mongoose.model<IDonorProfile>('DonorProfile', donorProfileSchema);
+
+export const getActiveDonorQuery = () => ({
+  $or: [
+    { donorStatus: 'ACTIVE' },
+    { donorStatus: 'INACTIVE', inactiveUntil: { $lt: new Date() } }
+  ]
+});

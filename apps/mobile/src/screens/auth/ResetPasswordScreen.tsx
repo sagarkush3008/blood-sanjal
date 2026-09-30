@@ -118,7 +118,7 @@ export const ResetPasswordScreen = () => {
               setNewPassword(val);
               if (apiError) setApiError(null);
             }}
-            secureTextEntry
+            isPassword
             leftIcon="lock-closed-outline"
           />
 

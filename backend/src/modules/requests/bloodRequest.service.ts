@@ -224,7 +224,10 @@ export class BloodRequestService {
     await request.save();
 
     const donors = await DonorProfile.find({
-      donorStatus: 'ACTIVE',
+      $or: [
+        { donorStatus: 'ACTIVE' },
+        { donorStatus: 'INACTIVE', inactiveUntil: { $lt: new Date() } }
+      ],
       bloodGroup: request.bloodGroup,
       notificationPreference: { $in: ['ALL', 'EMERGENCY_ONLY'] }
     }).populate('userId');

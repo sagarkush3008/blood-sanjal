@@ -236,6 +236,32 @@ const spec = {
         }
       }
     },
+    "/donors/me/availability": {
+      patch: {
+        tags: ["Donor Profile"],
+        summary: "Update donor availability status",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  status: { type: "string", enum: ["ACTIVE", "INACTIVE"] },
+                  durationHours: { type: "integer", description: "Hours to remain inactive (if status is INACTIVE)" },
+                  durationDays: { type: "integer", description: "Days to remain inactive (if status is INACTIVE)" },
+                  reason: { type: "string", description: "Optional private reason for inactivity" }
+                },
+                required: ["status"]
+              }
+            }
+          }
+        },
+        responses: {
+          "200": { description: "Availability updated successfully" }
+        }
+      }
+    },
     "/requests/contact": {
       post: {
         tags: ["Contact Requests"],

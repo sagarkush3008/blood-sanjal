@@ -38,7 +38,10 @@ export class ReminderService {
 
     const dueDonors = await DonorProfile.find({
       reminderDate: { $lte: processDate },
-      donorStatus: 'ACTIVE',
+      $or: [
+        { donorStatus: 'ACTIVE' },
+        { donorStatus: 'INACTIVE', inactiveUntil: { $lt: new Date() } }
+      ],
       notificationPreference: { $nin: ['NONE', 'EMERGENCY_ONLY'] }
     }).populate('userId');
 

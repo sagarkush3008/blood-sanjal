@@ -44,7 +44,13 @@ export class AdminService {
       User.countDocuments({ deletedAt: { $exists: false } }).catch(() => 0),
       User.countDocuments({ status: 'ACTIVE', deletedAt: { $exists: false } }).catch(() => 0),
       DonorProfile.countDocuments({ deletedAt: { $exists: false } }).catch(() => 0),
-      DonorProfile.countDocuments({ donorStatus: 'ACTIVE', deletedAt: { $exists: false } }).catch(() => 0),
+      DonorProfile.countDocuments({
+        $or: [
+          { donorStatus: 'ACTIVE' },
+          { donorStatus: 'INACTIVE', inactiveUntil: { $lt: new Date() } }
+        ],
+        deletedAt: { $exists: false }
+      }).catch(() => 0),
       BloodRequest.countDocuments({ deletedAt: { $exists: false } }).catch(() => 0),
       BloodRequest.countDocuments({ status: { $in: ['ACTIVE', 'PARTIALLY_FULFILLED', 'VERIFIED'] }, deletedAt: { $exists: false } }).catch(() => 0),
       BloodRequest.countDocuments({ urgency: 'EMERGENCY', status: 'PENDING_VERIFICATION', deletedAt: { $exists: false } }).catch(() => 0),
@@ -252,7 +258,10 @@ export class AdminService {
 
     const compatibleGroups = COMPATIBLE_DONOR_MAP[request.bloodGroup] || [request.bloodGroup];
     const compatibleDonorsCount = await DonorProfile.countDocuments({
-      donorStatus: 'ACTIVE',
+      $or: [
+        { donorStatus: 'ACTIVE' },
+        { donorStatus: 'INACTIVE', inactiveUntil: { $lt: new Date() } }
+      ],
       bloodGroup: { $in: compatibleGroups }
     });
 
@@ -291,7 +300,10 @@ export class AdminService {
     const compatibleGroups = COMPATIBLE_DONOR_MAP[request.bloodGroup] || [request.bloodGroup];
 
     const donors = await DonorProfile.find({
-      donorStatus: 'ACTIVE',
+      $or: [
+        { donorStatus: 'ACTIVE' },
+        { donorStatus: 'INACTIVE', inactiveUntil: { $lt: new Date() } }
+      ],
       bloodGroup: { $in: compatibleGroups }
     })
       .populate('userId', 'name provinceId districtId cityId areaId')

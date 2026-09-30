@@ -4,7 +4,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuthStore } from '../store/authStore';
 import { AuthNavigator } from './AuthNavigator';
-import { MainTabs } from './MainTabs';
+import { DrawerNavigator } from './DrawerNavigator';
 import { ProfileNavigator } from '../screens/profile/ProfileNavigator';
 import { AdminNavigator } from '../screens/admin/AdminNavigator';
 import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
@@ -28,12 +28,12 @@ const AppNavigator = ({ role }: { role?: string }) => {
         // Admin-only main flow
         <Stack.Screen name="Admin" component={AdminNavigator} />
       ) : (
-        // Regular user main flow
-        <Stack.Screen name="MainTabs" component={MainTabs} />
+        // Regular user main flow (Now wrapped in Drawer)
+        <Stack.Screen name="MainTabs" component={DrawerNavigator} />
       )}
       {/* Shared Screens for Modals or Deep Linking */}
       {!isAdmin && <Stack.Screen name="Admin" component={AdminNavigator} />}
-      {isAdmin && <Stack.Screen name="MainTabs" component={MainTabs} />}
+      {isAdmin && <Stack.Screen name="MainTabs" component={DrawerNavigator} />}
       <Stack.Screen name="Profile" component={ProfileNavigator} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ headerShown: true, title: 'Notifications' }} />
       <Stack.Screen name="CreateRequest" component={CreateRequestScreen} options={{ headerShown: false }} />

@@ -22,6 +22,15 @@ export class DonorController {
     } catch (error) { next(error); }
   }
 
+  static async updateAvailability(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const profile = await DonorService.updateAvailability(req.user.userId, req.body);
+      res.status(200).json(SuccessResponse(profile, req.id));
+    } catch (error) { next(error); }
+  }
+
+
   static async getById(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');

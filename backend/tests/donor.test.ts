@@ -89,4 +89,38 @@ describe('Donor Profile & Availability', () => {
       expect(updateData.totalDonations).toBeUndefined();
     });
   });
+
+  describe('PATCH /api/v1/donors/me/availability', () => {
+    it('should set donor as inactive for specified hours', async () => {
+      const mockProfile: any = { _id: 'donor1', userId: 'user1', save: jest.fn().mockResolvedValue(true) };
+      (DonorProfile.findOne as jest.Mock).mockResolvedValue(mockProfile);
+
+      const res = await request(app)
+        .patch('/api/v1/donors/me/availability')
+        .set('Authorization', `Bearer ${generateToken('user1')}`)
+        .send({ status: 'INACTIVE', durationHours: 24, reason: 'Travel' });
+
+      expect(res.status).toBe(200);
+      expect(mockProfile.donorStatus).toBe('INACTIVE');
+      expect(mockProfile.inactiveReason).toBe('Travel');
+      expect(mockProfile.inactiveUntil).toBeDefined();
+      expect(mockProfile.save).toHaveBeenCalled();
+    });
+
+    it('should set donor back to active and remove inactive fields', async () => {
+      const mockProfile: any = { _id: 'donor1', userId: 'user1', donorStatus: 'INACTIVE', inactiveUntil: new Date(), inactiveReason: 'Travel', save: jest.fn().mockResolvedValue(true) };
+      (DonorProfile.findOne as jest.Mock).mockResolvedValue(mockProfile);
+
+      const res = await request(app)
+        .patch('/api/v1/donors/me/availability')
+        .set('Authorization', `Bearer ${generateToken('user1')}`)
+        .send({ status: 'ACTIVE' });
+
+      expect(res.status).toBe(200);
+      expect(mockProfile.donorStatus).toBe('ACTIVE');
+      expect(mockProfile.inactiveReason).toBeUndefined();
+      expect(mockProfile.inactiveUntil).toBeUndefined();
+      expect(mockProfile.save).toHaveBeenCalled();
+    });
+  });
 });

@@ -81,7 +81,10 @@ export class CampaignService {
     
     const profiles = await DonorProfile.find({
        bloodGroup: { $in: campaign.bloodGroupsNeeded },
-       donorStatus: 'ACTIVE',
+       $or: [
+         { donorStatus: 'ACTIVE' },
+         { donorStatus: 'INACTIVE', inactiveUntil: { $lt: new Date() } }
+       ],
        notificationPreference: 'ALL'
     }).populate('userId');
     

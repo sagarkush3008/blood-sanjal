@@ -140,7 +140,12 @@ app.get('/api/v1/metrics', async (req, res) => {
     const { DonorProfile } = await import('./modules/donors/donorProfile.model');
     const { BloodRequest } = await import('./modules/requests/bloodRequest.model');
     const [donorsCount, emergencyCount] = await Promise.all([
-      DonorProfile.countDocuments({ donorStatus: 'ACTIVE' }).catch(() => 0),
+      DonorProfile.countDocuments({
+        $or: [
+          { donorStatus: 'ACTIVE' },
+          { donorStatus: 'INACTIVE', inactiveUntil: { $lt: new Date() } }
+        ]
+      }).catch(() => 0),
       BloodRequest.countDocuments({ urgency: 'EMERGENCY', status: { $ne: 'CANCELLED' } }).catch(() => 0),
     ]);
     res.json(SuccessResponse({

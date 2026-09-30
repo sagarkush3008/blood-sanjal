@@ -7,11 +7,13 @@ export interface InputFieldProps extends TextInputProps {
   label: string;
   error?: string;
   leftIcon?: string | React.ReactNode;
+  isPassword?: boolean;
 }
 
 export const InputField = forwardRef<TextInput, InputFieldProps>(
-  ({ label, error, leftIcon, style, onFocus, onBlur, ...props }, ref) => {
+  ({ label, error, leftIcon, isPassword, style, onFocus, onBlur, ...props }, ref) => {
     const [isFocused, setIsFocused] = useState(false);
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const internalInputRef = useRef<TextInput>(null);
 
     useImperativeHandle(ref, () => internalInputRef.current as TextInput);
@@ -64,8 +66,21 @@ export const InputField = forwardRef<TextInput, InputFieldProps>(
               setIsFocused(false);
               onBlur?.(e);
             }}
+            secureTextEntry={isPassword ? !isPasswordVisible : props.secureTextEntry}
             {...props}
           />
+          {isPassword && (
+            <TouchableOpacity
+              style={styles.rightIconWrapper}
+              onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+            >
+              <Ionicons
+                name={isPasswordVisible ? 'eye-off' : 'eye'}
+                size={20}
+                color="#64748B"
+              />
+            </TouchableOpacity>
+          )}
         </TouchableOpacity>
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </View>
@@ -100,6 +115,12 @@ const styles = StyleSheet.create({
     marginRight: 8,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  rightIconWrapper: {
+    marginLeft: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 4,
   },
   input: {
     flex: 1,
