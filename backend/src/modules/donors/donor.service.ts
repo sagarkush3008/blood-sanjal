@@ -28,26 +28,47 @@ export class DonorService {
     const profile = await DonorProfile.findOne({ userId });
     if (!profile) throw new AppError(404, 'NOT_FOUND', 'Donor profile not found');
 
+    const now = new Date();
+    profile.lastStatusChangedAt = now;
+    profile.lastStatusChangedBy = profile.userId;
+
     if (data.status === 'ACTIVE') {
       profile.donorStatus = 'ACTIVE';
+      profile.availabilityMode = 'AVAILABLE';
       profile.inactiveUntil = undefined;
       profile.inactiveReason = undefined;
+      profile.inactiveUnit = undefined;
+      profile.inactiveDuration = undefined;
+      profile.inactiveStartedAt = undefined;
     } else if (data.status === 'INACTIVE') {
       profile.donorStatus = 'INACTIVE';
+      profile.inactiveStartedAt = now;
+      
       if (data.reason) profile.inactiveReason = data.reason;
+      else profile.inactiveReason = undefined;
       
       let inactiveUntil = undefined;
       if (data.durationHours !== undefined || data.durationDays !== undefined) {
-        if (data.durationHours !== undefined && (data.durationHours < 1 || data.durationHours > 72)) {
-          throw new AppError(400, 'VALIDATION_ERROR', 'durationHours must be between 1 and 72');
+        profile.availabilityMode = 'TEMPORARY_INACTIVE';
+        if (data.durationHours !== undefined) {
+          if (data.durationHours < 1 || data.durationHours > 72) throw new AppError(400, 'VALIDATION_ERROR', 'durationHours must be between 1 and 72');
+          profile.inactiveUnit = 'HOURS';
+          profile.inactiveDuration = data.durationHours;
+          const target = new Date(now);
+          target.setHours(target.getHours() + data.durationHours);
+          inactiveUntil = target;
+        } else if (data.durationDays !== undefined) {
+          if (data.durationDays < 1 || data.durationDays > 90) throw new AppError(400, 'VALIDATION_ERROR', 'durationDays must be between 1 and 90');
+          profile.inactiveUnit = 'DAYS';
+          profile.inactiveDuration = data.durationDays;
+          const target = new Date(now);
+          target.setDate(target.getDate() + data.durationDays);
+          inactiveUntil = target;
         }
-        if (data.durationDays !== undefined && (data.durationDays < 1 || data.durationDays > 90)) {
-          throw new AppError(400, 'VALIDATION_ERROR', 'durationDays must be between 1 and 90');
-        }
-        const now = new Date();
-        if (data.durationHours) now.setHours(now.getHours() + data.durationHours);
-        if (data.durationDays) now.setDate(now.getDate() + data.durationDays);
-        inactiveUntil = now;
+      } else {
+        profile.availabilityMode = 'INDEFINITE_INACTIVE';
+        profile.inactiveUnit = undefined;
+        profile.inactiveDuration = undefined;
       }
       profile.inactiveUntil = inactiveUntil;
     } else {

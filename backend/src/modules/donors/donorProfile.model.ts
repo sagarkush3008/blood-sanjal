@@ -12,6 +12,12 @@ export interface IDonorProfile extends Document {
   contactPreference: 'PHONE' | 'EMAIL' | 'WHATSAPP' | 'SYSTEM_ONLY';
   notificationPreference: 'ALL' | 'EMERGENCY_ONLY' | 'NONE';
   isVerified: boolean;
+  availabilityMode?: 'AVAILABLE' | 'TEMPORARY_INACTIVE' | 'INDEFINITE_INACTIVE';
+  inactiveUnit?: 'HOURS' | 'DAYS';
+  inactiveDuration?: number;
+  inactiveStartedAt?: Date;
+  lastStatusChangedAt?: Date;
+  lastStatusChangedBy?: mongoose.Types.ObjectId;
 }
 
 const donorProfileSchema = new Schema<IDonorProfile>(
@@ -27,6 +33,12 @@ const donorProfileSchema = new Schema<IDonorProfile>(
     contactPreference: { type: String, enum: ['PHONE', 'EMAIL', 'WHATSAPP', 'SYSTEM_ONLY'], default: 'SYSTEM_ONLY' },
     notificationPreference: { type: String, enum: ['ALL', 'EMERGENCY_ONLY', 'NONE'], default: 'ALL' },
     isVerified: { type: Boolean, default: false },
+    availabilityMode: { type: String, enum: ['AVAILABLE', 'TEMPORARY_INACTIVE', 'INDEFINITE_INACTIVE'] },
+    inactiveUnit: { type: String, enum: ['HOURS', 'DAYS'] },
+    inactiveDuration: { type: Number },
+    inactiveStartedAt: { type: Date },
+    lastStatusChangedAt: { type: Date },
+    lastStatusChangedBy: { type: Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }
 );

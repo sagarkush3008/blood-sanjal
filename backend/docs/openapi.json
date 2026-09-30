@@ -133,8 +133,50 @@
           "bloodGroup": {
             "type": "string"
           },
-          "availabilityStatus": {
-            "type": "boolean"
+          "donorStatus": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE",
+              "UNAVAILABLE",
+              "HIDDEN"
+            ]
+          },
+          "availabilityMode": {
+            "type": "string",
+            "enum": [
+              "AVAILABLE",
+              "TEMPORARY_INACTIVE",
+              "INDEFINITE_INACTIVE"
+            ]
+          },
+          "inactiveUnit": {
+            "type": "string",
+            "enum": [
+              "HOURS",
+              "DAYS"
+            ]
+          },
+          "inactiveDuration": {
+            "type": "integer"
+          },
+          "inactiveStartedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "inactiveUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "inactiveReason": {
+            "type": "string"
+          },
+          "lastStatusChangedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastStatusChangedBy": {
+            "type": "string"
           },
           "lastDonationDate": {
             "type": "string",
