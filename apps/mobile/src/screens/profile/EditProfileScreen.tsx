@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { AuthAPI } from '../../api/auth.api';
@@ -22,7 +22,8 @@ export const EditProfileScreen = () => {
   const [name, setName] = useState(meData?.name || '');
   const [cityId, setCityId] = useState(meData?.cityId || '');
   const [bloodGroup, setBloodGroup] = useState(meData?.bloodGroup || '');
-  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const [avatarUri, setAvatarUri] = useState<string | null>(meData?.avatar_url || null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const updateMutation = useMutation({
     mutationFn: (data: any) => AuthAPI.updateProfile(data),
@@ -44,9 +45,24 @@ export const EditProfileScreen = () => {
       quality: 0.5,
     });
 
-    if (!result.canceled) {
-      setAvatarUri(result.assets[0].uri);
-      // In a full flow, you would upload to Cloudinary via FilesAPI here
+    if (!result.canceled && result.assets[0].uri) {
+      const selectedUri = result.assets[0].uri;
+      setAvatarUri(selectedUri);
+      uploadImage(selectedUri);
+    }
+  };
+
+  const uploadImage = async (uri: string) => {
+    setIsUploading(true);
+    try {
+      await AuthAPI.uploadAvatar(uri);
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+      Alert.alert("Success", "Profile picture updated!");
+    } catch (error: any) {
+      Alert.alert("Error", "Failed to upload image.");
+      setAvatarUri(meData?.avatar_url || null);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -57,8 +73,17 @@ export const EditProfileScreen = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={pickImage} style={styles.avatar}>
-          <Text style={styles.avatarText}>{meData?.name?.charAt(0) || 'U'}</Text>
+        <TouchableOpacity onPress={pickImage} style={styles.avatar} disabled={isUploading}>
+          {avatarUri ? (
+            <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+          ) : (
+            <Text style={styles.avatarText}>{meData?.name?.charAt(0) || 'U'}</Text>
+          )}
+          {isUploading && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="small" color="#ffffff" />
+            </View>
+          )}
           <View style={styles.cameraIconContainer}>
             <Text style={{ fontSize: 16 }}>📷</Text>
           </View>
@@ -139,6 +164,18 @@ const styles = StyleSheet.create({
     ...typography.h1,
     color: colors.surface,
     fontSize: 40,
+  },
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cameraIconContainer: {
     position: 'absolute',

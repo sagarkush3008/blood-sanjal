@@ -43,4 +43,22 @@ export const AuthAPI = {
   updateProfile: (data: any) => apiClient.patch('/me', data),
   getPrivacySettings: () => apiClient.get('/me/privacy'),
   updatePrivacySettings: (data: any) => apiClient.patch('/me/privacy', data),
+  uploadAvatar: async (imageUri: string) => {
+    const formData = new FormData();
+    const filename = imageUri.split('/').pop() || 'avatar.jpg';
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1]}` : 'image/jpeg';
+    
+    formData.append('avatar', {
+      uri: imageUri,
+      name: filename,
+      type,
+    } as any);
+
+    return apiClient.put('/me/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
 };
