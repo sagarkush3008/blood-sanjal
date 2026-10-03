@@ -74,6 +74,10 @@ export const HomeScreen = () => {
     locationText = meProfile.cityId;
   }
   
+  if (locationText.includes('Kathamdnu')) {
+    locationText = locationText.replace('Kathamdnu', 'Kathmandu');
+  }
+  
   const bloodGroup = meProfile?.bloodGroup || donorProfile?.bloodGroup || 'O+';
   const totalDonations = donorProfile?.totalDonations || 0;
   
@@ -226,7 +230,7 @@ export const HomeScreen = () => {
             <View style={styles.donorStatsBox}>
               <View style={styles.statCol}>
                 <Text style={styles.statLabel}>TOTAL DONATIONS</Text>
-                <Text style={styles.statValue}>{totalDonations} Times</Text>
+                <Text style={styles.statValue}>{totalDonations} {totalDonations === 1 ? 'Time' : 'Times'}</Text>
               </View>
               <View style={styles.statCol}>
                 <Text style={styles.statLabel}>LAST DONATED</Text>
