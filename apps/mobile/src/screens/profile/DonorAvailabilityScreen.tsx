@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DonorsAPI } from '../../api/donors.api';
-import { fonts } from '../../theme';
+import { fonts, colors } from '../../theme';
 
 export const DonorAvailabilityScreen = ({ navigation }: any) => {
   const queryClient = useQueryClient();
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 14, color: '#475569', lineHeight: 20, fontFamily: fonts.regular },
   statusTimeText: { fontSize: 13, color: '#0F172A', marginTop: 8, fontFamily: fonts.semiBold },
   
-  primaryButton: { flexDirection: 'row', backgroundColor: '#10B981', padding: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 24, shadowColor: '#10B981', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 2 },
+  primaryButton: { flexDirection: 'row', backgroundColor: colors.primary, padding: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 24, shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 2 },
   primaryButtonText: { color: '#FFFFFF', fontSize: 15, fontFamily: fonts.bold },
   
   tabsContainer: { flexDirection: 'row', backgroundColor: '#E2E8F0', borderRadius: 10, padding: 4, marginBottom: 24 },
