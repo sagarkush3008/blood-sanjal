@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 16 },
 
   greetingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  greetingText: { fontSize: 13, color: '#475569', flex: 1, paddingRight: 10, lineHeight: 18 },
+  greetingText: { fontSize: 12, color: '#475569', flex: 1, paddingRight: 10, lineHeight: 18 },
   locationPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0', maxWidth: 140 },
   locationText: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: '#64748B', flexShrink: 1 },
 
@@ -499,13 +499,13 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 11, fontFamily: 'Inter_800ExtraBold', color: '#FECACA', letterSpacing: 0.5, marginBottom: 4 },
   statValue: { fontSize: 18, fontFamily: 'Inter_800ExtraBold', color: '#FFFFFF' },
 
-  eligibilityCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ECFDF5', borderRadius: 20, padding: 16, marginBottom: 32, borderWidth: 1, borderColor: '#D1FAE5' },
-  eligibilityIconBox: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#059669', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  eligibilityTextCol: { flex: 1, paddingRight: 10 },
-  eligibilityTitle: { fontSize: 14, fontFamily: 'Inter_800ExtraBold', color: '#064E3B', marginBottom: 4 },
-  eligibilitySub: { fontSize: 11, color: '#047857', lineHeight: 16, fontFamily: 'Inter_500Medium' },
-  iDonatedBtn: { backgroundColor: '#059669', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
-  iDonatedBtnText: { color: '#FFFFFF', fontSize: 13, fontFamily: 'Inter_800ExtraBold' },
+  eligibilityCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ECFDF5', borderRadius: 20, padding: 14, marginBottom: 32, borderWidth: 1, borderColor: '#D1FAE5' },
+  eligibilityIconBox: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#059669', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  eligibilityTextCol: { flex: 1, paddingRight: 8 },
+  eligibilityTitle: { fontSize: 13, fontFamily: 'Inter_800ExtraBold', color: '#064E3B', marginBottom: 2 },
+  eligibilitySub: { fontSize: 10, color: '#047857', lineHeight: 14, fontFamily: 'Inter_500Medium' },
+  iDonatedBtn: { backgroundColor: '#059669', paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12 },
+  iDonatedBtnText: { color: '#FFFFFF', fontSize: 12, fontFamily: 'Inter_800ExtraBold' },
 
   sectionTitle: { fontSize: 14, fontFamily: 'Inter_800ExtraBold', color: '#64748B', letterSpacing: 1, marginBottom: 16, marginLeft: 4 },
   gridContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 16 },
