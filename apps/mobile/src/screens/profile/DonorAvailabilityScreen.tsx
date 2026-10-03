@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DonorsAPI } from '../../api/donors.api';
+import { fonts } from '../../theme';
 
 export const DonorAvailabilityScreen = ({ navigation }: any) => {
   const queryClient = useQueryClient();
@@ -91,17 +92,15 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.headerTitleContainer}>
-            <Ionicons name="water" size={20} color="#E11D48" style={{ marginRight: 8 }} />
-            <Text style={styles.headerTitle}>Donor Availability Status</Text>
-          </View>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
-            <Ionicons name="close" size={20} color="#475569" />
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
+            <Ionicons name="arrow-back" size={24} color="#0F172A" />
           </TouchableOpacity>
+          <Text style={styles.headerTitle}>Availability Status</Text>
+          <View style={{ width: 40 }} />
         </View>
 
         {/* Current Status Banner */}
@@ -113,8 +112,10 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
             </View>
             <Text style={styles.statusText}>
               Emergency notifications and search visibility are temporarily paused.
-              {inactiveUntil && `\nUntil: ${new Date(inactiveUntil).toLocaleString()}`}
             </Text>
+            {inactiveUntil && (
+               <Text style={styles.statusTimeText}>Until: {new Date(inactiveUntil).toLocaleString()}</Text>
+            )}
           </View>
         ) : (
           <View style={[styles.statusBanner, { backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }]}>
@@ -131,7 +132,7 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
         {/* Action Button */}
         {isInactive && (
           <TouchableOpacity 
-            style={[styles.primaryButton, { backgroundColor: '#059669' }]}
+            style={styles.primaryButton}
             onPress={handleMakeActive}
             disabled={updateMutation.isPending}
           >
@@ -139,8 +140,8 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
               <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
               <>
-                <Ionicons name="play-circle-outline" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-                <Text style={styles.primaryButtonText}>Make Me Active & Available Now</Text>
+                <Ionicons name="power" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                <Text style={styles.primaryButtonText}>Become Active Now</Text>
               </>
             )}
           </TouchableOpacity>
@@ -152,15 +153,13 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
             style={[styles.tab, activeTab === 'PRESETS' && styles.activeTab]}
             onPress={() => setActiveTab('PRESETS')}
           >
-            <Ionicons name="time-outline" size={16} color={activeTab === 'PRESETS' ? '#0F172A' : '#64748B'} style={{ marginRight: 6 }} />
             <Text style={[styles.tabText, activeTab === 'PRESETS' && styles.activeTabText]}>Quick Presets</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.tab, activeTab === 'CUSTOM' && styles.activeTab]}
             onPress={() => setActiveTab('CUSTOM')}
           >
-            <Ionicons name="options-outline" size={16} color={activeTab === 'CUSTOM' ? '#0F172A' : '#64748B'} style={{ marginRight: 6 }} />
-            <Text style={[styles.tabText, activeTab === 'CUSTOM' && styles.activeTabText]}>Custom Hours / Days</Text>
+            <Text style={[styles.tabText, activeTab === 'CUSTOM' && styles.activeTabText]}>Custom</Text>
           </TouchableOpacity>
         </View>
 
@@ -168,51 +167,33 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
         {activeTab === 'PRESETS' && (
           <View style={styles.grid}>
             <TouchableOpacity style={styles.card} onPress={() => handleSetPreset(2, undefined, 'Short errand')}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>Inactive for 2 Hours</Text>
-                <Ionicons name="time-outline" size={16} color="#64748B" />
-              </View>
-              <Text style={styles.cardSubtitle}>In meeting, class, or short errand</Text>
+              <Text style={styles.cardTitle}>2 Hours</Text>
+              <Text style={styles.cardSubtitle}>In meeting or class</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.card} onPress={() => handleSetPreset(3, undefined, 'Personal break')}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>Inactive for 3 Hours</Text>
-                <Ionicons name="time-outline" size={16} color="#64748B" />
-              </View>
-              <Text style={styles.cardSubtitle}>Personal break or exam session</Text>
+              <Text style={styles.cardTitle}>3 Hours</Text>
+              <Text style={styles.cardSubtitle}>Exam or rest</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.card} onPress={() => handleSetPreset(8, undefined, 'Night sleep')}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>Inactive for 8 Hours</Text>
-                <Ionicons name="moon-outline" size={16} color="#64748B" />
-              </View>
-              <Text style={styles.cardSubtitle}>Night sleep & uninterrupted rest</Text>
+              <Text style={styles.cardTitle}>8 Hours</Text>
+              <Text style={styles.cardSubtitle}>Night sleep</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.card} onPress={() => handleSetPreset(undefined, 1, 'Busy whole day')}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>Inactive for 1 Day (24 hrs)</Text>
-                <Ionicons name="calendar-outline" size={16} color="#64748B" />
-              </View>
-              <Text style={styles.cardSubtitle}>Busy whole day with family/work</Text>
+              <Text style={styles.cardTitle}>24 Hours</Text>
+              <Text style={styles.cardSubtitle}>Busy whole day</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.card} onPress={() => handleSetPreset(undefined, 2, 'Weekend trip')}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>Inactive for 2 Days</Text>
-                <Ionicons name="calendar-outline" size={16} color="#64748B" />
-              </View>
-              <Text style={styles.cardSubtitle}>Weekend trip or temporary rest</Text>
+              <Text style={styles.cardTitle}>2 Days</Text>
+              <Text style={styles.cardSubtitle}>Weekend trip</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.card} onPress={() => handleSetPreset(undefined, 3, 'Short vacation')}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>Inactive for 3 Days</Text>
-                <Ionicons name="calendar-outline" size={16} color="#64748B" />
-              </View>
-              <Text style={styles.cardSubtitle}>Short vacation or out of Birgunj</Text>
+              <Text style={styles.cardTitle}>3 Days</Text>
+              <Text style={styles.cardSubtitle}>Short vacation</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -249,7 +230,7 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
 
             <TextInput 
               style={styles.reasonInput}
-              placeholder="Reason (Optional, e.g. Out of town)"
+              placeholder="Reason (Optional)"
               placeholderTextColor="#94A3B8"
               value={customReason}
               onChangeText={setCustomReason}
@@ -264,87 +245,67 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
               {updateMutation.isPending ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
-                <Text style={styles.customSubmitText}>Apply Custom Status</Text>
+                <Text style={styles.customSubmitText}>Apply Duration</Text>
               )}
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Turn back on now */}
-        {!isInactive && (
-          <View style={{ marginTop: 24, paddingHorizontal: 4 }}>
-            <TouchableOpacity style={styles.turnBackOnRow} onPress={() => updateMutation.mutate({ status: 'ACTIVE' })}>
-              <Ionicons name="play-circle-outline" size={18} color="#059669" />
-              <Text style={styles.turnBackOnText}>You are already Active</Text>
-            </TouchableOpacity>
-            <View style={styles.warningRow}>
-              <Ionicons name="lock-closed" size={14} color="#F59E0B" />
-              <Text style={styles.warningText}>
-                When inactive, you will not receive emergency priority alarms. You can change this setting at any time.
-              </Text>
-            </View>
-          </View>
-        )}
+        {/* Bottom Safety Info */}
+        <View style={styles.infoBox}>
+           <Ionicons name="shield-checkmark" size={18} color="#94A3B8" style={{marginRight: 8, marginTop: 2}} />
+           <Text style={styles.infoText}>
+             You can turn your availability back on manually at any time. When inactive, you will not receive emergency alerts.
+           </Text>
+        </View>
 
-        {isInactive && (
-          <View style={{ marginTop: 24, paddingHorizontal: 4 }}>
-            <TouchableOpacity style={styles.turnBackOnRow} onPress={handleMakeActive}>
-              <Ionicons name="play-circle-outline" size={18} color="#059669" />
-              <Text style={styles.turnBackOnText}>Turn back on now (Active)</Text>
-            </TouchableOpacity>
-            <View style={styles.warningRow}>
-              <Ionicons name="lock-closed" size={14} color="#F59E0B" />
-              <Text style={styles.warningText}>
-                When inactive, you will not receive emergency priority alarms. You can change this setting at any time.
-              </Text>
-            </View>
-          </View>
-        )}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
+  safeArea: { flex: 1, backgroundColor: '#F8FAFC' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
-  headerTitleContainer: { flexDirection: 'row', alignItems: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#0F172A' },
-  closeButton: { padding: 6, backgroundColor: '#F1F5F9', borderRadius: 20 },
-  container: { padding: 16 },
-  statusBanner: { padding: 16, borderRadius: 12, borderWidth: 1, marginBottom: 20 },
-  statusBannerHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  dot: { width: 12, height: 12, borderRadius: 6, marginRight: 8 },
-  statusTitle: { fontSize: 16, fontWeight: '800', color: '#0F172A' },
-  statusText: { fontSize: 13, color: '#475569', lineHeight: 18 },
-  primaryButton: { flexDirection: 'row', padding: 16, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  primaryButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
-  tabsContainer: { flexDirection: 'row', backgroundColor: '#F8FAFC', borderRadius: 8, padding: 4, marginBottom: 20 },
-  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 6 },
-  activeTab: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 },
-  tabText: { fontSize: 14, fontWeight: '600', color: '#64748B' },
-  activeTabText: { color: '#0F172A' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  card: { width: '48%', backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 14, marginBottom: 12 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 },
-  cardTitle: { fontSize: 14, fontWeight: '700', color: '#0F172A', flex: 1, marginRight: 8 },
-  cardSubtitle: { fontSize: 12, color: '#64748B', lineHeight: 16 },
-  customSection: { padding: 20, backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3 },
-  customTitle: { fontSize: 16, fontWeight: '800', color: '#0F172A', marginBottom: 16 },
-  inputRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  numberInput: { flex: 1, height: 50, backgroundColor: '#F8FAFC', borderRadius: 10, borderWidth: 1, borderColor: '#CBD5E1', fontSize: 18, fontWeight: '700', textAlign: 'center', color: '#0F172A', marginRight: 12 },
-  unitToggle: { flexDirection: 'row', backgroundColor: '#F1F5F9', borderRadius: 10, padding: 4, height: 50 },
-  unitBtn: { paddingHorizontal: 20, justifyContent: 'center', borderRadius: 8 },
-  unitBtnActive: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 1 },
-  unitBtnText: { fontSize: 14, fontWeight: '600', color: '#64748B' },
-  unitBtnTextActive: { color: '#0F172A' },
-  reasonInput: { backgroundColor: '#F8FAFC', height: 50, borderRadius: 10, borderWidth: 1, borderColor: '#CBD5E1', paddingHorizontal: 16, fontSize: 14, color: '#0F172A', marginBottom: 20 },
-  customSubmitBtn: { backgroundColor: '#E11D48', height: 50, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  customSubmitText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 16, paddingHorizontal: 4, marginBottom: 8 },
+  iconButton: { padding: 8 },
+  headerTitle: { fontSize: 18, color: '#0F172A', fontFamily: fonts.bold },
+  container: { paddingHorizontal: 20, paddingBottom: 40 },
   
-  turnBackOnRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  turnBackOnText: { color: '#059669', fontWeight: '700', fontSize: 15, marginLeft: 8 },
-  warningRow: { flexDirection: 'row', alignItems: 'flex-start', paddingRight: 16 },
-  warningText: { fontSize: 12, color: '#94A3B8', marginLeft: 8, lineHeight: 16, flex: 1 },
+  statusBanner: { padding: 20, borderRadius: 16, borderWidth: 1, marginBottom: 24 },
+  statusBannerHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  dot: { width: 10, height: 10, borderRadius: 5, marginRight: 8 },
+  statusTitle: { fontSize: 16, color: '#0F172A', fontFamily: fonts.bold },
+  statusText: { fontSize: 14, color: '#475569', lineHeight: 20, fontFamily: fonts.regular },
+  statusTimeText: { fontSize: 13, color: '#0F172A', marginTop: 8, fontFamily: fonts.semiBold },
+  
+  primaryButton: { flexDirection: 'row', backgroundColor: '#0F172A', padding: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
+  primaryButtonText: { color: '#FFFFFF', fontSize: 15, fontFamily: fonts.bold },
+  
+  tabsContainer: { flexDirection: 'row', backgroundColor: '#E2E8F0', borderRadius: 10, padding: 4, marginBottom: 24 },
+  tab: { flex: 1, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
+  activeTab: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
+  tabText: { fontSize: 14, color: '#64748B', fontFamily: fonts.semiBold },
+  activeTabText: { color: '#0F172A', fontFamily: fonts.bold },
+  
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  card: { width: '48%', backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.02, shadowRadius: 4, elevation: 1 },
+  cardTitle: { fontSize: 16, color: '#0F172A', marginBottom: 4, fontFamily: fonts.bold },
+  cardSubtitle: { fontSize: 13, color: '#64748B', lineHeight: 18, fontFamily: fonts.regular },
+  
+  customSection: { padding: 20, backgroundColor: '#FFFFFF', borderRadius: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.02, shadowRadius: 4, elevation: 1 },
+  customTitle: { fontSize: 16, color: '#0F172A', marginBottom: 16, fontFamily: fonts.bold },
+  inputRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  numberInput: { flex: 1, height: 50, backgroundColor: '#F8FAFC', borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', fontSize: 18, textAlign: 'center', color: '#0F172A', marginRight: 12, fontFamily: fonts.bold },
+  unitToggle: { flexDirection: 'row', backgroundColor: '#F1F5F9', borderRadius: 12, padding: 4, height: 50 },
+  unitBtn: { paddingHorizontal: 16, justifyContent: 'center', borderRadius: 8 },
+  unitBtnActive: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
+  unitBtnText: { fontSize: 13, color: '#64748B', fontFamily: fonts.semiBold },
+  unitBtnTextActive: { color: '#0F172A', fontFamily: fonts.bold },
+  reasonInput: { backgroundColor: '#F8FAFC', height: 50, borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', paddingHorizontal: 16, fontSize: 14, color: '#0F172A', marginBottom: 20, fontFamily: fonts.regular },
+  customSubmitBtn: { backgroundColor: '#DC2626', height: 50, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  customSubmitText: { color: '#FFFFFF', fontSize: 15, fontFamily: fonts.bold },
+  
+  infoBox: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 32, paddingHorizontal: 4 },
+  infoText: { flex: 1, fontSize: 13, color: '#94A3B8', lineHeight: 20, fontFamily: fonts.regular }
 });
