@@ -186,10 +186,12 @@ export const HomeScreen = () => {
               <View>
                 <TouchableOpacity 
                   style={styles.statusPill}
+                  activeOpacity={0.7}
                   onPress={() => navigation.navigate('Profile', { screen: 'DonorAvailability' })}
                 >
                   <View style={[styles.statusDot, { backgroundColor: isAvailable ? '#22C55E' : '#EF4444' }]} />
                   <Text style={styles.statusText}>{isAvailable ? 'Active' : 'Inactive'}</Text>
+                  <Feather name="chevron-down" size={14} color="#64748B" style={{ marginLeft: 2 }} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -477,7 +479,7 @@ const styles = StyleSheet.create({
   donorName: { fontSize: 20, fontFamily: 'Inter_800ExtraBold', color: '#FFFFFF', marginBottom: 4, letterSpacing: -0.5 },
   donorLocationRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 },
   donorLocationText: { fontSize: 13, color: '#FECACA', fontFamily: 'Inter_500Medium' },
-  statusPill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FFFFFF', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  statusPill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FFFFFF', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 3 },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
   statusText: { fontSize: 12, fontFamily: 'Inter_700Bold', color: '#0F172A' },
   
