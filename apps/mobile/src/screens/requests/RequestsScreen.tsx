@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
   },
   headerSubtitle: {
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   createButtonText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
   },
   tabContainer: {
     flexDirection: 'row',
@@ -238,16 +238,16 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
   },
   activeTabText: {
     color: colors.primary,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
   },
   activeTabTextEmergency: {
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
   },
   listContainer: {
     flex: 1,

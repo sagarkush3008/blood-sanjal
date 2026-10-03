@@ -283,13 +283,13 @@ const styles = StyleSheet.create({
   },
   brandTitle: {
     fontSize: 24,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
     letterSpacing: -0.3,
   },
   brandTagline: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: colors.primary,
     marginTop: 2,
     letterSpacing: 0.2,
@@ -328,12 +328,12 @@ const styles = StyleSheet.create({
   errorBannerText: {
     color: '#991B1B',
     fontSize: 13,
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
     flex: 1,
   },
   fieldLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#334155',
     marginBottom: 8,
   },
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
   },
   footerLink: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: colors.primary,
   },
 });

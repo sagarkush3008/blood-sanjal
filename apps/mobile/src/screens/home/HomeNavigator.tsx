@@ -20,7 +20,7 @@ export const HomeNavigator = () => {
       screenOptions={{
         headerStyle: { backgroundColor: '#FFFFFF' },
         headerTintColor: colors.primary,
-        headerTitleStyle: { fontWeight: '700' },
+        headerTitleStyle: { fontFamily: 'Inter_700Bold' },
       }}
     >
       <Stack.Screen name="HomeMain" component={HomeScreen} options={{ headerShown: false }} />

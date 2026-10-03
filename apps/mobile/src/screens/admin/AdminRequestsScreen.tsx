@@ -109,7 +109,7 @@ export const AdminRequestsScreen = () => {
               <Text style={styles.patientName}>Patient: {item.patientName || 'Medical Case'}</Text>
               <Text style={styles.hospitalText}>🏥 {item.hospitalName}</Text>
               <Text style={styles.unitsText}>🩸 Needed: {item.unitsRequired} Unit(s) (Fulfilled: {item.unitsFulfilled || 0})</Text>
-              <Text style={styles.urgencyText}>⚡ Urgency: <Text style={{ fontWeight: 'bold' }}>{item.urgency}</Text></Text>
+              <Text style={styles.urgencyText}>⚡ Urgency: <Text style={{ fontFamily: 'Inter_700Bold' }}>{item.urgency}</Text></Text>
 
               <View style={styles.actionRow}>
                 {item.status === 'PENDING_VERIFICATION' && (
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   filterTabText: {
     ...typography.caption,
     color: colors.textMuted,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
   },
   filterTabTextActive: {
     color: colors.danger,
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   },
   bloodChipText: {
     color: colors.surface,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     fontSize: 14,
   },
   statusBadge: {
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   },
   statusBadgeText: {
     fontSize: 10,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
   },
   textActive: {
     color: '#065F46',
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   },
   patientName: {
     ...typography.body1,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.text,
     marginBottom: 2,
   },
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   },
   verifyBtnText: {
     ...typography.caption,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.success,
   },
   closeBtn: {
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   },
   closeBtnText: {
     ...typography.caption,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: '#1D4ED8',
   }
 });

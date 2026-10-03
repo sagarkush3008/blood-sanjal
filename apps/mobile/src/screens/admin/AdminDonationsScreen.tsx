@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     ...typography.caption,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
   },
   badgeTextVerified: {
     color: '#065F46',
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   },
   hospitalName: {
     ...typography.body1,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: colors.primaryDark,
     marginVertical: 2,
   },
@@ -220,17 +220,17 @@ const styles = StyleSheet.create({
   },
   verifyText: {
     ...typography.caption,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.success,
   },
   rejectText: {
     ...typography.caption,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.danger,
   },
   certText: {
     ...typography.caption,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: '#1D4ED8',
   }
 });

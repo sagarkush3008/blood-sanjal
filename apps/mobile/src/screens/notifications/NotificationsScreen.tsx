@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    fontWeight: '900',
+    fontFamily: 'Inter_900Black',
     color: '#0F172A',
   },
   unreadCountPill: {
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   },
   unreadCountText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#FFFFFF',
   },
   markAllButton: {
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
   },
   markAllText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#B91C1C',
   },
   listContainer: {
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
     marginBottom: 6,
   },
@@ -308,13 +308,13 @@ const styles = StyleSheet.create({
   },
   typeBadge: {
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#94A3B8',
     letterSpacing: 0.5,
   },
   notifTitle: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
     marginBottom: 2,
   },
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   unreadMessage: {
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
   },
   time: {

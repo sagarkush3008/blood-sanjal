@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   },
   uploadLabel: {
     ...typography.body1,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.text,
     marginBottom: spacing.s,
   },

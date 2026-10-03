@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   },
   action: {
     ...typography.body1,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.danger,
   },
   time: {

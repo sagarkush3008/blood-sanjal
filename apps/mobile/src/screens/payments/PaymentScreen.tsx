@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
   },
   historyBtn: {
@@ -257,13 +257,13 @@ const styles = StyleSheet.create({
   },
   billLabel: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#64748B',
     letterSpacing: 0.8,
   },
   billAmount: {
     fontSize: 32,
-    fontWeight: '900',
+    fontFamily: 'Inter_900Black',
     color: '#0F172A',
     marginVertical: 4,
   },
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   },
   purposeText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: colors.primary,
   },
   divider: {
@@ -300,12 +300,12 @@ const styles = StyleSheet.create({
   },
   billDetailVal: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#0F172A',
   },
   sectionTitle: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
     marginBottom: 12,
   },
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   },
   providerName: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
   },
   providerTagline: {
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
   },
   securityTitle: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#166534',
   },
   securityText: {

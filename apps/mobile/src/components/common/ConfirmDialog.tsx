@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
     marginBottom: 8,
     textAlign: 'center',
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   },
   cancelText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#475569',
   },
   confirmBtn: {
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   },
   confirmText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#FFFFFF',
   },
 });

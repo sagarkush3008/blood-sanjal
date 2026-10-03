@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   },
   composeBtnText: {
     ...typography.caption,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.surface,
   },
   listContainer: {
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   },
   alertTitle: {
     ...typography.body1,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.text,
     flex: 1,
   },
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 10,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
   },
   textSent: {
     color: '#065F46',
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   targetText: {
     ...typography.caption,
     color: colors.primaryDark,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     marginTop: 2,
   },
   dateText: {
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   cancelBtnText: {
     ...typography.caption,
     color: colors.danger,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
   },
   modalOverlay: {
     flex: 1,

@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   },
   amount: {
     ...typography.body1,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.text,
   },
   date: {
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     ...typography.caption,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
   },
   badgeTextSuccess: {
     color: colors.success,

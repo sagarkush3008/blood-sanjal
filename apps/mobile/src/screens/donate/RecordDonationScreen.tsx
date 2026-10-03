@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
     marginBottom: 6,
   },
@@ -313,12 +313,12 @@ const styles = StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#991B1B',
   },
   fieldLabel: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#334155',
     marginBottom: 6,
     marginTop: 4,
@@ -344,12 +344,12 @@ const styles = StyleSheet.create({
   },
   typeChipText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
   },
   typeChipTextActive: {
     color: colors.primary,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
   },
 });
 

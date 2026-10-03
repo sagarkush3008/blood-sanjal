@@ -50,7 +50,7 @@ export const RewardsScreen = () => {
       <View style={styles.sectionHeaderRow}>
         <Text style={[styles.sectionTitle, { marginTop: spacing.xl }]}>Certificates of Appreciation</Text>
         <TouchableOpacity onPress={() => navigation.navigate('VerifyCertificate')}>
-          <Text style={{ color: colors.primary, fontWeight: 'bold', marginTop: spacing.xl }}>Verify</Text>
+          <Text style={{ color: colors.primary, fontFamily: 'Inter_700Bold', marginTop: spacing.xl }}>Verify</Text>
         </TouchableOpacity>
       </View>
       {certs.length === 0 ? (
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   },
   certTitle: {
     ...typography.body1,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.primaryDark,
     marginBottom: 4,
   },

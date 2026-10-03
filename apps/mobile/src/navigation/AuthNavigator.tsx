@@ -15,7 +15,7 @@ export const AuthNavigator = () => {
       screenOptions={{
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.primary,
-        headerTitleStyle: { fontWeight: 'bold' },
+        headerTitleStyle: { fontFamily: 'Inter_700Bold' },
       }}
     >
       <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />

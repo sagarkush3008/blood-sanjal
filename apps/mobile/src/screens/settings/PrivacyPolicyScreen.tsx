@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F1F5F9',
   },
   backBtn: { padding: 4 },
-  headerTitle: { fontSize: 16, fontWeight: '700', color: '#0F172A' },
+  headerTitle: { fontSize: 16, fontFamily: 'Inter_700Bold', color: '#0F172A' },
   scrollContent: { padding: 20, paddingBottom: 40 },
   lastUpdated: { fontSize: 12, color: '#64748B', marginBottom: 16 },
   summaryBox: {
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   },
   summaryTitle: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#1E40AF',
     marginBottom: 4,
   },
@@ -106,6 +106,6 @@ const styles = StyleSheet.create({
     color: '#1E3A8A',
     lineHeight: 18,
   },
-  sectionHeading: { fontSize: 15, fontWeight: '700', color: '#0F172A', marginTop: 14, marginBottom: 6 },
+  sectionHeading: { fontSize: 15, fontFamily: 'Inter_700Bold', color: '#0F172A', marginTop: 14, marginBottom: 6 },
   bodyText: { fontSize: 13, color: '#475569', lineHeight: 20 },
 });

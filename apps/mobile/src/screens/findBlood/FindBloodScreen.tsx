@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
   },
   headerSubtitle: {
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   },
   filterLabel: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#334155',
     marginBottom: 10,
     textTransform: 'uppercase',
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
   },
   distanceLabel: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#475569',
   },
   distancePills: {
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
   },
   distancePillText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
   },
   distancePillTextActive: {
@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
   },
   feeTitle: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#92400E',
   },
   feeText: {
@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
   feePayButtonText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
   },
   resultsContainer: {
     flex: 1,
@@ -506,18 +506,18 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
   },
   modalSubtitle: {
     fontSize: 13,
     color: colors.primary,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     marginTop: 2,
   },
   inputLabel: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#334155',
     marginBottom: 6,
   },
@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
   },
   modalCancelText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#475569',
   },
   modalSubmitButton: {
@@ -572,7 +572,7 @@ const styles = StyleSheet.create({
   },
   modalSubmitText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#FFFFFF',
   },
 });

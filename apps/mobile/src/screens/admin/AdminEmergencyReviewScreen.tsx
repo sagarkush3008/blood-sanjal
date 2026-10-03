@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
   },
   detailText: {
     ...typography.body2,
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   label: {
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.textMuted,
   },
   actions: {

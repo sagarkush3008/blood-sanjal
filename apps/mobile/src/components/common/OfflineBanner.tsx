@@ -34,6 +34,6 @@ const styles = StyleSheet.create({
   text: {
     color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
   },
 });

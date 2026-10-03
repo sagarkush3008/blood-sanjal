@@ -161,13 +161,13 @@ const styles = StyleSheet.create({
   },
   dateMonth: {
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: colors.primary,
     letterSpacing: 0.5,
   },
   dateDay: {
     fontSize: 18,
-    fontWeight: '900',
+    fontFamily: 'Inter_900Black',
     color: '#0F172A',
     lineHeight: 22,
   },
@@ -191,12 +191,12 @@ const styles = StyleSheet.create({
   },
   registeredText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#059669',
   },
   title: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
     lineHeight: 20,
   },
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   detailText: {
     fontSize: 11,
     color: '#475569',
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
   },
   groupsRow: {
     flexDirection: 'row',
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   },
   groupsLabel: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
   },
   groupsList: {
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
   moreGroupsText: {
     fontSize: 10,
     color: '#94A3B8',
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
   },
   actionRow: {
     flexDirection: 'row',
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   },
   rsvpBtnText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: colors.primary,
   },
   rsvpBtnTextActive: {
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   },
   viewMoreText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
   },
 });

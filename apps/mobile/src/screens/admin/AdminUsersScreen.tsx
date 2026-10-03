@@ -113,7 +113,7 @@ export const AdminUsersScreen = () => {
                       </View>
                     </View>
                     <Text style={styles.email}>{email}</Text>
-                    <Text style={styles.details}>🩸 Blood: <Text style={{ fontWeight: 'bold' }}>{item.bloodGroup}</Text> | Status: {item.donorStatus || 'ACTIVE'}</Text>
+                    <Text style={styles.details}>🩸 Blood: <Text style={{ fontFamily: 'Inter_700Bold' }}>{item.bloodGroup}</Text> | Status: {item.donorStatus || 'ACTIVE'}</Text>
                     <Text style={styles.details}>🏆 Donations: {item.totalDonations || 0}</Text>
                   </View>
                   <View style={styles.buttonCol}>
@@ -135,7 +135,7 @@ export const AdminUsersScreen = () => {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.name}>{item.name}</Text>
                   <Text style={styles.email}>{item.email}</Text>
-                  <Text style={styles.details}>Role: {item.role} | Status: <Text style={{ fontWeight: 'bold' }}>{item.status}</Text></Text>
+                  <Text style={styles.details}>Role: {item.role} | Status: <Text style={{ fontFamily: 'Inter_700Bold' }}>{item.status}</Text></Text>
                 </View>
                 <TouchableOpacity 
                   style={[styles.statusButton, item.status === 'ACTIVE' ? styles.suspendButton : styles.activateButton]}
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   tabText: {
     ...typography.body1,
     color: colors.textMuted,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
   },
   activeTabText: {
     color: colors.danger,
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   },
   name: {
     ...typography.body1,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.text,
   },
   miniBadge: {
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   },
   miniBadgeText: {
     fontSize: 10,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
   },
   textVerified: {
     color: '#065F46',
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   },
   statusButtonText: {
     ...typography.caption,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
   },
   suspendText: {
     color: colors.danger,

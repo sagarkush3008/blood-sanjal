@@ -90,7 +90,7 @@ export const SupportPlatformScreen = () => {
 
       <View style={{ marginTop: spacing.xxl, alignItems: 'center' }}>
         <TouchableOpacity onPress={() => navigation.navigate('PaymentHistory')}>
-          <Text style={{ color: colors.primary, ...typography.body1, fontWeight: 'bold' }}>View Contribution History</Text>
+          <Text style={{ color: colors.primary, ...typography.body1, fontFamily: 'Inter_700Bold' }}>View Contribution History</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   },
   disclaimerTitle: {
     ...typography.body1,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: '#92400E',
     marginBottom: 4,
   },
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   statusText: {
     ...typography.body1,
     color: colors.success,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     textAlign: 'center',
   }
 });

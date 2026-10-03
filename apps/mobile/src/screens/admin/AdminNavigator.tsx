@@ -20,7 +20,7 @@ export const AdminNavigator = () => {
       screenOptions={{
         headerStyle: { backgroundColor: colors.danger },
         headerTintColor: colors.surface,
-        headerTitleStyle: { fontWeight: 'bold' },
+        headerTitleStyle: { fontFamily: 'Inter_700Bold' },
       }}
     >
       <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} options={{ headerShown: false }} />

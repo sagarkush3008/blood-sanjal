@@ -162,7 +162,7 @@ export const HomeScreen = () => {
         {/* GREETING & LOCATION */}
         <View style={styles.greetingRow}>
           <Text style={styles.greetingText}>
-            Hello, <Text style={{ fontWeight: '800', color: '#0F172A' }}>{firstName}</Text> 👋 Thank you for being a lifesaver 💖
+            Hello, <Text style={{ fontFamily: 'Inter_800ExtraBold', color: '#0F172A' }}>{firstName}</Text> 👋 Thank you for being a lifesaver 💖
           </Text>
           <View style={styles.locationPill}>
             <Feather name="map-pin" size={12} color="#DC2626" />
@@ -376,7 +376,7 @@ export const HomeScreen = () => {
               <View style={styles.campBadge}><Text style={styles.campBadgeText}>UPCOMING CAMP</Text></View>
               <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
                  <Feather name="users" size={12} color="#3B82F6"/>
-                 <Text style={{fontSize: 12, color: '#3B82F6', fontWeight: '600'}}>2 Attending</Text>
+                 <Text style={{fontSize: 12, color: '#3B82F6', fontFamily: 'Inter_600SemiBold'}}>2 Attending</Text>
               </View>
            </View>
            <Text style={styles.campTitle}>Birgunj Mega Blood Donation Drive 2026</Text>
@@ -384,7 +384,7 @@ export const HomeScreen = () => {
            
            <View style={styles.campInfoRow}>
               <Feather name="calendar" size={12} color="#DC2626" style={{marginTop: 2}} />
-              <Text style={styles.campInfoText}><Text style={{fontWeight: '700'}}>2026-05-08</Text> (09:00 AM - 04:00 PM)</Text>
+              <Text style={styles.campInfoText}><Text style={{fontFamily: 'Inter_700Bold'}}>2026-05-08</Text> (09:00 AM - 04:00 PM)</Text>
            </View>
            <View style={styles.campInfoRow}>
               <Feather name="map-pin" size={12} color="#64748B" style={{marginTop: 2}} />
@@ -452,105 +452,105 @@ const styles = StyleSheet.create({
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   logoBox: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#DC2626', alignItems: 'center', justifyContent: 'center' },
-  brandTitle: { fontSize: 18, fontWeight: '900', color: '#0F172A', letterSpacing: -0.5 },
+  brandTitle: { fontSize: 18, fontFamily: 'Inter_900Black', color: '#0F172A', letterSpacing: -0.5 },
   nepalBadge: { backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
-  nepalBadgeText: { fontSize: 10, fontWeight: '900', color: '#DC2626', letterSpacing: 0.5 },
-  brandTagline: { fontSize: 12, color: '#64748B', marginTop: 2, fontWeight: '500' },
+  nepalBadgeText: { fontSize: 10, fontFamily: 'Inter_900Black', color: '#DC2626', letterSpacing: 0.5 },
+  brandTagline: { fontSize: 12, color: '#64748B', marginTop: 2, fontFamily: 'Inter_500Medium' },
   
   headerActions: { flexDirection: 'row', gap: 12, alignItems: 'center' },
   iconBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', position: 'relative', borderWidth: 1, borderColor: '#E2E8F0' },
   notificationBadge: { position: 'absolute', top: -4, right: -4, backgroundColor: '#EF4444', minWidth: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFFFFF' },
-  notificationBadgeText: { fontSize: 10, fontWeight: 'bold', color: '#FFFFFF' },
+  notificationBadgeText: { fontSize: 10, fontFamily: 'Inter_700Bold', color: '#FFFFFF' },
   avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#DC2626' },
-  avatarLetter: { fontSize: 16, fontWeight: '800', color: '#DC2626' },
+  avatarLetter: { fontSize: 16, fontFamily: 'Inter_800ExtraBold', color: '#DC2626' },
 
   scrollContent: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 16 },
 
   greetingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   greetingText: { fontSize: 13, color: '#475569', flex: 1, paddingRight: 10, lineHeight: 18 },
   locationPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0', maxWidth: 140 },
-  locationText: { fontSize: 11, fontWeight: '600', color: '#64748B', flexShrink: 1 },
+  locationText: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: '#64748B', flexShrink: 1 },
 
   donorCard: { borderRadius: 24, padding: 24, marginBottom: 24, shadowColor: '#991B1B', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 10 },
   donorCardTop: { flexDirection: 'row', gap: 16, alignItems: 'flex-start' },
   bloodGroupSquare: { width: 68, height: 68, borderRadius: 20, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 5 },
-  bloodGroupText: { fontSize: 32, fontWeight: '900', color: '#DC2626' },
+  bloodGroupText: { fontSize: 32, fontFamily: 'Inter_900Black', color: '#DC2626' },
   donorCardInfo: { flex: 1, justifyContent: 'center' },
-  donorName: { fontSize: 20, fontWeight: '800', color: '#FFFFFF', marginBottom: 4, letterSpacing: -0.5 },
+  donorName: { fontSize: 20, fontFamily: 'Inter_800ExtraBold', color: '#FFFFFF', marginBottom: 4, letterSpacing: -0.5 },
   donorLocationRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 },
-  donorLocationText: { fontSize: 13, color: '#FECACA', fontWeight: '500' },
+  donorLocationText: { fontSize: 13, color: '#FECACA', fontFamily: 'Inter_500Medium' },
   statusPill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FFFFFF', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
-  statusText: { fontSize: 12, fontWeight: '700', color: '#0F172A' },
+  statusText: { fontSize: 12, fontFamily: 'Inter_700Bold', color: '#0F172A' },
   
   inactivePremiumBox: { backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   inactivePremiumHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  inactivePremiumTitle: { fontSize: 12, fontWeight: '800', color: '#FCA5A5', letterSpacing: 0.5 },
-  inactivePremiumAction: { fontSize: 11, fontWeight: '700', color: '#FFFFFF', textDecorationLine: 'underline' },
+  inactivePremiumTitle: { fontSize: 12, fontFamily: 'Inter_800ExtraBold', color: '#FCA5A5', letterSpacing: 0.5 },
+  inactivePremiumAction: { fontSize: 11, fontFamily: 'Inter_700Bold', color: '#FFFFFF', textDecorationLine: 'underline' },
   inactivePremiumReason: { fontSize: 13, color: '#FFFFFF', fontStyle: 'italic', marginBottom: 16, lineHeight: 18 },
   returnTimeWrapper: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 12, padding: 12, alignItems: 'center' },
   returnTimeItem: { flex: 1 },
-  returnTimeLabel: { fontSize: 9, fontWeight: '800', color: '#FCA5A5', marginBottom: 2, letterSpacing: 0.5 },
-  returnTimeValue: { fontSize: 14, fontWeight: '800', color: '#FFFFFF' },
+  returnTimeLabel: { fontSize: 9, fontFamily: 'Inter_800ExtraBold', color: '#FCA5A5', marginBottom: 2, letterSpacing: 0.5 },
+  returnTimeValue: { fontSize: 14, fontFamily: 'Inter_800ExtraBold', color: '#FFFFFF' },
   returnTimeDivider: { width: 1, height: '100%', backgroundColor: 'rgba(255,255,255,0.2)', marginHorizontal: 12 },
 
   donorStatsBox: { flexDirection: 'row', backgroundColor: 'rgba(255, 255, 255, 0.15)', borderRadius: 16, padding: 16, marginTop: 24, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.1)' },
   statCol: { flex: 1 },
-  statLabel: { fontSize: 11, fontWeight: '800', color: '#FECACA', letterSpacing: 0.5, marginBottom: 4 },
-  statValue: { fontSize: 18, fontWeight: '800', color: '#FFFFFF' },
+  statLabel: { fontSize: 11, fontFamily: 'Inter_800ExtraBold', color: '#FECACA', letterSpacing: 0.5, marginBottom: 4 },
+  statValue: { fontSize: 18, fontFamily: 'Inter_800ExtraBold', color: '#FFFFFF' },
 
   eligibilityCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ECFDF5', borderRadius: 20, padding: 16, marginBottom: 32, borderWidth: 1, borderColor: '#D1FAE5' },
   eligibilityIconBox: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#059669', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   eligibilityTextCol: { flex: 1, paddingRight: 10 },
-  eligibilityTitle: { fontSize: 14, fontWeight: '800', color: '#064E3B', marginBottom: 4 },
-  eligibilitySub: { fontSize: 11, color: '#047857', lineHeight: 16, fontWeight: '500' },
+  eligibilityTitle: { fontSize: 14, fontFamily: 'Inter_800ExtraBold', color: '#064E3B', marginBottom: 4 },
+  eligibilitySub: { fontSize: 11, color: '#047857', lineHeight: 16, fontFamily: 'Inter_500Medium' },
   iDonatedBtn: { backgroundColor: '#059669', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
-  iDonatedBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  iDonatedBtnText: { color: '#FFFFFF', fontSize: 13, fontFamily: 'Inter_800ExtraBold' },
 
-  sectionTitle: { fontSize: 14, fontWeight: '800', color: '#64748B', letterSpacing: 1, marginBottom: 16, marginLeft: 4 },
+  sectionTitle: { fontSize: 14, fontFamily: 'Inter_800ExtraBold', color: '#64748B', letterSpacing: 1, marginBottom: 16, marginLeft: 4 },
   gridContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 16 },
   gridItem: { width: (width - 56) / 2, backgroundColor: '#FFFFFF', borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 2 },
   gridIconBox: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   gridTextCol: { flex: 1 },
-  gridTitle: { fontSize: 13, fontWeight: '800', color: '#0F172A', marginBottom: 2, letterSpacing: -0.3 },
-  gridSub: { fontSize: 11, color: '#64748B', lineHeight: 14, fontWeight: '500' },
+  gridTitle: { fontSize: 13, fontFamily: 'Inter_800ExtraBold', color: '#0F172A', marginBottom: 2, letterSpacing: -0.3 },
+  gridSub: { fontSize: 11, color: '#64748B', lineHeight: 14, fontFamily: 'Inter_500Medium' },
 
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 32, marginBottom: 16 },
-  viewAllText: { fontSize: 13, fontWeight: '800', color: '#DC2626', letterSpacing: 0.5 },
+  viewAllText: { fontSize: 13, fontFamily: 'Inter_800ExtraBold', color: '#DC2626', letterSpacing: 0.5 },
   
   volunteersBox: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, marginTop: 24, borderWidth: 1, borderColor: '#E2E8F0' },
-  volunteersTitle: { fontSize: 13, fontWeight: '800', color: '#0F172A', marginBottom: 16, textAlign: 'center' },
+  volunteersTitle: { fontSize: 13, fontFamily: 'Inter_800ExtraBold', color: '#0F172A', marginBottom: 16, textAlign: 'center' },
   volunteersGrid: { flexDirection: 'row', justifyContent: 'space-between' },
   volunteerItem: { alignItems: 'center', backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 12, minWidth: 60 },
   volunteerPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#DC2626', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2, marginBottom: 8 },
-  volunteerPillText: { color: '#FFF', fontSize: 11, fontWeight: '800' },
-  volunteerCount: { fontSize: 16, fontWeight: '900', color: '#0F172A' },
-  volunteerSub: { fontSize: 9, color: '#64748B', fontWeight: '700', textTransform: 'uppercase', marginTop: 2 },
+  volunteerPillText: { color: '#FFF', fontSize: 11, fontFamily: 'Inter_800ExtraBold' },
+  volunteerCount: { fontSize: 16, fontFamily: 'Inter_900Black', color: '#0F172A' },
+  volunteerSub: { fontSize: 9, color: '#64748B', fontFamily: 'Inter_700Bold', textTransform: 'uppercase', marginTop: 2 },
   
   campCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, marginTop: 8, borderWidth: 1, borderColor: '#E2E8F0' },
   campHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   campBadge: { backgroundColor: '#ECFDF5', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  campBadgeText: { fontSize: 10, fontWeight: '800', color: '#059669', letterSpacing: 0.5 },
-  campTitle: { fontSize: 16, fontWeight: '800', color: '#0F172A', marginBottom: 4 },
-  campOrganizer: { fontSize: 12, color: '#475569', marginBottom: 12, fontWeight: '500' },
+  campBadgeText: { fontSize: 10, fontFamily: 'Inter_800ExtraBold', color: '#059669', letterSpacing: 0.5 },
+  campTitle: { fontSize: 16, fontFamily: 'Inter_800ExtraBold', color: '#0F172A', marginBottom: 4 },
+  campOrganizer: { fontSize: 12, color: '#475569', marginBottom: 12, fontFamily: 'Inter_500Medium' },
   campInfoRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6, paddingRight: 20, gap: 6 },
   campInfoText: { fontSize: 12, color: '#475569', lineHeight: 18 },
-  campBloodTitle: { fontSize: 9, fontWeight: '800', color: '#64748B', letterSpacing: 0.5, marginTop: 12, marginBottom: 8 },
+  campBloodTitle: { fontSize: 9, fontFamily: 'Inter_800ExtraBold', color: '#64748B', letterSpacing: 0.5, marginTop: 12, marginBottom: 8 },
   campBloodGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 16 },
   campBloodTinyPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
-  campBloodTinyText: { fontSize: 10, fontWeight: '800', color: '#DC2626' },
+  campBloodTinyText: { fontSize: 10, fontFamily: 'Inter_800ExtraBold', color: '#DC2626' },
   campFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#F1F5F9', paddingTop: 12 },
   campFooterText: { flex: 1, fontSize: 10, color: '#94A3B8', paddingRight: 10 },
   campActionBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ECFDF5', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#A7F3D0' },
-  campActionText: { fontSize: 11, fontWeight: '800', color: '#059669' },
+  campActionText: { fontSize: 11, fontFamily: 'Inter_800ExtraBold', color: '#059669' },
 
   inviteBanner: { flexDirection: 'row', alignItems: 'center', borderRadius: 16, padding: 16, marginTop: 24 },
-  inviteTitle: { fontSize: 14, fontWeight: '900', color: '#FFFFFF', marginBottom: 4 },
+  inviteTitle: { fontSize: 14, fontFamily: 'Inter_900Black', color: '#FFFFFF', marginBottom: 4 },
   inviteSub: { fontSize: 11, color: '#FECACA', lineHeight: 16 },
   inviteBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
-  inviteBtnText: { fontSize: 12, fontWeight: '800', color: '#DC2626' },
+  inviteBtnText: { fontSize: 12, fontFamily: 'Inter_800ExtraBold', color: '#DC2626' },
   
   noticeBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEF2F2', borderRadius: 12, padding: 16, marginTop: 16, borderWidth: 1, borderColor: '#FECACA' },
-  noticeTitle: { fontSize: 12, fontWeight: '800', color: '#991B1B', marginBottom: 2 },
+  noticeTitle: { fontSize: 12, fontFamily: 'Inter_800ExtraBold', color: '#991B1B', marginBottom: 2 },
   noticeSub: { fontSize: 10, color: '#B91C1C', lineHeight: 14 },
 });

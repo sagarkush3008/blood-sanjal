@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#334155',
     marginBottom: 5,
   },
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
     fontSize: 14,
     color: '#0F172A',
-    fontWeight: '400',
+    fontFamily: 'Inter_400Regular',
   },
   inputFocused: {
     borderColor: colors.primary,
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: colors.danger,
     fontSize: 12,
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
     marginTop: 4,
   },
 });

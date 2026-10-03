@@ -216,13 +216,13 @@ const styles = StyleSheet.create({
   },
   badgePillText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: colors.primary,
     letterSpacing: 0.3,
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
     marginBottom: 2,
   },
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
   },
   impactCardTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#0F172A',
     marginBottom: 12,
     textAlign: 'center',
@@ -261,12 +261,12 @@ const styles = StyleSheet.create({
   },
   impactValue: {
     fontSize: 22,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: colors.primary,
   },
   impactLabel: {
     fontSize: 11,
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
     color: '#64748B',
     marginTop: 2,
   },
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   recordDonationBtnText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
   criteriaCard: {
     backgroundColor: '#F0FDFA',
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   },
   criteriaTitle: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#0F766E',
   },
   criteriaItem: {
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#0F172A',
     marginBottom: 10,
   },
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
   },
   hospitalName: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#0F172A',
   },
   verifiedPill: {
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
   verifiedText: {
     color: '#10B981',
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
   donationDetailsRow: {
     flexDirection: 'row',
@@ -369,12 +369,12 @@ const styles = StyleSheet.create({
   detailLabel: {
     fontSize: 10,
     color: '#64748B',
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
     marginBottom: 2,
   },
   detailValue: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#0F172A',
   },
   emptyContainer: {
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#0F172A',
     marginTop: 8,
     marginBottom: 2,
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
   rejectionText: {
     fontSize: 11,
     color: '#991B1B',
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
     flex: 1,
   },
 });

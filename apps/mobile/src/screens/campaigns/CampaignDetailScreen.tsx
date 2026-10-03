@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
   },
   navTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
     flex: 1,
     textAlign: 'center',
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   },
   bannerTagline: {
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: colors.primary,
     letterSpacing: 1,
   },
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 19,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
     lineHeight: 25,
   },
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
   organizerText: {
     fontSize: 13,
     color: '#64748B',
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
   },
   divider: {
     height: 1,
@@ -381,13 +381,13 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
     textTransform: 'uppercase',
   },
   infoValue: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
     marginTop: 1,
   },
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
     marginBottom: 8,
   },
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
   },
   guidelinesTitle: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F766E',
   },
   guidelinesItem: {
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   },
   registeredBarText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#065F46',
   },
   cancelRsvpBtn: {
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   },
   cancelRsvpText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
   },
 });

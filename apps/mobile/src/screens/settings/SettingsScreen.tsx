@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
   },
   scrollContent: {
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   },
   sectionHeading: {
     fontSize: 13,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
     marginBottom: 8,
     marginTop: 6,
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   },
   rowTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#0F172A',
   },
   rowSub: {
@@ -292,12 +292,12 @@ const styles = StyleSheet.create({
   },
   langChipText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
   },
   langChipTextActive: {
     color: colors.primary,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
   },
   logoutBtn: {
     flexDirection: 'row',
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   },
   logoutBtnText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#DC2626',
   },
   footerVersion: {

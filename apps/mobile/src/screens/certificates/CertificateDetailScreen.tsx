@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   },
   navTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
     flex: 1,
     textAlign: 'center',
@@ -260,13 +260,13 @@ const styles = StyleSheet.create({
   },
   authorityTitle: {
     fontSize: 13,
-    fontWeight: '900',
+    fontFamily: 'Inter_900Black',
     color: '#0F172A',
     letterSpacing: 1.2,
   },
   authoritySub: {
     fontSize: 9,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#64748B',
     letterSpacing: 0.5,
     marginTop: 2,
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   },
   certHeading: {
     fontSize: 17,
-    fontWeight: '900',
+    fontFamily: 'Inter_900Black',
     color: '#B91C1C',
     letterSpacing: 0.8,
     marginBottom: 6,
@@ -288,14 +288,14 @@ const styles = StyleSheet.create({
   },
   presentedText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#64748B',
     letterSpacing: 1,
     marginBottom: 10,
   },
   donorNameText: {
     fontSize: 22,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
     textAlign: 'center',
     marginBottom: 8,
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
   },
   bloodGroupPillText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: colors.primary,
     letterSpacing: 0.5,
   },
@@ -341,13 +341,13 @@ const styles = StyleSheet.create({
   },
   gridLabel: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#64748B',
     letterSpacing: 0.4,
   },
   gridValue: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
   },
   signatureRow: {
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
   },
   signatureLabel: {
     fontSize: 9,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#64748B',
   },
   signatureTitle: {
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   },
   verifiedStampText: {
     fontSize: 8,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#065F46',
     letterSpacing: 0.5,
   },
@@ -405,13 +405,13 @@ const styles = StyleSheet.create({
   },
   verifyBannerTitle: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#64748B',
     textTransform: 'uppercase',
   },
   verifyBannerCode: {
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: colors.primary,
     letterSpacing: 0.5,
     marginVertical: 2,
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   },
   shareActionBtnText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#FFFFFF',
   },
 });

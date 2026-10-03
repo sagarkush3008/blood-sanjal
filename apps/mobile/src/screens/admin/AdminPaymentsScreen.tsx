@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   summaryLabel: {
     ...typography.caption,
     color: colors.textMuted,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
   },
   summaryValue: {
     ...typography.h1,
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   },
   countText: {
     ...typography.caption,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.success,
   },
   sectionTitle: {
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   },
   purposeText: {
     ...typography.body2,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.text,
   },
   statusBadge: {
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 10,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
   },
   textSuccess: {
     color: '#065F46',
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   },
   refundBtnText: {
     ...typography.caption,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.danger,
   }
 });

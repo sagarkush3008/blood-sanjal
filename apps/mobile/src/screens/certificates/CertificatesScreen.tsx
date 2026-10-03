@@ -154,13 +154,13 @@ const styles = StyleSheet.create({
   },
   badgePillText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: colors.primary,
     letterSpacing: 0.3,
   },
   title: {
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
     marginBottom: 2,
   },
@@ -212,13 +212,13 @@ const styles = StyleSheet.create({
   },
   certType: {
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: colors.primary,
     letterSpacing: 0.4,
   },
   certNum: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
   },
   divider: {
@@ -237,16 +237,16 @@ const styles = StyleSheet.create({
   bottomLabel: {
     fontSize: 10,
     color: '#64748B',
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
   },
   bottomValue: {
     fontSize: 12,
     color: '#334155',
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
   verifyCode: {
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
     letterSpacing: 0.5,
   },
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
   },
   viewBtnText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: colors.primary,
   },
 });

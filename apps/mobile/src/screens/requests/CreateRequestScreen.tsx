@@ -633,9 +633,8 @@ const styles = StyleSheet.create({
   },
   brandText: {
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
-    fontFamily: fonts.bold,
   },
   themeToggle: {
     width: 48,
@@ -670,9 +669,8 @@ const styles = StyleSheet.create({
   },
   userBadgeText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#DC2626',
-    fontFamily: fonts.semiBold,
   },
   bellBadge: {
     position: 'absolute',
@@ -689,7 +687,7 @@ const styles = StyleSheet.create({
   bellBadgeText: {
     color: '#FFFFFF',
     fontSize: 9,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
   },
   scrollContent: {
     padding: 16,
@@ -711,9 +709,8 @@ const styles = StyleSheet.create({
   },
   mainTitle: {
     fontSize: 22,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
-    fontFamily: fonts.bold,
     marginBottom: 6,
   },
   mainSubtitle: {
@@ -724,9 +721,8 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
-    fontFamily: fonts.bold,
     marginBottom: 14,
   },
   urgencyRow: {
@@ -754,8 +750,7 @@ const styles = StyleSheet.create({
   },
   urgencyTitle: {
     fontSize: 14,
-    fontWeight: '800',
-    fontFamily: fonts.bold,
+    fontFamily: 'Inter_800ExtraBold',
     marginBottom: 6,
     color: '#0F172A',
   },
@@ -783,9 +778,8 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
-    fontFamily: fonts.semiBold,
     marginBottom: 10,
   },
   bloodGrid: {
@@ -811,9 +805,8 @@ const styles = StyleSheet.create({
   },
   bloodPillText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
-    fontFamily: fonts.bold,
   },
   bloodPillTextSelected: {
     color: '#FFFFFF',
@@ -826,9 +819,8 @@ const styles = StyleSheet.create({
   },
   unitsTitle: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
-    fontFamily: fonts.semiBold,
   },
   unitsSub: {
     fontSize: 11,
@@ -851,9 +843,8 @@ const styles = StyleSheet.create({
   },
   unitsCount: {
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#DC2626',
-    fontFamily: fonts.bold,
     minWidth: 18,
     textAlign: 'center',
   },
@@ -877,9 +868,8 @@ const styles = StyleSheet.create({
   },
   feeHeaderTitle: {
     fontSize: 15,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
-    fontFamily: fonts.bold,
   },
   feeBadge: {
     backgroundColor: '#EFF6FF',
@@ -891,9 +881,8 @@ const styles = StyleSheet.create({
   },
   feeBadgeText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#1D4ED8',
-    fontFamily: fonts.bold,
   },
   feeSubtitle: {
     fontSize: 12,
@@ -903,9 +892,8 @@ const styles = StyleSheet.create({
   },
   walletLabel: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
-    fontFamily: fonts.semiBold,
     marginBottom: 10,
   },
   walletRow: {
@@ -935,8 +923,7 @@ const styles = StyleSheet.create({
   },
   walletBtnText: {
     fontSize: 14,
-    fontWeight: '800',
-    fontFamily: fonts.bold,
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
   },
   walletBtnTextSelected: {
@@ -955,9 +942,8 @@ const styles = StyleSheet.create({
   },
   walletIdText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
-    fontFamily: fonts.semiBold,
     marginBottom: 4,
   },
   walletInstructionText: {
@@ -994,8 +980,7 @@ const styles = StyleSheet.create({
   submitBtnText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '800',
-    fontFamily: fonts.bold,
+    fontFamily: 'Inter_800ExtraBold',
   },
 
   // Clean Input Styles

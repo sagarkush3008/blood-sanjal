@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   emergencyTitle: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     letterSpacing: 0.2,
   },
   emergencySubtitle: {
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   },
   dialogTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
     marginBottom: 8,
     textAlign: 'center',
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   },
   cancelText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#475569',
   },
   confirmButton: {
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   },
   confirmText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#FFFFFF',
   },
 });

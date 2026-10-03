@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
   },
   listContent: {
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   },
   txPurpose: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
   },
   txDate: {
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   },
   txAmount: {
     fontSize: 14,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
   },
   divider: {
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
   },
   txMetaVal: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#334155',
   },
 });

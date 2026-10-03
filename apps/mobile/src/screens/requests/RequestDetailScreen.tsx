@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 17,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
   },
   shareButton: {
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   },
   bloodBadgeText: {
     fontSize: 24,
-    fontWeight: '900',
+    fontFamily: 'Inter_900Black',
     color: colors.primary,
   },
   statusCol: {
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
   },
   unitsText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
   },
   divider: {
@@ -396,13 +396,13 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
   },
   infoValue: {
     fontSize: 13,
     color: '#0F172A',
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     flex: 1,
   },
   notesBox: {
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
   },
   notesLabel: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#94A3B8',
     textTransform: 'uppercase',
     marginBottom: 4,
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
     marginBottom: 8,
   },
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: colors.danger,
   },
   errorContainer: {

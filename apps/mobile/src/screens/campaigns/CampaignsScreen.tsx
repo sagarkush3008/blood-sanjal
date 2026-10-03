@@ -261,13 +261,13 @@ const styles = StyleSheet.create({
   },
   badgePillText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: colors.primary,
     letterSpacing: 0.3,
   },
   title: {
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
     marginBottom: 2,
   },
@@ -300,12 +300,12 @@ const styles = StyleSheet.create({
   },
   tabBtnText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
   },
   tabBtnTextActive: {
     color: '#0F172A',
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
   },
   searchBox: {
     flexDirection: 'row',
@@ -343,12 +343,12 @@ const styles = StyleSheet.create({
   },
   filterChipText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
   },
   filterChipTextActive: {
     color: colors.primary,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
   },
   listContent: {
     padding: 16,

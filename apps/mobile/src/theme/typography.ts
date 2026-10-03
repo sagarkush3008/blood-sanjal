@@ -32,11 +32,13 @@ export const fonts = {
 };
 
 export const typography = {
-  h1: { fontSize: 32, fontWeight: '700' as const, fontFamily: fonts.bold },
-  h2: { fontSize: 24, fontWeight: '700' as const, fontFamily: fonts.bold },
-  h3: { fontSize: 20, fontWeight: '600' as const, fontFamily: fonts.semiBold },
-  body1: { fontSize: 16, fontWeight: '400' as const, fontFamily: fonts.regular },
-  body2: { fontSize: 14, fontWeight: '400' as const, fontFamily: fonts.regular },
-  caption: { fontSize: 12, fontWeight: '400' as const, fontFamily: fonts.regular },
-  button: { fontSize: 16, fontWeight: '600' as const, fontFamily: fonts.semiBold },
+  h1: { fontSize: 32, fontFamily: 'Inter_700Bold' as const },
+  h2: { fontSize: 24, fontFamily: 'Inter_700Bold' as const },
+  h3: { fontSize: 20, fontFamily: 'Inter_600SemiBold' as const },
+  body1: { fontSize: 16, fontFamily: 'Inter_400Regular' as const },
+  body2: { fontSize: 14, fontFamily: 'Inter_400Regular' as const },
+  subtitle1: { fontSize: 16, fontFamily: 'Inter_500Medium' as const },
+  subtitle2: { fontSize: 14, fontFamily: 'Inter_500Medium' as const },
+  caption: { fontSize: 12, fontFamily: 'Inter_400Regular' as const },
+  button: { fontSize: 16, fontFamily: 'Inter_600SemiBold' as const },
 };

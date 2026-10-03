@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   },
   roleLabel: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#94A3B8',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   },
   otherPartyName: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
   },
   bloodBadge: {
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   },
   bloodText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: colors.primary,
   },
   messageBox: {
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   },
   revealedTitle: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#065F46',
   },
   contactRow: {
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   contactChipText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
   },
   contactChipEmail: {
     flexDirection: 'row',
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
   contactChipEmailText: {
     color: '#0F172A',
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
   pendingNotice: {
     flexDirection: 'row',
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
   },
   declineText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
   },
   acceptBtn: {
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
   },
   acceptText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#FFFFFF',
   },
   cancelBtn: {
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
   },
   cancelText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
   },
   dateFooter: {

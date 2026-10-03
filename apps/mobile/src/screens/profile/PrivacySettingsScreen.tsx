@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   },
   promiseTitle: {
     fontSize: 13,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#065F46',
     marginBottom: 2,
   },
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   },
   sectionHeading: {
     fontSize: 14,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
     marginBottom: 10,
     marginTop: 4,
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   },
   settingTitle: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
     marginBottom: 2,
   },
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   },
   policyTitle: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
     marginBottom: 2,
   },

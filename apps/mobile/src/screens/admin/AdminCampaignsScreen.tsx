@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   },
   newButtonText: {
     ...typography.caption,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.surface,
   },
   listContainer: {
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   },
   campaignTitle: {
     ...typography.body1,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.text,
     flex: 1,
     marginRight: spacing.s,
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   },
   statusBadgeText: {
     fontSize: 10,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
   },
   textActive: {
     color: '#065F46',
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   },
   actionBtnText: {
     ...typography.caption,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.text,
   },
   modalOverlay: {

@@ -248,7 +248,7 @@ export const BanksScreen = () => {
 
               <View style={styles.metaRow}>
                 <Ionicons name="time-outline" size={15} color="#059669" />
-                <Text style={[styles.metaText, { color: '#059669', fontWeight: '600' }]}>
+                <Text style={[styles.metaText, { color: '#059669', fontFamily: 'Inter_600SemiBold' }]}>
                   {item.hours} · {item.distance}
                 </Text>
               </View>
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: '900',
+    fontFamily: 'Inter_900Black',
     color: '#0F172A',
   },
   headerSubtitle: {
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   },
   profileChipText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
   },
   emergencyBanner: {
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
   },
   emergencyTitle: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#FFFFFF',
   },
   emergencyDesc: {
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   },
   callPillText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: colors.primary,
   },
   searchBar: {
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
   },
   typeBadgeText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
   },
   statusPill: {
@@ -444,11 +444,11 @@ const styles = StyleSheet.create({
   },
   statusPillText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
   },
   bankName: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#0F172A',
     marginBottom: 6,
     lineHeight: 20,
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
   },
   stockLabel: {
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
   },
   stockPills: {
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
   },
   groupBadgeText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: colors.primary,
   },
   actionRow: {
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
   },
   callButtonText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#FFFFFF',
   },
   directionsButton: {
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
   },
   directionsButtonText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
     color: '#0F172A',
   },
 });

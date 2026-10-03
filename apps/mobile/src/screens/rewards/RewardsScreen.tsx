@@ -158,7 +158,7 @@ export const RewardsScreen = () => {
                 <View style={styles.progressContainer}>
                   <View style={styles.progressLabelRow}>
                     <Text style={styles.nextMilestoneText}>
-                      Next: <Text style={{ fontWeight: '700' }}>{nextMilestone.name}</Text>
+                      Next: <Text style={{ fontFamily: 'Inter_700Bold' }}>{nextMilestone.name}</Text>
                     </Text>
                     <Text style={styles.progressCountText}>
                       {totalDonations} / {nextMilestone.count} donations ({progressPercent}%)
@@ -305,13 +305,13 @@ const styles = StyleSheet.create({
   },
   badgePillText: {
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#D97706',
     letterSpacing: 0.3,
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
     marginBottom: 2,
   },
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
   },
   donorLevelTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
   },
   donorLevelSub: {
@@ -377,12 +377,12 @@ const styles = StyleSheet.create({
   },
   statVal: {
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
   },
   statLabel: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
     marginTop: 2,
   },
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   progressCountText: {
     fontSize: 11,
     color: '#64748B',
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
   progressBarBg: {
     height: 8,
@@ -429,12 +429,12 @@ const styles = StyleSheet.create({
   },
   championBannerText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#065F46',
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
     marginBottom: 12,
   },
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
   },
   badgeName: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#64748B',
   },
   badgeNameUnlocked: {
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
   },
   unlockedPillText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#15803D',
   },
   lockedPill: {
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
   },
   lockedPillText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
   },
   badgeDesc: {
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
   earnedDateText: {
     fontSize: 10,
     color: '#059669',
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     marginTop: 2,
   },
   certificatesCta: {
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
   },
   certificatesCtaTitle: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
   },
   certificatesCtaSub: {

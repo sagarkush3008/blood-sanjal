@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   },
   brandTitle: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: colors.primary,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
     marginBottom: 8,
   },
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#991B1B',
     fontSize: 13,
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
     flex: 1,
   },
   backButton: {
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#64748B',
   },
 });

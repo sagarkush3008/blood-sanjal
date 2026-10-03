@@ -64,7 +64,7 @@ export const Timeline: React.FC<TimelineProps> = ({ events }) => {
                 <Text
                   style={[
                     styles.eventTitle,
-                    isCurrent && { color: colors.primary, fontWeight: '700' },
+                    isCurrent && { color: colors.primary, fontFamily: 'Inter_700Bold' },
                   ]}
                 >
                   {event.title}
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   },
   eventTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#0F172A',
   },
   timestampText: {

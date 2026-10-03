@@ -12,7 +12,7 @@ export const DonateNavigator = () => {
       screenOptions={{
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.primary,
-        headerTitleStyle: { fontWeight: 'bold' },
+        headerTitleStyle: { fontFamily: 'Inter_700Bold' },
       }}
     >
       <Stack.Screen name="DonateHistory" component={DonateScreen} options={{ title: 'My Donations' }} />

@@ -129,18 +129,18 @@ const styles = StyleSheet.create({
   bloodPillText: {
     color: '#FFF',
     fontSize: 14,
-    fontWeight: '900',
+    fontFamily: 'Inter_900Black',
   },
   unitsText: {
     fontSize: 14,
-    fontWeight: '900',
+    fontFamily: 'Inter_900Black',
     color: '#0F172A',
     marginBottom: 2,
   },
   requesterText: {
     fontSize: 10,
     color: '#64748B',
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
   },
   urgencyPill: {
     paddingHorizontal: 10,
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   
   urgencyPillText: {
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     letterSpacing: 0.5,
   },
   urgencyTextEmergency: { color: '#FFFFFF' },
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   },
   hospitalText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
     lineHeight: 18,
   },
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   dateTimeText: {
     fontSize: 10,
     color: '#64748B',
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
   detailsText: {
     fontSize: 11,
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   },
   verifiedText: {
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#059669',
   },
   actionBtn: {
@@ -224,6 +224,6 @@ const styles = StyleSheet.create({
   actionBtnText: {
     color: '#FFFFFF',
     fontSize: 11,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
   }
 });

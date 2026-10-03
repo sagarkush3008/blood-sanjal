@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   text: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     letterSpacing: 0.1,
   },
   textOutline: {

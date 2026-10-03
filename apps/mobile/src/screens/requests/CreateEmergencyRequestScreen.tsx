@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 22,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: '#0F172A',
     marginBottom: 4,
   },
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   },
   verificationTitle: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#991B1B',
     marginBottom: 3,
   },
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#991B1B',
     fontSize: 13,
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
     flex: 1,
   },
   fieldSection: {
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#334155',
     marginBottom: 8,
     textTransform: 'uppercase',

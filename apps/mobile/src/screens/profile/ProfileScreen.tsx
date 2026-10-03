@@ -203,7 +203,7 @@ export const ProfileScreen = () => {
                   <Ionicons name="shield-half" size={18} color="#DC2626" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.menuItemTitle, { color: '#DC2626', fontWeight: '700' }]}>
+                  <Text style={[styles.menuItemTitle, { color: '#DC2626', fontFamily: 'Inter_700Bold' }]}>
                     Admin Control Panel
                   </Text>
                   <Text style={{ fontSize: 11, color: '#64748B' }}>
@@ -263,11 +263,11 @@ const styles = StyleSheet.create({
   avatarInitial: {
     color: colors.primary,
     fontSize: 22,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
   },
   profileName: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
     marginBottom: 2,
   },
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
   roleBadgeText: {
     color: '#FFFFFF',
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     letterSpacing: 0.3,
   },
   pointsBadge: {
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   pointsBadgeText: {
     color: '#D97706',
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
   statsRow: {
     flexDirection: 'row',
@@ -324,12 +324,12 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 10,
     color: '#64748B',
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
     marginBottom: 2,
   },
   statValue: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
   },
   statDivider: {
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   },
   sectionHeading: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#475569',
     marginBottom: 8,
     marginLeft: 2,
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
   menuItemTitle: {
     flex: 1,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
     color: '#0F172A',
   },
   menuDivider: {
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
   logoutBtnText: {
     color: colors.primary,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
   appVersion: {
     textAlign: 'center',

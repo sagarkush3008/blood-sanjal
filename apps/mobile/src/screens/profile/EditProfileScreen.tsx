@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   bloodGroupText: {
     ...typography.subtitle2,
     color: '#64748B',
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
   },
   bloodGroupTextSelected: {
     color: '#FFFFFF',

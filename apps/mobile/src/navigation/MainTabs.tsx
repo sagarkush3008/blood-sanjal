@@ -21,7 +21,7 @@ export const MainTabs = () => {
         tabBarInactiveTintColor: '#94A3B8',
         tabBarLabelStyle: {
           fontSize: 10,
-          fontWeight: '700',
+          fontFamily: 'Inter_700Bold',
           marginTop: 2,
         },
         tabBarStyle: {
@@ -70,7 +70,7 @@ export const MainTabs = () => {
           tabBarLabel: 'DONATE',
           tabBarLabelStyle: {
             fontSize: 10,
-            fontWeight: '900',
+            fontFamily: 'Inter_900Black',
             color: '#DC2626',
             marginTop: 4,
           },

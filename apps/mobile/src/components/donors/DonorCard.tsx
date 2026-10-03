@@ -192,7 +192,7 @@ export const DonorCard: React.FC<DonorCardProps> = ({
       {isRecovering && (
         <View style={styles.recoveryNoticeBox}>
           <Text style={styles.recoveryNoticeText}>
-            This donor recently donated blood and is in a medically required recovery phase. They will be eligible to donate again on <Text style={{ fontWeight: 'bold' }}>{recoveryDateStr}</Text>.
+            This donor recently donated blood and is in a medically required recovery phase. They will be eligible to donate again on <Text style={{ fontFamily: 'Inter_700Bold' }}>{recoveryDateStr}</Text>.
           </Text>
         </View>
       )}
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   },
   bloodText: {
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: 'Inter_800ExtraBold',
     color: colors.primary,
   },
   infoCol: {
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
     flex: 1,
     marginRight: 8,
@@ -278,17 +278,17 @@ const styles = StyleSheet.create({
   statText: {
     fontSize: 12,
     color: '#475569',
-    fontWeight: '500',
+    fontFamily: 'Inter_500Medium',
   },
   
   inactivePremiumBox: { backgroundColor: '#FFF1F2', borderRadius: 10, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: '#FFE4E6' },
   inactivePremiumHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  inactivePremiumTitle: { fontSize: 11, fontWeight: '800', color: '#E11D48', letterSpacing: 0.5 },
+  inactivePremiumTitle: { fontSize: 11, fontFamily: 'Inter_800ExtraBold', color: '#E11D48', letterSpacing: 0.5 },
   inactivePremiumReason: { fontSize: 12, color: '#BE123C', fontStyle: 'italic', marginBottom: 10 },
   returnTimeWrapper: { flexDirection: 'row', backgroundColor: '#FFFFFF', borderRadius: 8, padding: 10, alignItems: 'center', borderWidth: 1, borderColor: '#FECACA' },
   returnTimeItem: { flex: 1 },
-  returnTimeLabel: { fontSize: 9, fontWeight: '800', color: '#F43F5E', marginBottom: 2, letterSpacing: 0.5 },
-  returnTimeValue: { fontSize: 13, fontWeight: '800', color: '#881337' },
+  returnTimeLabel: { fontSize: 9, fontFamily: 'Inter_800ExtraBold', color: '#F43F5E', marginBottom: 2, letterSpacing: 0.5 },
+  returnTimeValue: { fontSize: 13, fontFamily: 'Inter_800ExtraBold', color: '#881337' },
   returnTimeDivider: { width: 1, height: '100%', backgroundColor: '#FECACA', marginHorizontal: 8 },
 
   actionRow: {
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   contactButtonText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Inter_600SemiBold',
   },
   recoveryBadge: {
     flexDirection: 'row',
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
   },
   recoveryBadgeText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'Inter_700Bold',
     color: '#B45309',
   },
   recoveryNoticeBox: {

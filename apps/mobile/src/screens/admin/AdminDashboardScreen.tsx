@@ -56,7 +56,7 @@ export const AdminDashboardScreen = () => {
           {(error as any)?.response?.data?.error?.message || 'Please check your connection or permissions.'}
         </Text>
         <TouchableOpacity style={{ marginTop: 20, padding: 10, backgroundColor: colors.danger, borderRadius: 8 }} onPress={() => refetch()}>
-          <Text style={{ color: 'white', fontWeight: 'bold' }}>Retry Connection</Text>
+          <Text style={{ color: 'white', fontFamily: 'Inter_700Bold' }}>Retry Connection</Text>
         </TouchableOpacity>
       </View>
     );

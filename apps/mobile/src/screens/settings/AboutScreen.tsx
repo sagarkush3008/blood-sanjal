@@ -40,7 +40,7 @@ export const AboutScreen = () => {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Platform Engineering</Text>
           <Text style={styles.cardText}>
-            Engineered by <Text style={{ fontWeight: '700', color: '#0F172A' }}>Evolvix Infotech</Text> in
+            Engineered by <Text style={{ fontFamily: 'Inter_700Bold', color: '#0F172A' }}>Evolvix Infotech</Text> in
             partnership with humanitarian health advocates and certified medical facilities in Nepal.
           </Text>
         </View>
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F1F5F9',
   },
   backBtn: { padding: 4 },
-  headerTitle: { fontSize: 16, fontWeight: '700', color: '#0F172A' },
+  headerTitle: { fontSize: 16, fontFamily: 'Inter_700Bold', color: '#0F172A' },
   scrollContent: { padding: 20, alignItems: 'center' },
   logoBadge: {
     width: 80,
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FECACA',
   },
-  brandTitle: { fontSize: 22, fontWeight: '900', color: '#0F172A', marginBottom: 2 },
+  brandTitle: { fontSize: 22, fontFamily: 'Inter_900Black', color: '#0F172A', marginBottom: 2 },
   brandTagline: { fontSize: 13, color: '#64748B', marginBottom: 20 },
   card: {
     width: '100%',
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     marginBottom: 14,
   },
-  cardTitle: { fontSize: 14, fontWeight: '700', color: '#0F172A', marginBottom: 6 },
+  cardTitle: { fontSize: 14, fontFamily: 'Inter_700Bold', color: '#0F172A', marginBottom: 6 },
   cardText: { fontSize: 12, color: '#475569', lineHeight: 18 },
   copyright: { fontSize: 11, color: '#94A3B8', marginTop: 20 },
 });

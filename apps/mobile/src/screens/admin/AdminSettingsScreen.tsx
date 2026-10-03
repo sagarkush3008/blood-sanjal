@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     ...typography.body1,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.text,
     marginBottom: spacing.s,
   },
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   },
   switchLabel: {
     ...typography.body2,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.text,
   },
   hint: {
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   },
   triggerButtonText: {
     ...typography.caption,
-    fontWeight: 'bold',
+    fontFamily: 'Inter_700Bold',
     color: colors.surface,
   },
   spacer: {
