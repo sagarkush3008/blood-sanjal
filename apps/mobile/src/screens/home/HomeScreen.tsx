@@ -123,9 +123,6 @@ export const HomeScreen = () => {
       {/* HEADER STRIP */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.iconBtn}>
-            <Feather name="menu" size={20} color="#1E293B" />
-          </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.avatar}>
             <Text style={styles.avatarLetter}>{firstName.charAt(0).toUpperCase()}</Text>
           </TouchableOpacity>
@@ -143,7 +140,9 @@ export const HomeScreen = () => {
               </View>
             )}
           </TouchableOpacity>
-
+          <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.iconBtn}>
+            <Feather name="menu" size={20} color="#1E293B" />
+          </TouchableOpacity>
         </View>
       </View>
 
