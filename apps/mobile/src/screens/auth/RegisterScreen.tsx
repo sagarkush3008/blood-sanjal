@@ -25,10 +25,17 @@ const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Full name is required (min 2 characters)'),
-  email: z.string().email('Valid email address is required'),
-  phone: z.string().min(10, 'Valid 10-digit phone number is required'),
+  email: z.string().email('Valid email address is required').optional().or(z.literal('')),
+  phone: z.string().min(10, 'Valid 10-digit phone number is required').optional().or(z.literal('')),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   bloodGroup: z.string().optional(),
+}).refine(data => {
+  const hasEmail = data.email && data.email.trim() !== '';
+  const hasPhone = data.phone && data.phone.trim() !== '';
+  return hasEmail || hasPhone;
+}, {
+  message: "Either email or phone is required",
+  path: ["email"]
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -80,10 +87,18 @@ export const RegisterScreen = () => {
 
   const onSubmit = (data: RegisterFormData) => {
     setApiError(null);
-    registerMutation.mutate({
-      ...data,
+    const payload: any = {
+      name: data.name,
+      password: data.password,
       bloodGroup: selectedBloodGroup,
-    });
+    };
+    if (data.email && data.email.trim() !== '') {
+      payload.email = data.email.trim();
+    }
+    if (data.phone && data.phone.trim() !== '') {
+      payload.phone = data.phone.trim();
+    }
+    registerMutation.mutate(payload);
   };
 
   const handleSelectBloodGroup = (bg: string) => {

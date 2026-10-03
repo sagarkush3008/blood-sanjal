@@ -1,7 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { NativeModules, Platform } from 'react-native';
 import { storage } from '../utils/storage';
-import { useAuthStore } from '../store/authStore';
 
 // Dynamically grab the local IP address of the machine running Expo
 let HOST = 'localhost';
@@ -15,8 +14,7 @@ if (__DEV__) {
   }
 }
 
-export const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || `http://${HOST}:5000/api/v1`;
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || `http://${HOST}:5000/api/v1`;
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -62,7 +60,13 @@ const processQueue = (error: any, token: string | null = null) => {
 };
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Automatically unwrap the SuccessResponse envelope if present
+    if (response.data && response.data.success === true && response.data.data !== undefined) {
+      response.data = response.data.data;
+    }
+    return response;
+  },
   async (error: AxiosError<any>) => {
     const originalRequest: any = error.config;
 
@@ -117,6 +121,7 @@ apiClient.interceptors.response.use(
         processQueue(refreshError, null);
         // Force complete logout on refresh failure
         try {
+          const { useAuthStore } = require('../store/authStore');
           useAuthStore.getState().logout();
         } catch (e) {
           await storage.deleteItem('accessToken');

@@ -5,6 +5,7 @@ import { PrivacySettingsScreen } from './PrivacySettingsScreen';
 import { RewardsScreen } from './RewardsScreen';
 import { SupportPlatformScreen } from './SupportPlatformScreen';
 import { EditProfileScreen } from './EditProfileScreen';
+import { DonorAvailabilityScreen } from './DonorAvailabilityScreen';
 import { VerifyCertificateScreen } from './VerifyCertificateScreen';
 import { LogDonationScreen } from './LogDonationScreen';
 import { PaymentHistoryScreen } from './PaymentHistoryScreen';
@@ -27,6 +28,7 @@ export const ProfileNavigator = () => {
     >
       <Stack.Screen name="ProfileHome" component={ProfileScreen} options={{ title: 'My Profile' }} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit Profile' }} />
+      <Stack.Screen name="DonorAvailability" component={DonorAvailabilityScreen} options={{ headerShown: false, presentation: 'modal' }} />
       <Stack.Screen name="PrivacySettings" component={PrivacySettingsScreen} options={{ title: 'Privacy Settings' }} />
       <Stack.Screen name="Rewards" component={RewardsScreen} options={{ title: 'Achievements & Rewards' }} />
       <Stack.Screen name="Certificates" component={CertificatesNavigator} options={{ headerShown: false }} />

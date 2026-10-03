@@ -134,6 +134,25 @@ app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/locations', locationRoutes);
 app.use('/api/v1/media', mediaRoutes);
 app.use('/api/v1/legal', legalRoutes);
+import activeStatusRoutes from './modules/activeStatus/activeStatus.routes';
+app.use('/api/active-status', activeStatusRoutes);
+
+app.get('/api', (_req, res) => {
+  res.json({
+    name: 'Blood Sanjal API - Active Status Feature',
+    version: '1.0.0',
+    status: 'online',
+    endpoints: {
+      activeStatus: '/api/active-status',
+      activeSummary: '/api/active-status/summary',
+      activeDonors: '/api/active-status/donors',
+      activeRequests: '/api/active-status/requests',
+      heartbeat: '/api/active-status/heartbeat',
+      liveStream: '/api/active-status/stream',
+      auditHistory: '/api/active-status/audit-history'
+    }
+  });
+});
 
 app.get('/api/v1/metrics', async (req, res) => {
   try {

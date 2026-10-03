@@ -5,6 +5,7 @@ export const registerSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().min(7).optional(),
   password: z.string().min(8),
+  bloodGroup: z.string().optional(),
 }).refine(data => data.email || data.phone, {
   message: "Either email or phone is required",
   path: ["email"]

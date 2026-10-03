@@ -1,0 +1,9 @@
+export const INITIAL_USERS: any[] = [];
+export const INITIAL_DONORS: any[] = [];
+export const INITIAL_REQUESTS: any[] = [];
+export const INITIAL_CAMPAIGNS: any[] = [];
+export const INITIAL_NOTIFICATIONS: any[] = [];
+export const INITIAL_DONATIONS: any[] = [];
+export const INITIAL_REWARDS: any[] = [];
+export const INITIAL_CERTIFICATES: any[] = [];
+export const INITIAL_PAYMENTS: any[] = [];

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
 import { colors } from '../../theme';
 
 interface RequestCardProps {
@@ -30,206 +30,200 @@ export const RequestCard: React.FC<RequestCardProps> = ({
   contactPhone,
   onPress,
 }) => {
-  const isEmergency = urgency === 'EMERGENCY' || urgency === 'URGENT';
-  const displayId = id ? `ID: BR-2026-${id.slice(-6).toUpperCase()}` : 'ID: BR-2026-ACTIVE';
+  const isEmergency = urgency === 'EMERGENCY';
+  const isUrgent = urgency === 'URGENT';
+  const isNormal = !isEmergency && !isUrgent;
+
+  let borderColor = '#E2E8F0';
+  if (isEmergency) borderColor = '#FCA5A5';
 
   return (
-    <TouchableOpacity
-      style={[styles.container, isEmergency && styles.emergencyContainer]}
-      onPress={onPress}
-      activeOpacity={onPress ? 0.85 : 1}
-    >
-      {/* Top Badges Row */}
-      <View style={styles.badgesRow}>
-        <View style={[styles.urgencyBadge, isEmergency && styles.emergencyBadge]}>
-          <Ionicons
-            name={isEmergency ? 'warning' : 'information-circle'}
-            size={11}
-            color="#FFFFFF"
-            style={{ marginRight: 4 }}
-          />
-          <Text style={styles.urgencyBadgeText}>{urgency}</Text>
+    <View style={[styles.card, { borderColor }]}>
+      {/* TOP ROW */}
+      <View style={styles.topRow}>
+        <View style={styles.topLeft}>
+          <View style={styles.bloodPill}>
+             <Ionicons name="water" size={10} color="#FFF" style={{marginRight: 2}}/>
+             <Text style={styles.bloodPillText}>{bloodGroup}</Text>
+          </View>
+          <View>
+            <Text style={styles.unitsText}>{unitsRequired} Units Required</Text>
+            <Text style={styles.requesterText}>Requested by {patientName}</Text>
+          </View>
         </View>
-
-        <View style={styles.statusBadge}>
-          <Text style={styles.statusBadgeText}>{status}</Text>
-        </View>
-      </View>
-
-      {/* Patient Profile Row */}
-      <View style={styles.patientRow}>
-        <View style={styles.bloodTypeCircle}>
-          <Text style={styles.bloodTypeCircleText}>{bloodGroup}</Text>
-        </View>
-        <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text style={styles.patientName}>{patientName}</Text>
-          <Text style={styles.requiredUnits}>
-            Required: {unitsRequired} Unit(s) of {bloodGroup}
+        
+        <View style={[styles.urgencyPill, isEmergency && styles.urgencyEmergency, isUrgent && styles.urgencyUrgent, isNormal && styles.urgencyNormal]}>
+          <Text style={[styles.urgencyPillText, isEmergency && styles.urgencyTextEmergency, isUrgent && styles.urgencyTextUrgent, isNormal && styles.urgencyTextNormal]}>
+            {urgency === 'NORMAL' ? 'Normal Urgency' : urgency}
           </Text>
         </View>
       </View>
 
-      {/* Location */}
-      <View style={styles.locationRow}>
-        <Ionicons name="location-sharp" size={15} color="#64748B" style={{ marginRight: 5, marginTop: 1 }} />
-        <Text style={styles.locationText} numberOfLines={2}>
-          {location || 'Hospital Location'}
-        </Text>
+      {/* HOSPITAL & LOCATION */}
+      <View style={styles.hospitalRow}>
+         <Feather name="plus-square" size={14} color="#DC2626" style={{marginTop: 2}} />
+         <Text style={styles.hospitalText}>{location || 'Hospital Location'}</Text>
       </View>
-
-      {/* Details Box if available */}
-      {details ? (
-        <View style={styles.detailsBox}>
-          <Text style={styles.detailsText} numberOfLines={2}>
-            Details: {details}
-          </Text>
-        </View>
-      ) : null}
-
-      {/* Footer Contact & ID */}
+      
+      {/* DATE & TIME */}
+      <View style={styles.dateTimeRow}>
+         <Feather name="calendar" size={12} color="#3B82F6" />
+         <Text style={styles.dateTimeText}>2026-05-15</Text>
+         <View style={{width: 12}} />
+         <Feather name="clock" size={12} color="#F59E0B" />
+         <Text style={styles.dateTimeText}>11:00 AM</Text>
+      </View>
+      
+      {/* DETAILS */}
+      <Text style={styles.detailsText} numberOfLines={2}>
+         "{details || 'Urgent requirement for blood units. Please donate.'}"
+      </Text>
+      
+      {/* FOOTER ACTIONS */}
       <View style={styles.footerRow}>
-        <View style={{ flex: 1, paddingRight: 6 }}>
-          <Text style={styles.contactLabel}>Requester Contact:</Text>
-          <Text style={styles.contactValue} numberOfLines={1}>
-            {contactName || 'Hospital Staff'} {contactPhone ? `• ${contactPhone}` : ''}
-          </Text>
-        </View>
-        <Text style={styles.idText}>{displayId}</Text>
+         <View style={styles.verifiedPill}>
+           <Ionicons name="checkmark" size={12} color="#059669" style={{marginRight: 4}} />
+           <Text style={styles.verifiedText}>Verified Request</Text>
+         </View>
+         
+         <TouchableOpacity style={[styles.actionBtn, isEmergency ? styles.actionBtnEmergency : styles.actionBtnNormal]} onPress={onPress}>
+           <Text style={styles.actionBtnText}>View & Respond</Text>
+         </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 14,
-    shadowColor: '#0F172A',
+    marginBottom: 16,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
     elevation: 2,
   },
-  emergencyContainer: {
-    borderWidth: 2,
-    borderColor: '#DC2626',
-    shadowColor: '#DC2626',
-    shadowOpacity: 0.08,
-  },
-  badgesRow: {
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+    alignItems: 'flex-start',
+    marginBottom: 16,
   },
-  urgencyBadge: {
+  topLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#64748B',
+    gap: 12,
+  },
+  bloodPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DC2626',
     borderRadius: 8,
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
   },
-  emergencyBadge: {
-    backgroundColor: '#DC2626',
+  bloodPillText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '900',
   },
-  urgencyBadgeText: {
-    color: '#FFFFFF',
+  unitsText: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#0F172A',
+    marginBottom: 2,
+  },
+  requesterText: {
+    fontSize: 10,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  urgencyPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  urgencyEmergency: { backgroundColor: '#DC2626' },
+  urgencyUrgent: { backgroundColor: '#F59E0B' },
+  urgencyNormal: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#94A3B8' },
+  
+  urgencyPillText: {
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
-  statusBadge: {
-    backgroundColor: '#FFEDD5',
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  statusBadgeText: {
-    color: '#C2410C',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  patientRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  bloodTypeCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#B91C1C',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bloodTypeCircleText: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '900',
-  },
-  patientName: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#0F172A',
-  },
-  requiredUnits: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#DC2626',
-    marginTop: 2,
-  },
-  locationRow: {
+  urgencyTextEmergency: { color: '#FFFFFF' },
+  urgencyTextUrgent: { color: '#FFFFFF' },
+  urgencyTextNormal: { color: '#475569' },
+
+  hospitalRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 10,
+    gap: 6,
+    marginBottom: 8,
+    paddingRight: 10,
   },
-  locationText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#475569',
-    fontWeight: '500',
-    lineHeight: 17,
+  hospitalText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0F172A',
+    lineHeight: 18,
   },
-  detailsBox: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+  dateTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 12,
+  },
+  dateTimeText: {
+    fontSize: 10,
+    color: '#64748B',
+    fontWeight: '600',
   },
   detailsText: {
     fontSize: 11,
-    color: '#334155',
-    fontWeight: '500',
+    color: '#64748B',
+    fontStyle: 'italic',
+    lineHeight: 16,
+    marginBottom: 16,
   },
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
-    paddingTop: 8,
+    paddingTop: 16,
   },
-  contactLabel: {
+  verifiedPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  verifiedText: {
     fontSize: 10,
-    color: '#64748B',
-    fontWeight: '500',
+    fontWeight: '800',
+    color: '#059669',
   },
-  contactValue: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginTop: 1,
+  actionBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
-  idText: {
-    fontSize: 10,
-    color: '#64748B',
-    fontWeight: '700',
-  },
+  actionBtnEmergency: { backgroundColor: '#DC2626' },
+  actionBtnNormal: { backgroundColor: '#0F172A' },
+  actionBtnText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '800',
+  }
 });

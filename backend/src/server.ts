@@ -16,13 +16,10 @@ const startServer = async () => {
     // Helper cron: automatically revert INACTIVE donors to ACTIVE if their scheduled inactivity period has expired.
     const availabilityCron = setInterval(async () => {
       try {
-        const { DonorProfile } = await import('./modules/donors/donorProfile.model');
-        const result = await DonorProfile.updateMany(
-          { donorStatus: 'INACTIVE', inactiveUntil: { $lt: new Date() } },
-          { $set: { donorStatus: 'ACTIVE' }, $unset: { inactiveUntil: 1, inactiveReason: 1 } }
-        );
-        if (result.modifiedCount > 0) {
-          logger.info(`Cron: Restored ${result.modifiedCount} donors to ACTIVE status.`);
+        const { DonorService } = await import('./modules/donors/donor.service');
+        const count = await DonorService.processAutoExpirations();
+        if (count > 0) {
+          logger.info(`Cron: Restored ${count} donors to ACTIVE status.`);
         }
       } catch (err) {
         logger.error('Error in availability cron helper', err);

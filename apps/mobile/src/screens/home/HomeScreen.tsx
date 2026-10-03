@@ -18,6 +18,8 @@ import { useAuthStore } from '../../store/authStore';
 import { AuthAPI } from '../../api/auth.api';
 import { NotificationsAPI } from '../../api/notifications.api';
 import { DonorsAPI } from '../../api/donors.api';
+import { BloodRequestsAPI } from '../../api/requests.api';
+import { RequestCard } from '../../components/requests/RequestCard';
 import { colors } from '../../theme';
 
 const { width } = Dimensions.get('window');
@@ -35,7 +37,7 @@ export const HomeScreen = () => {
 
   // Live Donor Profile
   const { data: donorProfile, refetch: refetchDonor } = useQuery({
-    queryKey: ['my-donor-profile'],
+    queryKey: ['my-profile'],
     queryFn: () => DonorsAPI.getMyProfile().then((res) => res.data?.data || res.data).catch(() => null),
   });
 
@@ -45,6 +47,12 @@ export const HomeScreen = () => {
     queryFn: () =>
       NotificationsAPI.list({ isRead: false }).then((res) => res.data?.data || res.data),
   });
+
+  const { data: requestsData } = useQuery({
+    queryKey: ['blood-requests', 'home-urgent'],
+    queryFn: () => BloodRequestsAPI.list({ limit: 3 }).then(res => res.data?.data || res.data),
+  });
+  const urgentRequests = Array.isArray(requestsData) ? requestsData.slice(0, 3) : (requestsData?.requests || []).slice(0, 3);
 
   const onRefresh = () => {
     refetchMe();
@@ -58,18 +66,55 @@ export const HomeScreen = () => {
 
   const displayName = meProfile?.name || user?.name || 'Friend';
   const firstName = displayName.split(' ')[0];
-  const locationText = meProfile?.location?.city ? `${meProfile.location.city}, ${meProfile.location.province || 'Nepal'}` : 'Nepal';
   
-  const bloodGroup = donorProfile?.bloodGroup || meProfile?.bloodGroup || 'O+';
-  const totalDonations = donorProfile?.counters?.totalDonations || 0;
+  let locationText = 'Nepal';
+  if (meProfile?.cityId && meProfile?.provinceId) {
+    locationText = `${meProfile.cityId}, ${meProfile.provinceId}`;
+  } else if (meProfile?.cityId) {
+    locationText = meProfile.cityId;
+  }
+  
+  const bloodGroup = meProfile?.bloodGroup || donorProfile?.bloodGroup || 'O+';
+  const totalDonations = donorProfile?.totalDonations || 0;
   
   let lastDonatedDate = 'N/A';
-  if (donorProfile?.lastDonatedAt) {
-    const d = new Date(donorProfile.lastDonatedAt);
+  if (donorProfile?.lastDonationDate) {
+    const d = new Date(donorProfile.lastDonationDate);
     lastDonatedDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  const isAvailable = donorProfile ? donorProfile.active : false;
+  const isAvailable = donorProfile?.donorStatus === 'ACTIVE';
+  const inactiveReason = donorProfile?.inactiveReason;
+  const inactiveUntil = donorProfile?.inactiveUntil;
+  
+  let relativeText = null;
+  let exactTimeText = null;
+  
+  if (!isAvailable && inactiveUntil) {
+    const untilDate = new Date(inactiveUntil);
+    const now = new Date();
+    const diffMs = untilDate.getTime() - now.getTime();
+    
+    if (diffMs > 0) {
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffHours / 24);
+      
+      if (diffDays > 0) {
+        relativeText = `${diffDays} day${diffDays > 1 ? 's' : ''}`;
+      } else if (diffHours > 0) {
+        relativeText = `${diffHours} hr${diffHours > 1 ? 's' : ''}`;
+      } else {
+        relativeText = `< 1 hr`;
+      }
+      
+      const timeStr = untilDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      const dateStr = untilDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      exactTimeText = `${dateStr}, ${timeStr}`;
+    } else {
+       relativeText = 'Shortly';
+       exactTimeText = 'Any moment now';
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -142,23 +187,61 @@ export const HomeScreen = () => {
                 <Feather name="map-pin" size={12} color="#FCA5A5" />
                 <Text style={styles.donorLocationText}>{locationText}</Text>
               </View>
-              <View style={styles.statusPill}>
-                <View style={[styles.statusDot, { backgroundColor: isAvailable ? '#22C55E' : '#EF4444' }]} />
-                <Text style={styles.statusText}>{isAvailable ? 'Active' : 'Inactive'}</Text>
+              <View>
+                <TouchableOpacity 
+                  style={styles.statusPill}
+                  onPress={() => navigation.navigate('Profile', { screen: 'DonorAvailability' })}
+                >
+                  <View style={[styles.statusDot, { backgroundColor: isAvailable ? '#22C55E' : '#EF4444' }]} />
+                  <Text style={styles.statusText}>{isAvailable ? 'Active' : 'Inactive'}</Text>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
 
-          <View style={styles.donorStatsBox}>
-            <View style={styles.statCol}>
-              <Text style={styles.statLabel}>TOTAL DONATIONS</Text>
-              <Text style={styles.statValue}>{totalDonations} Times</Text>
+          {/* PREMIUM INACTIVE CARD (Replaces Stats when Inactive to keep card size identical) */}
+          {!isAvailable ? (
+            <View style={[styles.inactivePremiumBox, { marginTop: 24 }]}>
+               <View style={styles.inactivePremiumHeader}>
+                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                   <Feather name="moon" size={14} color="#FCA5A5" />
+                   <Text style={styles.inactivePremiumTitle}>Temporarily Unavailable</Text>
+                 </View>
+                 <TouchableOpacity onPress={() => navigation.navigate('Profile', { screen: 'DonorAvailability' })}>
+                   <Text style={styles.inactivePremiumAction}>Change</Text>
+                 </TouchableOpacity>
+               </View>
+               
+               {inactiveReason && (
+                 <Text style={styles.inactivePremiumReason}>"{inactiveReason}"</Text>
+               )}
+
+               {relativeText && (
+                 <View style={styles.returnTimeWrapper}>
+                   <View style={styles.returnTimeItem}>
+                     <Text style={styles.returnTimeLabel}>RETURNING IN</Text>
+                     <Text style={styles.returnTimeValue}>{relativeText}</Text>
+                   </View>
+                   <View style={styles.returnTimeDivider} />
+                   <View style={styles.returnTimeItem}>
+                     <Text style={styles.returnTimeLabel}>EXACT TIME & DAY</Text>
+                     <Text style={styles.returnTimeValue}>{exactTimeText}</Text>
+                   </View>
+                 </View>
+               )}
             </View>
-            <View style={styles.statCol}>
-              <Text style={styles.statLabel}>LAST DONATED</Text>
-              <Text style={styles.statValue}>{lastDonatedDate}</Text>
+          ) : (
+            <View style={styles.donorStatsBox}>
+              <View style={styles.statCol}>
+                <Text style={styles.statLabel}>TOTAL DONATIONS</Text>
+                <Text style={styles.statValue}>{totalDonations} Times</Text>
+              </View>
+              <View style={styles.statCol}>
+                <Text style={styles.statLabel}>LAST DONATED</Text>
+                <Text style={styles.statValue}>{lastDonatedDate}</Text>
+              </View>
             </View>
-          </View>
+          )}
         </LinearGradient>
 
         {/* ELIGIBILITY CHECK CARD */}
@@ -169,7 +252,7 @@ export const HomeScreen = () => {
           <View style={styles.eligibilityTextCol}>
             <Text style={styles.eligibilityTitle}>Donation Eligibility Check</Text>
             <Text style={styles.eligibilitySub}>
-              {donorProfile?.lastDonatedAt 
+              {donorProfile?.lastDonationDate 
                 ? 'Check your donation readiness based on your last recorded donation!' 
                 : 'Log your first donation to keep track of your eligibility!'}
             </Text>
@@ -226,6 +309,129 @@ export const HomeScreen = () => {
             </View>
           </TouchableOpacity>
         </View>
+
+        {/* URGENT BLOOD REQUESTS */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>Urgent Blood Requests</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Requests')}>
+            <Text style={styles.viewAllText}>View All ({urgentRequests.length || 12}) {'>'}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {urgentRequests.length > 0 ? (
+          urgentRequests.map((item: any) => (
+            <RequestCard
+              key={item._id || item.id}
+              id={item._id || item.id}
+              bloodGroup={item.bloodGroup}
+              patientName={item.patientName || 'Patient in Need'}
+              location={item.hospitalName || item.hospitalLocation?.address || 'Hospital'}
+              unitsRequired={item.unitsRequired || 1}
+              urgency={item.urgency || 'NORMAL'}
+              status={item.status || 'ACTIVE'}
+              details={item.additionalInfo}
+              onPress={() => navigation.navigate('RequestDetail', { id: item._id || item.id })}
+            />
+          ))
+        ) : (
+          <View style={{ padding: 20, alignItems: 'center', backgroundColor: '#FFF', borderRadius: 16 }}>
+             <Text style={{ color: '#64748B' }}>No urgent requests right now.</Text>
+          </View>
+        )}
+
+        {/* ACTIVE VOLUNTARY DONORS INFO CARD */}
+        <View style={styles.volunteersBox}>
+          <Text style={styles.volunteersTitle}>Active Voluntary Donors in Birgunj & Parsa</Text>
+          <View style={styles.volunteersGrid}>
+             {[
+               { bg: 'A+', count: 11 },
+               { bg: 'B+', count: 15 },
+               { bg: 'AB+', count: 19 },
+               { bg: 'O-', count: 7 },
+             ].map((grp) => (
+               <View key={grp.bg} style={styles.volunteerItem}>
+                  <View style={styles.volunteerPill}>
+                     <Ionicons name="water" size={10} color="#FFF" style={{marginRight: 2}}/>
+                     <Text style={styles.volunteerPillText}>{grp.bg}</Text>
+                  </View>
+                  <Text style={styles.volunteerCount}>{grp.count}</Text>
+                  <Text style={styles.volunteerSub}>Donors</Text>
+               </View>
+             ))}
+          </View>
+          <View style={[styles.volunteerItem, { alignSelf: 'center', marginTop: 12, paddingHorizontal: 40, paddingVertical: 12, backgroundColor: '#F8FAFC', borderRadius: 12 }]}>
+             <View style={styles.volunteerPill}>
+                 <Ionicons name="water" size={10} color="#FFF" style={{marginRight: 2}}/>
+                 <Text style={styles.volunteerPillText}>O+</Text>
+             </View>
+             <Text style={styles.volunteerCount}>4</Text>
+             <Text style={styles.volunteerSub}>Donors</Text>
+          </View>
+        </View>
+
+        {/* FEATURED DONATION DRIVES */}
+        <Text style={[styles.sectionTitle, { marginTop: 24, fontSize: 11 }]}>FEATURED DONATION DRIVES</Text>
+        <View style={styles.campCard}>
+           <View style={styles.campHeader}>
+              <View style={styles.campBadge}><Text style={styles.campBadgeText}>UPCOMING CAMP</Text></View>
+              <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
+                 <Feather name="users" size={12} color="#3B82F6"/>
+                 <Text style={{fontSize: 12, color: '#3B82F6', fontWeight: '600'}}>2 Attending</Text>
+              </View>
+           </View>
+           <Text style={styles.campTitle}>Birgunj Mega Blood Donation Drive 2026</Text>
+           <Text style={styles.campOrganizer}>Youth Red Cross Circle Birgunj & Blood Sanjal</Text>
+           
+           <View style={styles.campInfoRow}>
+              <Feather name="calendar" size={12} color="#DC2626" style={{marginTop: 2}} />
+              <Text style={styles.campInfoText}><Text style={{fontWeight: '700'}}>2026-05-08</Text> (09:00 AM - 04:00 PM)</Text>
+           </View>
+           <View style={styles.campInfoRow}>
+              <Feather name="map-pin" size={12} color="#64748B" style={{marginTop: 2}} />
+              <Text style={styles.campInfoText}>Narayani Hospital Blood Bank Premises, Birgunj Metropolitan City, Parsa</Text>
+           </View>
+
+           <Text style={styles.campBloodTitle}>BLOOD GROUPS NEEDED</Text>
+           <View style={styles.campBloodGrid}>
+              {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+'].map(bg => (
+                <View key={bg} style={styles.campBloodTinyPill}>
+                  <Ionicons name="water" size={8} color="#DC2626" style={{marginRight: 2}}/>
+                  <Text style={styles.campBloodTinyText}>{bg}</Text>
+                </View>
+              ))}
+           </View>
+           
+           <View style={styles.campFooter}>
+             <Text style={styles.campFooterText}>Let's donate with forces Birgunj! Invite friends</Text>
+             <TouchableOpacity style={styles.campActionBtn}>
+                <Ionicons name="checkmark-circle-outline" size={14} color="#059669" style={{marginRight: 4}}/>
+                <Text style={styles.campActionText}>I'll Attend this Camp</Text>
+             </TouchableOpacity>
+           </View>
+        </View>
+
+        {/* INVITE FRIEND BANNER */}
+        <LinearGradient colors={['#B91C1C', '#7F1D1D']} style={styles.inviteBanner}>
+          <View style={{flex: 1, paddingRight: 12}}>
+            <Text style={styles.inviteTitle}>Know someone who can donate blood?</Text>
+            <Text style={styles.inviteSub}>Invite friends and family in Birgunj to join Blood Sanjal.</Text>
+          </View>
+          <TouchableOpacity style={styles.inviteBtn}>
+             <Ionicons name="share-social-outline" size={16} color="#DC2626" style={{marginRight: 6}}/>
+             <Text style={styles.inviteBtnText}>Invite a friend</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+
+        {/* NON-COMMERCIAL NOTICE */}
+        <View style={styles.noticeBox}>
+           <Ionicons name="shield-checkmark-outline" size={24} color="#DC2626" style={{marginRight: 12}} />
+           <View style={{flex: 1}}>
+              <Text style={styles.noticeTitle}>Voluntary & Non-Commercial Platform</Text>
+              <Text style={styles.noticeSub}>Blood Sanjal connects voluntary donors with blood banks across Nepal. Selling or purchasing blood is strictly illegal under Nepalese law.</Text>
+           </View>
+        </View>
+
+        <View style={{height: 40}} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -276,6 +482,17 @@ const styles = StyleSheet.create({
   statusPill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FFFFFF', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
   statusText: { fontSize: 12, fontWeight: '700', color: '#0F172A' },
+  
+  inactivePremiumBox: { backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  inactivePremiumHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  inactivePremiumTitle: { fontSize: 12, fontWeight: '800', color: '#FCA5A5', letterSpacing: 0.5 },
+  inactivePremiumAction: { fontSize: 11, fontWeight: '700', color: '#FFFFFF', textDecorationLine: 'underline' },
+  inactivePremiumReason: { fontSize: 13, color: '#FFFFFF', fontStyle: 'italic', marginBottom: 16, lineHeight: 18 },
+  returnTimeWrapper: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 12, padding: 12, alignItems: 'center' },
+  returnTimeItem: { flex: 1 },
+  returnTimeLabel: { fontSize: 9, fontWeight: '800', color: '#FCA5A5', marginBottom: 2, letterSpacing: 0.5 },
+  returnTimeValue: { fontSize: 14, fontWeight: '800', color: '#FFFFFF' },
+  returnTimeDivider: { width: 1, height: '100%', backgroundColor: 'rgba(255,255,255,0.2)', marginHorizontal: 12 },
 
   donorStatsBox: { flexDirection: 'row', backgroundColor: 'rgba(255, 255, 255, 0.15)', borderRadius: 16, padding: 16, marginTop: 24, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.1)' },
   statCol: { flex: 1 },
@@ -297,4 +514,43 @@ const styles = StyleSheet.create({
   gridTextCol: { flex: 1 },
   gridTitle: { fontSize: 13, fontWeight: '800', color: '#0F172A', marginBottom: 2, letterSpacing: -0.3 },
   gridSub: { fontSize: 11, color: '#64748B', lineHeight: 14, fontWeight: '500' },
+
+  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 32, marginBottom: 16 },
+  viewAllText: { fontSize: 13, fontWeight: '800', color: '#DC2626', letterSpacing: 0.5 },
+  
+  volunteersBox: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, marginTop: 24, borderWidth: 1, borderColor: '#E2E8F0' },
+  volunteersTitle: { fontSize: 13, fontWeight: '800', color: '#0F172A', marginBottom: 16, textAlign: 'center' },
+  volunteersGrid: { flexDirection: 'row', justifyContent: 'space-between' },
+  volunteerItem: { alignItems: 'center', backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 12, minWidth: 60 },
+  volunteerPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#DC2626', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2, marginBottom: 8 },
+  volunteerPillText: { color: '#FFF', fontSize: 11, fontWeight: '800' },
+  volunteerCount: { fontSize: 16, fontWeight: '900', color: '#0F172A' },
+  volunteerSub: { fontSize: 9, color: '#64748B', fontWeight: '700', textTransform: 'uppercase', marginTop: 2 },
+  
+  campCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, marginTop: 8, borderWidth: 1, borderColor: '#E2E8F0' },
+  campHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  campBadge: { backgroundColor: '#ECFDF5', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  campBadgeText: { fontSize: 10, fontWeight: '800', color: '#059669', letterSpacing: 0.5 },
+  campTitle: { fontSize: 16, fontWeight: '800', color: '#0F172A', marginBottom: 4 },
+  campOrganizer: { fontSize: 12, color: '#475569', marginBottom: 12, fontWeight: '500' },
+  campInfoRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6, paddingRight: 20, gap: 6 },
+  campInfoText: { fontSize: 12, color: '#475569', lineHeight: 18 },
+  campBloodTitle: { fontSize: 9, fontWeight: '800', color: '#64748B', letterSpacing: 0.5, marginTop: 12, marginBottom: 8 },
+  campBloodGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 16 },
+  campBloodTinyPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  campBloodTinyText: { fontSize: 10, fontWeight: '800', color: '#DC2626' },
+  campFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#F1F5F9', paddingTop: 12 },
+  campFooterText: { flex: 1, fontSize: 10, color: '#94A3B8', paddingRight: 10 },
+  campActionBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ECFDF5', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#A7F3D0' },
+  campActionText: { fontSize: 11, fontWeight: '800', color: '#059669' },
+
+  inviteBanner: { flexDirection: 'row', alignItems: 'center', borderRadius: 16, padding: 16, marginTop: 24 },
+  inviteTitle: { fontSize: 14, fontWeight: '900', color: '#FFFFFF', marginBottom: 4 },
+  inviteSub: { fontSize: 11, color: '#FECACA', lineHeight: 16 },
+  inviteBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
+  inviteBtnText: { fontSize: 12, fontWeight: '800', color: '#DC2626' },
+  
+  noticeBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEF2F2', borderRadius: 12, padding: 16, marginTop: 16, borderWidth: 1, borderColor: '#FECACA' },
+  noticeTitle: { fontSize: 12, fontWeight: '800', color: '#991B1B', marginBottom: 2 },
+  noticeSub: { fontSize: 10, color: '#B91C1C', lineHeight: 14 },
 });

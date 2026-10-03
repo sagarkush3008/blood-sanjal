@@ -8,6 +8,8 @@ import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { colors, spacing, typography } from '../../theme';
 import * as ImagePicker from 'expo-image-picker';
 
+const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+
 export const EditProfileScreen = () => {
   const queryClient = useQueryClient();
   const navigation = useNavigation<any>();
@@ -19,6 +21,7 @@ export const EditProfileScreen = () => {
 
   const [name, setName] = useState(meData?.name || '');
   const [cityId, setCityId] = useState(meData?.cityId || '');
+  const [bloodGroup, setBloodGroup] = useState(meData?.bloodGroup || '');
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
   const updateMutation = useMutation({
@@ -26,7 +29,7 @@ export const EditProfileScreen = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['me'] });
       Alert.alert("Success", "Profile updated successfully.");
-      navigation.goBack();
+      navigation.navigate('ProfileHome');
     },
     onError: (error: any) => {
       Alert.alert("Error", error.response?.data?.message || "Failed to update profile.");
@@ -48,7 +51,7 @@ export const EditProfileScreen = () => {
   };
 
   const handleSave = () => {
-    updateMutation.mutate({ name, cityId });
+    updateMutation.mutate({ name, cityId, bloodGroup });
   };
 
   return (
@@ -70,6 +73,28 @@ export const EditProfileScreen = () => {
           onChangeText={setName}
           placeholder="John Doe"
         />
+
+        <Text style={styles.label}>Blood Group</Text>
+        <View style={styles.bloodGroupGrid}>
+          {BLOOD_GROUPS.map((bg) => (
+            <TouchableOpacity
+              key={bg}
+              style={[
+                styles.bloodGroupChip,
+                bloodGroup === bg && styles.bloodGroupChipSelected
+              ]}
+              onPress={() => setBloodGroup(bg)}
+            >
+              <Text style={[
+                styles.bloodGroupText,
+                bloodGroup === bg && styles.bloodGroupTextSelected
+              ]}>
+                {bg}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         <InputField 
           label="City / Location"
           value={cityId}
@@ -132,6 +157,49 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     padding: spacing.l,
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: -20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  label: {
+    ...typography.subtitle2,
+    color: colors.text,
+    marginBottom: spacing.s,
+    marginTop: spacing.m,
+  },
+  bloodGroupGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: spacing.l,
+  },
+  bloodGroupChip: {
+    width: '23%',
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  bloodGroupChipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  bloodGroupText: {
+    ...typography.subtitle2,
+    color: '#64748B',
+    fontWeight: '700',
+  },
+  bloodGroupTextSelected: {
+    color: '#FFFFFF',
   },
   spacer: {
     height: spacing.xl,

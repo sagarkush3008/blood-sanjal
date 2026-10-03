@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, AppState, Platform } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useQueryClient } from '@tanstack/react-query';
+import { ActiveStatusAPI } from '../api/activeStatus.api';
 import { useAuthStore } from '../store/authStore';
 import { AuthNavigator } from './AuthNavigator';
 import { DrawerNavigator } from './DrawerNavigator';
@@ -50,10 +52,56 @@ const AppNavigator = ({ role }: { role?: string }) => {
 
 export const RootNavigator = () => {
   const { token, user, isLoading, checkAuth } = useAuthStore();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  useEffect(() => {
+    if (!token) return;
+    let interval: NodeJS.Timeout;
+    
+    const sendHeartbeat = () => {
+      ActiveStatusAPI.heartbeat(Platform.OS).catch(err => console.log('Heartbeat failed:', err.message));
+    };
+
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'active') {
+        sendHeartbeat();
+        interval = setInterval(sendHeartbeat, 2 * 60 * 1000); // Every 2 minutes
+      } else {
+        clearInterval(interval);
+      }
+    };
+
+    // Heartbeat logic
+    sendHeartbeat();
+    interval = setInterval(sendHeartbeat, 2 * 60 * 1000);
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    
+    // Connect to SSE Live Stream
+    const unsubscribeStream = ActiveStatusAPI.subscribeToLiveStream((eventData) => {
+      console.log('[LiveStream Event]', eventData.event);
+      // Invalidate relevant queries based on the event
+      if (eventData.event === 'donor_status_changed' || eventData.event === 'donors_auto_restored') {
+        queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] });
+        queryClient.invalidateQueries({ queryKey: ['admin-donors'] });
+        queryClient.invalidateQueries({ queryKey: ['donors'] });
+      }
+      if (eventData.event === 'request_status_changed' || eventData.event === 'new_active_request' || eventData.event === 'request_status_updated') {
+        queryClient.invalidateQueries({ queryKey: ['blood-requests'] });
+        queryClient.invalidateQueries({ queryKey: ['admin-dashboard-stats'] });
+      }
+    });
+
+    return () => {
+      clearInterval(interval);
+      subscription.remove();
+      unsubscribeStream();
+    };
+  }, [token, queryClient]);
 
   if (isLoading) {
     return (

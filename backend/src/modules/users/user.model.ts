@@ -29,10 +29,12 @@ export interface IUser extends Document {
   };
   privacySettings: IPrivacySettings;
   deletedAt?: Date;
+  lastHeartbeat?: Date;
+  onlinePlatform?: string;
 }
 
 const privacySettingsSchema = new Schema<IPrivacySettings>({
-  donorSearchVisibility: { type: Boolean, default: false },
+  donorSearchVisibility: { type: Boolean, default: true },
   contactRevealPolicy: { type: String, enum: ['DIRECT', 'CONSENT_REQUIRED', 'HIDDEN'], default: 'CONSENT_REQUIRED' },
   emergencyNotifications: { type: Boolean, default: true },
   approximateLocationSharing: { type: Boolean, default: true },
@@ -61,6 +63,8 @@ const userSchema = new Schema<IUser>(
     },
     privacySettings: { type: privacySettingsSchema, default: () => ({}) },
     deletedAt: { type: Date },
+    lastHeartbeat: { type: Date },
+    onlinePlatform: { type: String },
   },
   { timestamps: true }
 );

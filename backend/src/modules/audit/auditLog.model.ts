@@ -8,6 +8,7 @@ export interface IAuditLog extends Document {
   requestId?: string;
   ipHash?: string;
   userAgent?: string;
+  metadata?: Record<string, any>;
 }
 
 const auditLogSchema = new Schema<IAuditLog>(
@@ -19,6 +20,7 @@ const auditLogSchema = new Schema<IAuditLog>(
     requestId: { type: String },
     ipHash: { type: String },
     userAgent: { type: String },
+    metadata: { type: Schema.Types.Mixed },
   },
   { timestamps: true }
 );

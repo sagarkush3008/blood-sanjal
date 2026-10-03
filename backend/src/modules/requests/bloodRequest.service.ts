@@ -45,6 +45,7 @@ export class BloodRequestService {
     const duplicate = await BloodRequest.findOne({
       requesterId: userId,
       bloodGroup: data.bloodGroup,
+      patientName: data.patientName,
       status: { $in: ['PENDING_VERIFICATION', 'ACTIVE', 'PARTIALLY_FULFILLED'] }
     });
     if (duplicate) {

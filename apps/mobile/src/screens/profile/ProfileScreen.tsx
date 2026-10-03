@@ -113,6 +113,19 @@ export const ProfileScreen = () => {
 
           <TouchableOpacity
             style={styles.menuItem}
+            onPress={() => navigation.navigate('DonorAvailability')}
+          >
+            <View style={[styles.menuIconCircle, { backgroundColor: '#FEF3C7' }]}>
+              <Ionicons name="time-outline" size={18} color="#D97706" />
+            </View>
+            <Text style={styles.menuItemTitle}>Active Status & Availability</Text>
+            <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          <TouchableOpacity
+            style={styles.menuItem}
             onPress={() => navigation.navigate('PrivacySettings')}
           >
             <View style={[styles.menuIconCircle, { backgroundColor: '#CCFBF1' }]}>

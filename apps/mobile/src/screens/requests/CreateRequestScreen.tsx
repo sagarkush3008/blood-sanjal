@@ -7,8 +7,8 @@ import {
   Alert,
   TouchableOpacity,
   TextInput,
-  StatusBar,
   ActivityIndicator,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -40,12 +40,10 @@ const CleanInput: React.FC<CleanInputProps> = ({
   keyboardType = 'default',
   autoCapitalize = 'sentences',
 }) => {
-  const [isFocused, setIsFocused] = useState(false);
-
   return (
     <View style={styles.inputContainer}>
       <Text style={styles.inputLabel}>{label}</Text>
-      <View style={[styles.inputWrapper, isFocused && styles.inputWrapperFocused]}>
+      <View style={styles.inputWrapper}>
         {icon && <View style={styles.inputIcon}>{icon}</View>}
         <TextInput
           style={styles.textInput}
@@ -55,8 +53,6 @@ const CleanInput: React.FC<CleanInputProps> = ({
           placeholderTextColor="#94A3B8"
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
         />
       </View>
     </View>
@@ -229,6 +225,7 @@ export const CreateRequestScreen = () => {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* CARD 1: Header Card */}
         <View style={styles.card}>
@@ -696,6 +693,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
+    paddingBottom: 40,
+    flexGrow: 1,
     gap: 14,
   },
   card: {

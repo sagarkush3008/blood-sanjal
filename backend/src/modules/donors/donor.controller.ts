@@ -27,6 +27,33 @@ export class DonorController {
       if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
       const profile = await DonorService.updateAvailability(req.user.userId, req.body);
       res.status(200).json(SuccessResponse(profile, req.id));
+    } catch (error) { console.error("updateAvailability ERROR:", error); next(error); }
+  }
+
+  static async updateStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      
+      const { status } = req.body;
+      if (status !== 'ACTIVE' && status !== 'INACTIVE') {
+        throw new AppError(400, 'VALIDATION_ERROR', 'Invalid status. Must be ACTIVE or INACTIVE.');
+      }
+      
+      // Prevent mass assignment explicitly
+      const safeData = { status };
+      
+      const profile = await DonorService.updateStatus(req.user.userId, safeData);
+      const { toDonorStatusDTO } = await import('./donor.dto');
+      res.status(200).json(SuccessResponse(toDonorStatusDTO(profile), req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async getStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const profile = await DonorService.getProfile(req.user.userId);
+      const { toDonorStatusDTO } = await import('./donor.dto');
+      res.status(200).json(SuccessResponse(toDonorStatusDTO(profile), req.id));
     } catch (error) { next(error); }
   }
 

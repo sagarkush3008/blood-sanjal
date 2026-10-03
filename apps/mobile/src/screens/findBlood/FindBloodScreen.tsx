@@ -269,6 +269,9 @@ export const FindBloodScreen = () => {
                   donorStatus={item.donorStatus}
                   totalDonations={item.totalDonations}
                   lastDonationDate={item.lastDonationDate}
+                  reminderDate={item.reminderDate}
+                  inactiveUntil={item.inactiveUntil}
+                  inactiveReason={item.inactiveReason}
                   location={
                     item.approximateLocation?.districtId ||
                     item.approximateLocation?.cityId ||
