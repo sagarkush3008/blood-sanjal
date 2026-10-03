@@ -25,7 +25,7 @@ import { colors } from './src/theme';
 
 // Globally set Inter as default font for all React Native Text & TextInput
 const defaultFont = Platform.select({
-  web: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  web: "'Inter', sans-serif",
   default: 'Inter_400Regular',
 });
 
@@ -85,10 +85,10 @@ export default function App() {
         style.id = styleId;
         style.innerHTML = `
           * {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+            font-family: 'Inter', sans-serif !important;
           }
           input, textarea, select, button {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+            font-family: 'Inter', sans-serif !important;
           }
         `;
         document.head.appendChild(style);
