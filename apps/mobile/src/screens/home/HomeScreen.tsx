@@ -129,10 +129,8 @@ export const HomeScreen = () => {
           <View style={styles.logoBox}>
             <Ionicons name="heart" size={24} color="#FFFFFF" />
           </View>
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={styles.brandTitle} numberOfLines={1}>BLOOD SANJAL</Text>
-            </View>
+          <View style={{ flex: 1, justifyContent: 'center' }}>
+            <Text style={styles.brandTitle} numberOfLines={1}>BLOOD SANJAL</Text>
             <Text style={styles.brandTagline} numberOfLines={1}>Connecting People. Saving Lives.</Text>
           </View>
         </View>
@@ -468,7 +466,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 16 },
 
   greetingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  greetingText: { fontSize: 12, color: '#475569', flex: 1, paddingRight: 10, lineHeight: 18 },
+  greetingText: { fontSize: 13, color: '#475569', flex: 1, paddingRight: 10, lineHeight: 18, fontFamily: 'Inter_500Medium' },
   locationPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0', maxWidth: 140 },
   locationText: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: '#64748B', flexShrink: 1 },
 
