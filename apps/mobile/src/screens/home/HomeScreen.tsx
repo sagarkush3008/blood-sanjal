@@ -191,7 +191,7 @@ export const HomeScreen = () => {
                 >
                   <View style={[styles.statusDot, { backgroundColor: isAvailable ? '#22C55E' : '#EF4444' }]} />
                   <Text style={styles.statusText}>{isAvailable ? 'Active' : 'Inactive'}</Text>
-                  <Feather name="chevron-down" size={14} color="#64748B" style={{ marginLeft: 2 }} />
+                  <Feather name="edit-2" size={12} color="#64748B" style={{ marginLeft: 2 }} />
                 </TouchableOpacity>
               </View>
             </View>
