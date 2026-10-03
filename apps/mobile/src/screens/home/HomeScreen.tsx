@@ -129,11 +129,11 @@ export const HomeScreen = () => {
           <View style={styles.logoBox}>
             <Ionicons name="heart" size={24} color="#FFFFFF" />
           </View>
-          <View>
+          <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={styles.brandTitle}>BLOOD SANJAL</Text>
+              <Text style={styles.brandTitle} numberOfLines={1}>BLOOD SANJAL</Text>
             </View>
-            <Text style={styles.brandTagline}>Connecting People. Saving Lives.</Text>
+            <Text style={styles.brandTagline} numberOfLines={1}>Connecting People. Saving Lives.</Text>
           </View>
         </View>
         <View style={styles.headerActions}>
@@ -443,23 +443,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     justifyContent: 'space-between', 
     alignItems: 'center', 
-    paddingHorizontal: 20, 
+    paddingHorizontal: 16, 
     paddingTop: 12, 
     paddingBottom: 16,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  logoBox: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#DC2626', alignItems: 'center', justifyContent: 'center' },
-  brandTitle: { fontSize: 18, fontFamily: 'Inter_900Black', color: '#0F172A', letterSpacing: -0.5 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, paddingRight: 12 },
+  logoBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#DC2626', alignItems: 'center', justifyContent: 'center' },
+  brandTitle: { fontSize: 16, fontFamily: 'Inter_900Black', color: '#0F172A', letterSpacing: -0.5 },
   nepalBadge: { backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   nepalBadgeText: { fontSize: 10, fontFamily: 'Inter_900Black', color: '#DC2626', letterSpacing: 0.5 },
-  brandTagline: { fontSize: 12, color: '#64748B', marginTop: 2, fontFamily: 'Inter_500Medium' },
+  brandTagline: { fontSize: 10, color: '#64748B', marginTop: 0, fontFamily: 'Inter_500Medium' },
   
-  headerActions: { flexDirection: 'row', gap: 12, alignItems: 'center' },
-  iconBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', position: 'relative', borderWidth: 1, borderColor: '#E2E8F0' },
-  notificationBadge: { position: 'absolute', top: -4, right: -4, backgroundColor: '#EF4444', minWidth: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFFFFF' },
+  headerActions: { flexDirection: 'row', gap: 8, alignItems: 'center', flexShrink: 0 },
+  iconBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', position: 'relative', borderWidth: 1, borderColor: '#E2E8F0' },
+  notificationBadge: { position: 'absolute', top: -4, right: -4, backgroundColor: '#EF4444', minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFFFFF' },
   notificationBadgeText: { fontSize: 10, fontFamily: 'Inter_700Bold', color: '#FFFFFF' },
   avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#DC2626' },
   avatarLetter: { fontSize: 16, fontFamily: 'Inter_800ExtraBold', color: '#DC2626' },
