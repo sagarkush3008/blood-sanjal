@@ -126,9 +126,9 @@ export const HomeScreen = () => {
           <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.iconBtn}>
             <Feather name="menu" size={20} color="#1E293B" />
           </TouchableOpacity>
-          <View style={styles.logoBox}>
-            <Ionicons name="heart" size={24} color="#FFFFFF" />
-          </View>
+          <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.avatar}>
+            <Text style={styles.avatarLetter}>{firstName.charAt(0).toUpperCase()}</Text>
+          </TouchableOpacity>
           <View style={{ flex: 1, justifyContent: 'center' }}>
             <Text style={styles.brandTitle} numberOfLines={1}>BLOOD SANJAL</Text>
             <Text style={styles.brandTagline} numberOfLines={1}>Connecting People. Saving Lives.</Text>
@@ -143,12 +143,7 @@ export const HomeScreen = () => {
               </View>
             )}
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.avatar}>
-            <Text style={styles.avatarLetter}>{firstName.charAt(0).toUpperCase()}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => {}} style={styles.iconBtn}>
-            <Feather name="more-vertical" size={20} color="#1E293B" />
-          </TouchableOpacity>
+
         </View>
       </View>
 
@@ -441,8 +436,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     justifyContent: 'space-between', 
     alignItems: 'center', 
-    paddingLeft: 16,
-    paddingRight: 24, 
+    paddingHorizontal: 16, 
     paddingTop: 12, 
     paddingBottom: 16,
     backgroundColor: '#FFFFFF',
