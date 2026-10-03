@@ -52,7 +52,7 @@ export class UserController {
         throw new AppError(400, 'VALIDATION_ERROR', 'No image file provided');
       }
 
-      const cloudinary = require('cloudinary').v2;
+      const cloudinary = require('../../config/cloudinary.config').default;
       const User = require('./user.model').User;
 
       console.log(`Starting Cloudinary upload for user: ${req.user.userId}`);
@@ -61,8 +61,11 @@ export class UserController {
         const stream = cloudinary.uploader.upload_stream(
           { folder: 'blood_sanjal/avatars', width: 400, height: 400, crop: 'fill' },
           (error: any, result: any) => {
-            if (result) resolve(result);
-            else reject(error);
+            if (error) {
+              console.error('Cloudinary stream error:', error);
+              return reject(error);
+            }
+            resolve(result);
           }
         );
         stream.end(file.buffer);
@@ -73,7 +76,7 @@ export class UserController {
 
       const updatedUser = await User.findByIdAndUpdate(
         req.user.userId,
-        { avatar_url: avatarUrl },
+        { avatarAssetId: avatarUrl },
         { new: true }
       ).select('-passwordHash');
 

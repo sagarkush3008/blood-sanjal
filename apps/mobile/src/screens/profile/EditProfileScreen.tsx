@@ -22,7 +22,7 @@ export const EditProfileScreen = () => {
   const [name, setName] = useState(meData?.name || '');
   const [cityId, setCityId] = useState(meData?.cityId || '');
   const [bloodGroup, setBloodGroup] = useState(meData?.bloodGroup || '');
-  const [avatarUri, setAvatarUri] = useState<string | null>(meData?.avatar_url || null);
+  const [avatarUri, setAvatarUri] = useState<string | null>(meData?.avatarAssetId || null);
   const [isUploading, setIsUploading] = useState(false);
 
   const updateMutation = useMutation({
@@ -60,7 +60,7 @@ export const EditProfileScreen = () => {
       Alert.alert("Success", "Profile picture updated!");
     } catch (error: any) {
       Alert.alert("Error", "Failed to upload image.");
-      setAvatarUri(meData?.avatar_url || null);
+      setAvatarUri(meData?.avatarAssetId || null);
     } finally {
       setIsUploading(false);
     }
