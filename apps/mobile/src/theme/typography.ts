@@ -2,32 +2,32 @@ import { Platform } from 'react-native';
 
 export const fonts = {
   light: Platform.select({
-    web: "'Poppins', sans-serif",
-    default: 'Poppins_300Light',
+    web: "'Inter', sans-serif",
+    default: 'Inter_300Light',
   }),
   regular: Platform.select({
-    web: "'Poppins', sans-serif",
-    default: 'Poppins_400Regular',
+    web: "'Inter', sans-serif",
+    default: 'Inter_400Regular',
   }),
   medium: Platform.select({
-    web: "'Poppins', sans-serif",
-    default: 'Poppins_500Medium',
+    web: "'Inter', sans-serif",
+    default: 'Inter_500Medium',
   }),
   semiBold: Platform.select({
-    web: "'Poppins', sans-serif",
-    default: 'Poppins_600SemiBold',
+    web: "'Inter', sans-serif",
+    default: 'Inter_600SemiBold',
   }),
   bold: Platform.select({
-    web: "'Poppins', sans-serif",
-    default: 'Poppins_700Bold',
+    web: "'Inter', sans-serif",
+    default: 'Inter_700Bold',
   }),
   extraBold: Platform.select({
-    web: "'Poppins', sans-serif",
-    default: 'Poppins_800ExtraBold',
+    web: "'Inter', sans-serif",
+    default: 'Inter_800ExtraBold',
   }),
   black: Platform.select({
-    web: "'Poppins', sans-serif",
-    default: 'Poppins_900Black',
+    web: "'Inter', sans-serif",
+    default: 'Inter_900Black',
   }),
 };
 

@@ -12,21 +12,21 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   useFonts,
-  Poppins_300Light,
-  Poppins_400Regular,
-  Poppins_500Medium,
-  Poppins_600SemiBold,
-  Poppins_700Bold,
-  Poppins_800ExtraBold,
-  Poppins_900Black,
-} from '@expo-google-fonts/poppins';
+  Inter_300Light,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Inter_800ExtraBold,
+  Inter_900Black,
+} from '@expo-google-fonts/inter';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { colors } from './src/theme';
 
-// Globally set Poppins as default font for all React Native Text & TextInput
+// Globally set Inter as default font for all React Native Text & TextInput
 const defaultFont = Platform.select({
-  web: "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-  default: 'Poppins_400Regular',
+  web: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  default: 'Inter_400Regular',
 });
 
 // @ts-ignore
@@ -57,38 +57,38 @@ const queryClient = new QueryClient({
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-    Poppins_300Light,
-    Poppins_400Regular,
-    Poppins_500Medium,
-    Poppins_600SemiBold,
-    Poppins_700Bold,
-    Poppins_800ExtraBold,
-    Poppins_900Black,
+    Inter_300Light,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    Inter_800ExtraBold,
+    Inter_900Black,
   });
 
-  // Inject Google Fonts Poppins stylesheet and global font-family rule in Web environment
+  // Inject Google Fonts Inter stylesheet and global font-family rule in Web environment
   useEffect(() => {
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
-      const linkId = 'google-font-poppins';
+      const linkId = 'google-font-inter';
       if (!document.getElementById(linkId)) {
         const link = document.createElement('link');
         link.id = linkId;
         link.rel = 'stylesheet';
         link.href =
-          'https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&display=swap';
+          'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap';
         document.head.appendChild(link);
       }
 
-      const styleId = 'poppins-global-styles';
+      const styleId = 'inter-global-styles';
       if (!document.getElementById(styleId)) {
         const style = document.createElement('style');
         style.id = styleId;
         style.innerHTML = `
           * {
-            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
           }
           input, textarea, select, button {
-            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
           }
         `;
         document.head.appendChild(style);
