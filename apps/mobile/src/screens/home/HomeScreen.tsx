@@ -443,7 +443,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     justifyContent: 'space-between', 
     alignItems: 'center', 
-    paddingHorizontal: 16, 
+    paddingLeft: 16,
+    paddingRight: 24, 
     paddingTop: 12, 
     paddingBottom: 16,
     backgroundColor: '#FFFFFF',
@@ -457,12 +458,12 @@ const styles = StyleSheet.create({
   nepalBadgeText: { fontSize: 10, fontFamily: 'Inter_900Black', color: '#DC2626', letterSpacing: 0.5 },
   brandTagline: { fontSize: 9, color: '#64748B', marginTop: 0, fontFamily: 'Inter_500Medium' },
   
-  headerActions: { flexDirection: 'row', gap: 6, alignItems: 'center', flexShrink: 0 },
-  iconBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', position: 'relative', borderWidth: 1, borderColor: '#E2E8F0' },
-  notificationBadge: { position: 'absolute', top: -4, right: -4, backgroundColor: '#EF4444', minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFFFFF' },
+  headerActions: { flexDirection: 'row', gap: 10, alignItems: 'center', flexShrink: 0 },
+  iconBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', position: 'relative', borderWidth: 1, borderColor: '#E2E8F0' },
+  notificationBadge: { position: 'absolute', top: -2, right: -2, backgroundColor: '#EF4444', minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFFFFF' },
   notificationBadgeText: { fontSize: 10, fontFamily: 'Inter_700Bold', color: '#FFFFFF' },
-  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#DC2626' },
-  avatarLetter: { fontSize: 16, fontFamily: 'Inter_800ExtraBold', color: '#DC2626' },
+  avatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#DC2626' },
+  avatarLetter: { fontSize: 15, fontFamily: 'Inter_800ExtraBold', color: '#DC2626' },
 
   scrollContent: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 16 },
 
