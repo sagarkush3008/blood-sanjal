@@ -2,9 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { DonationService } from './donation.service';
 import { SuccessResponse } from '../../core/http/result';
 import { AppError } from '../../core/errors/appError';
-import { AIService } from '../../services/ai.service';
+import { AIService, HealthData } from '../ai/ai.service';
 import { DonorProfile } from './donorProfile.model';
-import { DonationRecord } from './donationRecord.model';
 
 export class DonationController {
   static async submit(req: Request, res: Response, next: NextFunction) {
@@ -12,6 +11,49 @@ export class DonationController {
       if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
       const result = await DonationService.submitDonation(req.user.userId, req.body);
       res.status(201).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async logDonationWithAI(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.body.userId || req.user?.userId;
+      const healthData: HealthData = req.body.healthData;
+
+      if (!userId || !healthData) {
+        throw new AppError(400, 'VALIDATION_ERROR', 'Missing required health data or user ID');
+      }
+
+      // Call Google Gemini AI Service
+      const aiResult = await AIService.analyzeDonationEligibility(healthData);
+      const nextDate = new Date(aiResult.nextEligibleDate);
+
+      // Database Transaction (MongoDB)
+      const updatedProfile = await DonorProfile.findOneAndUpdate(
+        { userId: userId },
+        {
+          $inc: { totalDonations: 1 },
+          $set: {
+            lastDonationDate: new Date(healthData.lastDonationDate),
+            inactiveUntil: nextDate, // Marks them as temporarily inactive
+            reminderDate: nextDate, // Used by cron job to send push notification
+            donorStatus: 'UNAVAILABLE',
+            inactiveReason: 'Recent donation recovery period',
+            inactiveStartedAt: new Date()
+          }
+        },
+        { new: true }
+      );
+
+      if (!updatedProfile) {
+        throw new AppError(404, 'NOT_FOUND', 'Donor profile not found');
+      }
+
+      res.status(200).json(SuccessResponse({
+        totalDonations: updatedProfile.totalDonations,
+        nextEligibleDate: updatedProfile.inactiveUntil,
+        recoveryTips: aiResult.recoveryTips
+      }, req.id));
+
     } catch (error) { next(error); }
   }
 
@@ -37,47 +79,6 @@ export class DonationController {
     try {
       const result = await DonationService.getDetail(req.params.id as string, req.user?.userId, req.user?.role);
       res.status(200).json(SuccessResponse(result, req.id));
-    } catch (error) { next(error); }
-  }
-
-  static async logAndAnalyzeDonation(req: Request, res: Response, next: NextFunction) {
-    try {
-      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
-      const userId = req.user.userId;
-      const { metrics } = req.body;
-
-      // 1. Get AI Analysis
-      const analysis = await AIService.analyzeEligibility(metrics);
-
-      // Find donor profile first to get the ID
-      let profile = await DonorProfile.findOne({ userId });
-      if (!profile) {
-        throw new AppError(404, 'NOT_FOUND', 'Donor profile not found');
-      }
-
-      // 2. Save the Donation Record
-      const newDonation = await DonationRecord.create({
-        donorProfileId: profile._id,
-        donationDate: metrics.lastDonationDate,
-        metrics,
-        aiAnalysis: analysis
-      });
-
-      // 3. Update the Donor Profile with the new state
-      const updatedProfile = await DonorProfile.findByIdAndUpdate(
-        profile._id,
-        { 
-          lastDonationDate: metrics.lastDonationDate,
-          nextEligibleDate: analysis.nextEligibleDate,
-          aiRecoveryTips: analysis.tips,
-          donorStatus: analysis.isEligibleToday ? 'ACTIVE' : 'INACTIVE',
-          inactiveUntil: analysis.isEligibleToday ? null : analysis.nextEligibleDate,
-          inactiveReason: analysis.isEligibleToday ? null : 'Post-Donation Recovery Period'
-        },
-        { new: true }
-      );
-
-      res.status(200).json(SuccessResponse({ profile: updatedProfile, analysis }, req.id));
     } catch (error) { next(error); }
   }
 }

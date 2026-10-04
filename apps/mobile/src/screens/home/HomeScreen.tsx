@@ -21,6 +21,7 @@ import { NotificationsAPI } from '../../api/notifications.api';
 import { DonorsAPI } from '../../api/donors.api';
 import { BloodRequestsAPI } from '../../api/requests.api';
 import { RequestCard } from '../../components/requests/RequestCard';
+import { DonationEligibilityCard } from '../../components/donors/DonationEligibilityCard';
 import { colors } from '../../theme';
 
 const { width } = Dimensions.get('window');
@@ -251,22 +252,7 @@ export const HomeScreen = () => {
         </LinearGradient>
 
         {/* ELIGIBILITY CHECK CARD */}
-        <View style={styles.eligibilityCard}>
-          <View style={styles.eligibilityIconBox}>
-            <Feather name="clock" size={24} color="#FFFFFF" />
-          </View>
-          <View style={styles.eligibilityTextCol}>
-            <Text style={styles.eligibilityTitle}>Donation Eligibility Check</Text>
-            <Text style={styles.eligibilitySub}>
-              {donorProfile?.lastDonationDate 
-                ? 'Check your donation readiness based on your last recorded donation!' 
-                : 'Log your first donation to keep track of your eligibility!'}
-            </Text>
-          </View>
-          <TouchableOpacity style={styles.iDonatedBtn}>
-            <Text style={styles.iDonatedBtnText}>I Donated</Text>
-          </TouchableOpacity>
-        </View>
+        <DonationEligibilityCard donorProfile={donorProfile} />
 
         {/* QUICK ACTIONS */}
         <Text style={styles.sectionTitle}>QUICK ACTIONS</Text>

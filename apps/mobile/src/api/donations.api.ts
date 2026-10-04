@@ -5,4 +5,5 @@ export const DonationsAPI = {
   list: (params?: any) => apiClient.get('/donations', { params }),
   getById: (id: string) => apiClient.get(`/donations/${id}`),
   updateStatus: (id: string, data: any) => apiClient.patch(`/donations/${id}`, data),
+  logWithAI: (data: any) => apiClient.post('/donations/log', data),
 };

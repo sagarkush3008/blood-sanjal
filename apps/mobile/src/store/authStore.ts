@@ -13,6 +13,7 @@ export interface UserProfile {
   bloodGroup?: string;
   districtId?: string;
   cityId?: string;
+  avatarAssetId?: string;
   privacySettings?: {
     donorSearchVisibility?: boolean;
     contactRevealPolicy?: string;
@@ -52,6 +53,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           role: user.role || 'USER',
           status: user.status || 'ACTIVE',
           bloodGroup: user.bloodGroup,
+          avatarAssetId: user.avatarAssetId,
           privacySettings: user.privacySettings,
         };
         await storage.setItem('user', JSON.stringify(normalizedUser));
@@ -132,6 +134,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             bloodGroup: profile.bloodGroup,
             districtId: profile.districtId,
             cityId: profile.cityId,
+            avatarAssetId: profile.avatarAssetId,
             privacySettings: profile.privacySettings,
           };
           await storage.setItem('user', JSON.stringify(freshUser));
