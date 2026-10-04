@@ -18,12 +18,15 @@ export class AIService {
   public static async analyzeDonationEligibility(healthData: HealthData): Promise<AIEligibilityResult> {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      console.error('[AIService] GEMINI_API_KEY is not defined in environment variables');
+      console.error('[AIService] ❌ GEMINI_API_KEY is not defined in environment variables');
       throw new AppError(500, 'INTERNAL_ERROR', 'AI Configuration is missing.');
+    } else {
+      console.log(`[AIService] ✅ API Key loaded successfully (Starts with: ${apiKey.substring(0, 4)}... Length: ${apiKey.length})`);
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    // Using gemini-1.5-flash-latest as per instructions
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
 
     const prompt = `
       You are an expert medical assistant for a blood donation platform.
@@ -49,6 +52,11 @@ export class AIService {
     `;
 
     try {
+      // 4. Test with a Minimal Prompt (Optional debug fallback)
+      // Uncomment the two lines below to run a minimal test if the main prompt fails
+      // const testResult = await model.generateContent('Say hello');
+      // console.log('[AIService] Minimal Test Response:', testResult.response.text());
+
       const result = await model.generateContent(prompt);
       const responseText = result.response.text().trim();
       
@@ -61,8 +69,17 @@ export class AIService {
 
       return parsedData;
     } catch (error: any) {
-      console.error('[AIService] Failed to analyze eligibility:', error);
-      throw new AppError(500, 'AI_ERROR', error.message || 'AI analysis failed. Please try again.');
+      // 1. Verbose Backend Logging
+      console.error('\n--- [AIService] GEMINI API ERROR ---');
+      console.error('Error Object:', error);
+      console.error('Message:', error.message);
+      console.error('Status:', error.status || error.code || 'UNKNOWN_STATUS');
+      if (error.response) {
+         console.error('Response details:', error.response);
+      }
+      console.error('------------------------------------\n');
+      
+      throw new AppError(500, 'AI_ERROR', 'AI analysis is currently unavailable, please try again later.');
     }
   }
 }
