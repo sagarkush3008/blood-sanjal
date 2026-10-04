@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthStore } from '../../store/authStore';
 import { AuthAPI } from '../../api/auth.api';
@@ -21,7 +21,6 @@ import { NotificationsAPI } from '../../api/notifications.api';
 import { DonorsAPI } from '../../api/donors.api';
 import { BloodRequestsAPI } from '../../api/requests.api';
 import { RequestCard } from '../../components/requests/RequestCard';
-import { DonationEligibilityCard } from '../../components/donors/DonationEligibilityCard';
 import { colors } from '../../theme';
 
 const { width } = Dimensions.get('window');
@@ -251,8 +250,21 @@ export const HomeScreen = () => {
           )}
         </LinearGradient>
 
-        {/* ELIGIBILITY CHECK CARD */}
-        <DonationEligibilityCard donorProfile={donorProfile} />
+        {/* ELIGIBILITY CHECK CARD PROMPT */}
+        <TouchableOpacity 
+          style={styles.eligibilityPromptCard} 
+          onPress={() => navigation.navigate('Profile', { screen: 'EligibilityStatus' })}
+          activeOpacity={0.8}
+        >
+          <View style={styles.eligibilityIconBox}>
+            <MaterialCommunityIcons name="heart-pulse" size={24} color="#059669" />
+          </View>
+          <View style={styles.eligibilityTextCol}>
+            <Text style={styles.eligibilityPromptTitle}>Check Eligibility & AI Insights ✨</Text>
+            <Text style={styles.eligibilityPromptSub}>See when you can donate next & track your impact.</Text>
+          </View>
+          <Feather name="chevron-right" size={20} color="#059669" />
+        </TouchableOpacity>
 
         {/* QUICK ACTIONS */}
         <Text style={styles.sectionTitle}>QUICK ACTIONS</Text>
@@ -493,13 +505,11 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 11, fontFamily: 'Inter_800ExtraBold', color: '#FECACA', letterSpacing: 0.5, marginBottom: 4 },
   statValue: { fontSize: 18, fontFamily: 'Inter_800ExtraBold', color: '#FFFFFF' },
 
-  eligibilityCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ECFDF5', borderRadius: 20, padding: 14, marginBottom: 32, borderWidth: 1, borderColor: '#D1FAE5' },
-  eligibilityIconBox: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#059669', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  eligibilityPromptCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ECFDF5', borderRadius: 20, padding: 14, marginBottom: 32, borderWidth: 1, borderColor: '#D1FAE5' },
+  eligibilityIconBox: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#D1FAE5', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   eligibilityTextCol: { flex: 1, paddingRight: 8 },
-  eligibilityTitle: { fontSize: 13, fontFamily: 'Inter_800ExtraBold', color: '#064E3B', marginBottom: 2 },
-  eligibilitySub: { fontSize: 10, color: '#047857', lineHeight: 14, fontFamily: 'Inter_500Medium' },
-  iDonatedBtn: { backgroundColor: '#059669', paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12 },
-  iDonatedBtnText: { color: '#FFFFFF', fontSize: 12, fontFamily: 'Inter_800ExtraBold' },
+  eligibilityPromptTitle: { fontSize: 13, fontFamily: 'Inter_800ExtraBold', color: '#064E3B', marginBottom: 2 },
+  eligibilityPromptSub: { fontSize: 10, color: '#047857', lineHeight: 14, fontFamily: 'Inter_500Medium' },
 
   sectionTitle: { fontSize: 14, fontFamily: 'Inter_800ExtraBold', color: '#64748B', letterSpacing: 1, marginBottom: 16, marginLeft: 4 },
   gridContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 16 },

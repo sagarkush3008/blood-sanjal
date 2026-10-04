@@ -13,6 +13,7 @@ import { AdminNavigator } from '../admin/AdminNavigator';
 import { CertificatesNavigator } from '../certificates/CertificatesNavigator';
 import { SettingsNavigator } from '../settings/SettingsNavigator';
 import { PaymentsNavigator } from '../payments/PaymentsNavigator';
+import { EligibilityStatusScreen } from './EligibilityStatusScreen';
 import { colors } from '../../theme';
 
 const Stack = createNativeStackNavigator();
@@ -38,6 +39,7 @@ export const ProfileNavigator = () => {
       <Stack.Screen name="LogDonation" component={LogDonationScreen} options={{ title: 'Log Donation' }} />
       <Stack.Screen name="SupportPlatform" component={SupportPlatformScreen} options={{ title: 'Support Platform' }} />
       <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen} options={{ title: 'Contribution History' }} />
+      <Stack.Screen name="EligibilityStatus" component={EligibilityStatusScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Admin" component={AdminNavigator} options={{ headerShown: false }} />
     </Stack.Navigator>
   );

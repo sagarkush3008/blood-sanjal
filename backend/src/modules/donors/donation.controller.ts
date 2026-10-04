@@ -38,7 +38,8 @@ export class DonationController {
             reminderDate: nextDate, // Used by cron job to send push notification
             donorStatus: 'UNAVAILABLE',
             inactiveReason: 'Recent donation recovery period',
-            inactiveStartedAt: new Date()
+            inactiveStartedAt: new Date(),
+            lastRecoveryTips: aiResult.recoveryTips
           }
         },
         { new: true }
