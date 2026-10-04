@@ -4,6 +4,7 @@ import { logger } from './config/logger.config';
 import { env } from './config/env.config';
 import mongoose from 'mongoose';
 import { redisConnection } from './core/jobs/redis.client';
+import { initCronJobs } from './jobs/eligibilityCron';
 
 const startServer = async () => {
   try {
@@ -12,6 +13,9 @@ const startServer = async () => {
     const server = app.listen(env.PORT, () => {
       logger.info(`Server listening on port ${env.PORT} in ${env.NODE_ENV} mode`);
     });
+
+    // Initialize daily cron jobs
+    initCronJobs();
 
     // Helper cron: automatically revert INACTIVE donors to ACTIVE if their scheduled inactivity period has expired.
     const availabilityCron = setInterval(async () => {

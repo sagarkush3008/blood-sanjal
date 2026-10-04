@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Dimensions,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
@@ -128,7 +129,14 @@ export const HomeScreen = () => {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.avatar}>
-            <Text style={styles.avatarLetter}>{firstName.charAt(0).toUpperCase()}</Text>
+            {(meProfile?.avatarAssetId || user?.avatarAssetId) ? (
+              <Image 
+                source={{ uri: (meProfile?.avatarAssetId || user?.avatarAssetId) }} 
+                style={{ width: '100%', height: '100%', borderRadius: 999 }} 
+              />
+            ) : (
+              <Text style={styles.avatarLetter}>{firstName.charAt(0).toUpperCase()}</Text>
+            )}
           </TouchableOpacity>
           <View style={{ flex: 1, justifyContent: 'center' }}>
             <Text style={styles.brandTitle} numberOfLines={1}>BLOOD SANJAL</Text>

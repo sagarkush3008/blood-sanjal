@@ -18,6 +18,8 @@ export interface IDonorProfile extends Document {
   inactiveStartedAt?: Date | null;
   lastStatusChangedAt?: Date | null;
   lastStatusChangedBy?: mongoose.Types.ObjectId | null;
+  nextEligibleDate?: Date | null;
+  aiRecoveryTips?: string[];
 }
 
 const donorProfileSchema = new Schema<IDonorProfile>(
@@ -39,6 +41,8 @@ const donorProfileSchema = new Schema<IDonorProfile>(
     inactiveStartedAt: { type: Date, default: null },
     lastStatusChangedAt: { type: Date, default: null },
     lastStatusChangedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    nextEligibleDate: { type: Date, default: null },
+    aiRecoveryTips: { type: [String], default: [] },
   },
   { timestamps: true }
 );

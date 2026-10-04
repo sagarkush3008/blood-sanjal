@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   StatusBar,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -59,7 +60,14 @@ export const ProfileScreen = () => {
         {/* User Profile Card */}
         <View style={styles.profileCard}>
           <View style={styles.avatarCircle}>
-            <Text style={styles.avatarInitial}>{name.charAt(0).toUpperCase()}</Text>
+            {(meData?.avatarAssetId || user?.avatarAssetId) ? (
+              <Image 
+                source={{ uri: (meData?.avatarAssetId || user?.avatarAssetId) }} 
+                style={{ width: '100%', height: '100%', borderRadius: 999 }} 
+              />
+            ) : (
+              <Text style={styles.avatarInitial}>{name.charAt(0).toUpperCase()}</Text>
+            )}
           </View>
           <Text style={styles.profileName}>{name}</Text>
           <Text style={styles.profileEmail}>{email}</Text>

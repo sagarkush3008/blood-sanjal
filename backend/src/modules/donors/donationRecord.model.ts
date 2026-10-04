@@ -13,6 +13,8 @@ export interface IDonationRecord extends Document {
   verifiedBy?: mongoose.Types.ObjectId;
   rejectionReason?: string;
   deletedAt?: Date;
+  metrics?: any;
+  aiAnalysis?: any;
 }
 
 const donationRecordSchema = new Schema<IDonationRecord>(
@@ -29,6 +31,8 @@ const donationRecordSchema = new Schema<IDonationRecord>(
     verifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     rejectionReason: { type: String },
     deletedAt: { type: Date },
+    metrics: { type: Schema.Types.Mixed },
+    aiAnalysis: { type: Schema.Types.Mixed },
   },
   { timestamps: true }
 );

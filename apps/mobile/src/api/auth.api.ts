@@ -61,4 +61,5 @@ export const AuthAPI = {
       },
     });
   },
+  logDonation: (data: any) => apiClient.post('/donations/log-and-analyze', data),
 };
