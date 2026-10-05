@@ -25,7 +25,7 @@ export class DonationController {
 
       // Call Google Gemini AI Service
       const aiResult = await AIService.analyzeDonationEligibility(healthData);
-      const nextDate = new Date(aiResult.nextEligibleDate);
+      const nextDate = aiResult.nextEligibleDate ? new Date(aiResult.nextEligibleDate) : null;
 
       // Database Transaction (MongoDB)
       const updatedProfile = await DonorProfile.findOneAndUpdate(
@@ -39,7 +39,7 @@ export class DonationController {
             donorStatus: 'UNAVAILABLE',
             inactiveReason: 'Recent donation recovery period',
             inactiveStartedAt: new Date(),
-            lastRecoveryTips: aiResult.recoveryTips
+            lastRecoveryTips: aiResult.aiTips
           }
         },
         { new: true }
@@ -52,7 +52,70 @@ export class DonationController {
       res.status(200).json(SuccessResponse({
         totalDonations: updatedProfile.totalDonations,
         nextEligibleDate: updatedProfile.inactiveUntil,
-        recoveryTips: aiResult.recoveryTips
+        recoveryTips: aiResult.aiTips
+      }, req.id));
+
+    } catch (error) { next(error); }
+  }
+
+  static async assessEligibility(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.body.userId || req.user?.userId;
+      const healthData: HealthData = req.body; // Map directly
+
+      if (!userId || !healthData) {
+        throw new AppError(400, 'VALIDATION_ERROR', 'Missing required health data or user ID');
+      }
+
+      // Call Google Gemini AI Service
+      const aiResult = await AIService.analyzeDonationEligibility(healthData);
+      
+      let nextDate: Date | null = null;
+      if (aiResult.nextEligibleDate && aiResult.nextEligibleDate !== '9999-12-31') {
+         nextDate = new Date(aiResult.nextEligibleDate);
+      } else if (!aiResult.isEligible && aiResult.nextEligibleDate === '9999-12-31') {
+         nextDate = new Date('2099-12-31'); // Distant future fallback
+      }
+
+      const updatePayload: any = {
+        $set: {
+          lastRecoveryTips: aiResult.aiTips
+        }
+      };
+
+      if (!aiResult.isEligible && nextDate) {
+        updatePayload.$set.inactiveUntil = nextDate;
+        updatePayload.$set.reminderDate = nextDate;
+        updatePayload.$set.donorStatus = 'UNAVAILABLE';
+        updatePayload.$set.inactiveReason = 'Medical assessment criteria';
+        updatePayload.$set.inactiveStartedAt = new Date();
+      } else {
+        updatePayload.$set.inactiveUntil = null;
+        updatePayload.$set.reminderDate = null;
+        updatePayload.$set.donorStatus = 'ACTIVE';
+        updatePayload.$set.inactiveReason = null;
+        updatePayload.$set.inactiveStartedAt = null;
+      }
+      
+      // We only update lastDonationDate if it's explicitly provided and they are assessing a past donation
+      if (healthData.lastDonationDate) {
+        updatePayload.$set.lastDonationDate = new Date(healthData.lastDonationDate);
+      }
+
+      const updatedProfile = await DonorProfile.findOneAndUpdate(
+        { userId: userId },
+        updatePayload,
+        { new: true }
+      );
+
+      if (!updatedProfile) {
+        throw new AppError(404, 'NOT_FOUND', 'Donor profile not found');
+      }
+
+      res.status(200).json(SuccessResponse({
+        isEligible: aiResult.isEligible,
+        nextEligibleDate: updatedProfile.inactiveUntil,
+        aiTips: aiResult.aiTips
       }, req.id));
 
     } catch (error) { next(error); }

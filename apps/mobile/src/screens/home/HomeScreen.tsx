@@ -168,10 +168,14 @@ export const HomeScreen = () => {
           <Text style={styles.greetingText}>
             Hello, <Text style={{ fontFamily: 'Inter_800ExtraBold', color: '#0F172A' }}>{firstName}</Text> 👋 Thank you for being a lifesaver 💖
           </Text>
-          <View style={styles.locationPill}>
+          <TouchableOpacity 
+            style={styles.locationPill}
+            onPress={() => navigation.navigate('Profile', { screen: 'EditProfile' })}
+            activeOpacity={0.7}
+          >
             <Feather name="map-pin" size={12} color="#DC2626" />
             <Text style={styles.locationText} numberOfLines={1}>{locationText}</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* MAIN DONOR CARD */}
@@ -187,10 +191,14 @@ export const HomeScreen = () => {
             </View>
             <View style={styles.donorCardInfo}>
               <Text style={styles.donorName}>{displayName}</Text>
-              <View style={styles.donorLocationRow}>
+              <TouchableOpacity 
+                style={styles.donorLocationRow}
+                onPress={() => navigation.navigate('Profile', { screen: 'EditProfile' })}
+                activeOpacity={0.7}
+              >
                 <Feather name="map-pin" size={12} color="#FCA5A5" />
                 <Text style={styles.donorLocationText}>{locationText}</Text>
-              </View>
+              </TouchableOpacity>
               <View>
                 <TouchableOpacity 
                   style={styles.statusPill}
@@ -257,13 +265,20 @@ export const HomeScreen = () => {
           activeOpacity={0.8}
         >
           <View style={styles.eligibilityIconBox}>
-            <MaterialCommunityIcons name="heart-pulse" size={24} color="#059669" />
+            <LinearGradient
+              colors={['#10B981', '#059669']}
+              style={{ width: '100%', height: '100%', borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <MaterialCommunityIcons name="heart-pulse" size={24} color="#FFFFFF" />
+            </LinearGradient>
           </View>
           <View style={styles.eligibilityTextCol}>
             <Text style={styles.eligibilityPromptTitle}>Check Eligibility & AI Insights ✨</Text>
-            <Text style={styles.eligibilityPromptSub}>See when you can donate next & track your impact.</Text>
+            <Text style={styles.eligibilityPromptSub}>See when you can donate next and track your health.</Text>
           </View>
-          <Feather name="chevron-right" size={20} color="#059669" />
+          <View style={styles.eligibilityChevronBox}>
+            <Feather name="chevron-right" size={20} color="#94A3B8" />
+          </View>
         </TouchableOpacity>
 
         {/* QUICK ACTIONS */}
@@ -505,11 +520,12 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 11, fontFamily: 'Inter_800ExtraBold', color: '#FECACA', letterSpacing: 0.5, marginBottom: 4 },
   statValue: { fontSize: 18, fontFamily: 'Inter_800ExtraBold', color: '#FFFFFF' },
 
-  eligibilityPromptCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ECFDF5', borderRadius: 20, padding: 14, marginBottom: 32, borderWidth: 1, borderColor: '#D1FAE5' },
-  eligibilityIconBox: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#D1FAE5', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  eligibilityPromptCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 24, padding: 18, marginBottom: 32, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.05, shadowRadius: 14, elevation: 4, borderWidth: 1, borderColor: '#F8FAFC' },
+  eligibilityIconBox: { width: 48, height: 48, borderRadius: 16, marginRight: 16, shadowColor: '#10B981', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 3 },
   eligibilityTextCol: { flex: 1, paddingRight: 8 },
-  eligibilityPromptTitle: { fontSize: 13, fontFamily: 'Inter_800ExtraBold', color: '#064E3B', marginBottom: 2 },
-  eligibilityPromptSub: { fontSize: 10, color: '#047857', lineHeight: 14, fontFamily: 'Inter_500Medium' },
+  eligibilityPromptTitle: { fontSize: 14, fontFamily: 'Inter_800ExtraBold', color: '#0F172A', marginBottom: 4, letterSpacing: -0.3 },
+  eligibilityPromptSub: { fontSize: 11, color: '#64748B', lineHeight: 16, fontFamily: 'Inter_500Medium' },
+  eligibilityChevronBox: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center' },
 
   sectionTitle: { fontSize: 14, fontFamily: 'Inter_800ExtraBold', color: '#64748B', letterSpacing: 1, marginBottom: 16, marginLeft: 4 },
   gridContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 16 },

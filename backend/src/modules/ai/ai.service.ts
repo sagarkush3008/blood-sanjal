@@ -2,16 +2,20 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AppError } from '../../core/errors/appError';
 
 export interface HealthData {
+  age: number;
   gender: 'MALE' | 'FEMALE' | 'OTHER';
   weightKg: number;
   recentTattoos: boolean;
   recentAntibiotics: boolean;
+  isPregnant: boolean;
+  hasSurgery: boolean;
   lastDonationDate: string; // ISO String
 }
 
 export interface AIEligibilityResult {
-  nextEligibleDate: string; // YYYY-MM-DD
-  recoveryTips: string[];
+  isEligible: boolean;
+  nextEligibleDate: string | null; // YYYY-MM-DD
+  aiTips: string[];
 }
 
 export class AIService {
@@ -29,25 +33,23 @@ export class AIService {
     const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' });
 
     const prompt = `
-      You are an expert medical assistant for a blood donation platform.
-      Analyze the following donor health data and calculate the exact next eligible donation date.
+      Evaluate blood donation eligibility. 
+      User: Age ${healthData.age}, Gender ${healthData.gender}, Weight ${healthData.weightKg}kg, Tattoo ${healthData.recentTattoos}, Antibiotics ${healthData.recentAntibiotics}, Pregnant ${healthData.isPregnant}, Surgery ${healthData.hasSurgery}, Last Donation ${healthData.lastDonationDate}. 
       
-      Standard rules:
-      - Men: 90 days from last donation.
-      - Women: 120 days from last donation.
-      - Tattoos: Add an additional 6 months (180 days) wait time.
-      - Antibiotics: Add an additional 14 days wait time.
+      Rules: 
+      - Age <18 or >65, Weight <45, Pregnant, or Surgery = totally ineligible (nextEligibleDate can be a distant future date like 9999-12-31 or calculated based on rules, but isEligible must be false). 
+      - Tattoo = 6 months wait. 
+      - Antibiotics = 14 days wait. 
+      - Default wait = 90 days (males) / 120 days (females). 
       
-      Also provide 3 short, personalized health recovery tips (diet, hydration, rest).
-
-      Donor Data:
-      ${JSON.stringify(healthData, null, 2)}
+      Calculate absolute nextEligibleDate (YYYY-MM-DD). Provide 3 personalized aiTips.
 
       CRITICAL: You MUST return your response STRICTLY as a valid JSON object without any markdown wrapping, code blocks, or extra text.
       The JSON must exactly match this format:
       {
+        "isEligible": boolean,
         "nextEligibleDate": "YYYY-MM-DD",
-        "recoveryTips": ["Tip 1", "Tip 2", "Tip 3"]
+        "aiTips": ["Tip 1", "Tip 2", "Tip 3"]
       }
     `;
 
@@ -81,8 +83,9 @@ export class AIService {
       mockNextDate.setDate(mockNextDate.getDate() + 90);
       
       return {
+        isEligible: false,
         nextEligibleDate: mockNextDate.toISOString().split('T')[0],
-        recoveryTips: [
+        aiTips: [
           "Drink plenty of water over the next 24 hours.",
           "Eat iron-rich foods like spinach and red meat.",
           "Avoid strenuous physical activity for the rest of the day."

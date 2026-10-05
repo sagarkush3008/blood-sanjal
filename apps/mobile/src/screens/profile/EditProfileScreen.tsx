@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { AuthAPI } from '../../api/auth.api';
 import { InputField } from '../../components/forms/InputField';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
@@ -13,6 +13,7 @@ const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 export const EditProfileScreen = () => {
   const queryClient = useQueryClient();
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
 
   const { data: meData } = useQuery({
     queryKey: ['me'],
@@ -24,6 +25,12 @@ export const EditProfileScreen = () => {
   const [bloodGroup, setBloodGroup] = useState(meData?.bloodGroup || '');
   const [avatarUri, setAvatarUri] = useState<string | null>(meData?.avatarAssetId || null);
   const [isUploading, setIsUploading] = useState(false);
+
+  React.useEffect(() => {
+    if (route.params?.selectedLocation) {
+      setCityId(route.params.selectedLocation);
+    }
+  }, [route.params?.selectedLocation]);
 
   const updateMutation = useMutation({
     mutationFn: (data: any) => AuthAPI.updateProfile(data),
@@ -120,12 +127,23 @@ export const EditProfileScreen = () => {
           ))}
         </View>
 
-        <InputField 
-          label="City / Location"
-          value={cityId}
-          onChangeText={setCityId}
-          placeholder="Kathmandu"
-        />
+        <Text style={styles.label}>City / Location</Text>
+        <View style={styles.locationInputRow}>
+          <View style={{ flex: 1 }}>
+            <InputField 
+              label=""
+              value={cityId}
+              onChangeText={setCityId}
+              placeholder="Kathmandu"
+            />
+          </View>
+          <TouchableOpacity 
+            style={styles.mapBtn} 
+            onPress={() => navigation.navigate('LocationPicker')}
+          >
+            <Text style={{ fontSize: 20 }}>📍</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.spacer} />
 
@@ -244,5 +262,20 @@ const styles = StyleSheet.create({
   },
   spacer: {
     height: spacing.xl,
+  },
+  locationInputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  mapBtn: {
+    height: 52,
+    width: 52,
+    borderRadius: 16,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   }
 });

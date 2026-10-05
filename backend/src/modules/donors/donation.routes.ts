@@ -8,6 +8,7 @@ const router = Router();
 router.post('/', requireAuth, DonationController.submit);
 router.post('/me', requireAuth, DonationController.submit);
 router.post('/log', requireAuth, DonationController.logDonationWithAI);
+router.post('/assess', requireAuth, DonationController.assessEligibility);
 
 router.get('/', requireAuth, DonationController.getHistory);
 router.get('/me', requireAuth, DonationController.getHistory);
