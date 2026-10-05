@@ -307,7 +307,7 @@ export const HomeScreen = () => {
           </TouchableOpacity>
 
           {/* Action 3 */}
-          <TouchableOpacity style={styles.gridItem}>
+          <TouchableOpacity style={styles.gridItem} onPress={() => navigation.navigate('Profile', { screen: 'DonationHistory' })}>
             <View style={[styles.gridIconBox, { backgroundColor: '#D1FAE5' }]}>
               <Ionicons name="water" size={20} color="#059669" />
             </View>
@@ -318,7 +318,7 @@ export const HomeScreen = () => {
           </TouchableOpacity>
 
           {/* Action 4 */}
-          <TouchableOpacity style={styles.gridItem}>
+          <TouchableOpacity style={styles.gridItem} onPress={() => navigation.navigate('BloodCamps')}>
             <View style={[styles.gridIconBox, { backgroundColor: '#FEF3C7' }]}>
               <Feather name="calendar" size={20} color="#D97706" />
             </View>
