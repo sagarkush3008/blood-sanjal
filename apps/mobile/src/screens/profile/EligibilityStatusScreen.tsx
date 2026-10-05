@@ -12,41 +12,36 @@ import { colors } from '../../theme';
 const { width } = Dimensions.get('window');
 
 const useCountdown = (targetDate: string | Date | null) => {
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-    isComplete: true,
-  });
+  const [, setTick] = useState(0);
 
   useEffect(() => {
     if (!targetDate) return;
     const target = new Date(targetDate).getTime();
+    if (target <= new Date().getTime()) return;
 
     const interval = setInterval(() => {
-      const now = new Date().getTime();
-      const distance = target - now;
-
-      if (distance <= 0) {
-        clearInterval(interval);
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isComplete: true });
-        return;
-      }
-
-      setTimeLeft({
-        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((distance % (1000 * 60)) / 1000),
-        isComplete: false,
-      });
+      setTick(t => t + 1); // Force re-render every second
     }, 1000);
 
     return () => clearInterval(interval);
   }, [targetDate]);
 
-  return timeLeft;
+  if (!targetDate) return { days: 0, hours: 0, minutes: 0, seconds: 0, isComplete: true };
+
+  const target = new Date(targetDate).getTime();
+  const distance = target - new Date().getTime();
+
+  if (distance <= 0) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, isComplete: true };
+  }
+
+  return {
+    days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+    minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+    seconds: Math.floor((distance % (1000 * 60)) / 1000),
+    isComplete: false,
+  };
 };
 
 export const EligibilityStatusScreen = () => {
