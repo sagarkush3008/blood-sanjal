@@ -25,13 +25,20 @@ const transporter = nodemailer.createTransport({
 
 const sendOtp = async (to: string, code: string) => {
   logger.info(`[MAIL] Sending OTP ${code} to ${to}`);
-  await transporter.sendMail({
-    from: env.EMAIL_FROM,
-    to,
-    subject: 'Your Blood Sanjal Verification Code',
-    text: `Your verification code is: ${code}. It expires in ${env.OTP_EXPIRY_MINUTES} minutes.`,
-    html: `<p>Your verification code is: <strong>${code}</strong>. It expires in ${env.OTP_EXPIRY_MINUTES} minutes.</p>`
-  }).catch(err => logger.error(`[MAIL_ERROR] ${err.message}`));
+  try {
+    const info = await transporter.sendMail({
+      from: env.EMAIL_FROM,
+      to,
+      subject: 'Your Blood Sanjal Verification Code',
+      text: `Your verification code is: ${code}. It expires in ${env.OTP_EXPIRY_MINUTES} minutes.`,
+      html: `<p>Your verification code is: <strong>${code}</strong>. It expires in ${env.OTP_EXPIRY_MINUTES} minutes.</p>`
+    });
+    const testUrl = nodemailer.getTestMessageUrl(info);
+    if (testUrl) logger.info(`[MAIL_PREVIEW] Preview URL: ${testUrl}`);
+  } catch (err: any) {
+    logger.error(`[MAIL_ERROR] ${err.message}`);
+    // DO NOT crash the app if email fails in dev, just let the user use the logged OTP.
+  }
 };
 
 const sendResetLink = async (to: string, token: string) => {
