@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
-  Platform,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
@@ -28,7 +27,9 @@ export const LocationPickerScreen = () => {
 
   const [layerType, setLayerType] = useState<GoogleLayerType>('standard');
   const [loading, setLoading] = useState(false);
-  const [addressPreview, setAddressPreview] = useState<string>('Locating on Google Maps...');
+  const [exactLocationName, setExactLocationName] = useState<string>('Kathmandu');
+  const [detailedAddress, setDetailedAddress] = useState<string>('Detecting exact location...');
+  const [isResolving, setIsResolving] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [isMapReady, setIsMapReady] = useState(false);
 
@@ -44,37 +45,91 @@ export const LocationPickerScreen = () => {
             longitude: loc.coords.longitude,
           };
           setCoords(target);
-          fetchAddress(target.latitude, target.longitude);
+          fetchExactAddress(target.latitude, target.longitude);
           if (isMapReady) {
             webViewRef.current?.injectJavaScript(`if(window.setCenter){ window.setCenter(${target.latitude}, ${target.longitude}); } true;`);
           }
         } else {
-          fetchAddress(coords.latitude, coords.longitude);
+          fetchExactAddress(coords.latitude, coords.longitude);
         }
       } catch {
-        fetchAddress(coords.latitude, coords.longitude);
+        fetchExactAddress(coords.latitude, coords.longitude);
       }
     })();
   }, [isMapReady]);
 
-  const fetchAddress = async (lat: number, lng: number) => {
+  // Resolves the high-precision human-friendly name of the pinned location
+  const fetchExactAddress = async (lat: number, lng: number) => {
+    setIsResolving(true);
     try {
-      const geocoded = await Location.reverseGeocodeAsync({
+      // 1. Native Device Geocoder (expo-location)
+      const nativeResults = await Location.reverseGeocodeAsync({
         latitude: lat,
         longitude: lng,
       });
 
-      if (geocoded.length > 0) {
-        const p = geocoded[0];
-        const parts = [p.name, p.street, p.subregion || p.city, p.region].filter(Boolean);
-        const resolved = parts.length > 0 ? parts.join(', ') : p.city || 'Selected Location';
-        setAddressPreview(resolved);
-      } else {
-        setAddressPreview('Pin Location');
+      if (nativeResults && nativeResults.length > 0) {
+        const p = nativeResults[0];
+        const specificName = p.name || p.street;
+        const municipalityOrCity = p.city || p.subregion || p.district;
+        
+        let exact = '';
+        if (specificName && municipalityOrCity && !specificName.toLowerCase().includes(municipalityOrCity.toLowerCase())) {
+          exact = `${specificName}, ${municipalityOrCity}`;
+        } else if (specificName) {
+          exact = specificName;
+        } else if (municipalityOrCity) {
+          exact = municipalityOrCity;
+        }
+
+        const fullParts = [p.name, p.street, p.subregion || p.city, p.region].filter(Boolean);
+        const detailed = fullParts.length > 0 ? Array.from(new Set(fullParts)).join(', ') : exact;
+
+        if (exact && !exact.match(/^[\d\+\s\-\.,]+$/)) {
+          setExactLocationName(exact);
+          setDetailedAddress(detailed);
+          setIsResolving(false);
+          return;
+        }
+      }
+
+      // 2. High-accuracy fallback: OpenStreetMap Nominatim reverse geocode (gives precise neighborhoods in Nepal)
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+        headers: { 'User-Agent': 'BloodSanjal-App/1.0' },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.address) {
+          const addr = data.address;
+          const place = addr.amenity || addr.hospital || addr.tourism || addr.neighbourhood || addr.suburb || addr.quarter || addr.village || addr.road;
+          const city = addr.city || addr.town || addr.municipality || addr.district || addr.county;
+          
+          let exact = '';
+          if (place && city && place !== city) {
+            exact = `${place}, ${city}`;
+          } else if (place) {
+            exact = place;
+          } else if (city) {
+            exact = city;
+          }
+
+          if (exact) {
+            setExactLocationName(exact);
+            setDetailedAddress(data.display_name ? data.display_name.split(',').slice(0, 3).join(', ') : exact);
+            setIsResolving(false);
+            return;
+          }
+        }
       }
     } catch {
-      setAddressPreview(`${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E`);
+      // Fallback on coordinate display
     }
+
+    const fallbackName = `Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+    setExactLocationName(fallbackName);
+    setDetailedAddress(`${lat.toFixed(5)}° N, ${lng.toFixed(5)}° E`);
+    setIsResolving(false);
   };
 
   const handleMessage = (event: any) => {
@@ -83,7 +138,7 @@ export const LocationPickerScreen = () => {
       if (data.type === 'location_changed') {
         const newCoords = { latitude: data.latitude, longitude: data.longitude };
         setCoords(newCoords);
-        fetchAddress(newCoords.latitude, newCoords.longitude);
+        fetchExactAddress(newCoords.latitude, newCoords.longitude);
       } else if (data.type === 'map_ready') {
         setIsMapReady(true);
       }
@@ -112,7 +167,7 @@ export const LocationPickerScreen = () => {
         longitude: loc.coords.longitude,
       };
       setCoords(target);
-      fetchAddress(target.latitude, target.longitude);
+      fetchExactAddress(target.latitude, target.longitude);
       webViewRef.current?.injectJavaScript(`if(window.setCenter){ window.setCenter(${target.latitude}, ${target.longitude}); } true;`);
     } catch {
       Alert.alert('Location Error', 'Could not retrieve your current GPS coordinates.');
@@ -128,30 +183,19 @@ export const LocationPickerScreen = () => {
     });
   };
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     setLoading(true);
-    try {
-      const geocoded = await Location.reverseGeocodeAsync({
+    // Pass the exact resolved location name back to EditProfile
+    navigation.navigate({
+      name: 'EditProfile',
+      params: { 
+        selectedLocation: exactLocationName,
         latitude: coords.latitude,
         longitude: coords.longitude,
-      });
-
-      let selectedCity = 'Kathmandu';
-      if (geocoded.length > 0) {
-        const place = geocoded[0];
-        selectedCity = place.city || place.subregion || place.region || place.name || 'Kathmandu';
-      }
-
-      navigation.navigate({
-        name: 'EditProfile',
-        params: { selectedLocation: selectedCity },
-        merge: true,
-      });
-    } catch {
-      Alert.alert('Error', 'Failed to fetch location details.');
-    } finally {
-      setLoading(false);
-    }
+      },
+      merge: true,
+    });
+    setLoading(false);
   };
 
   // Generate robust HTML map with Google Maps tiles via Leaflet
@@ -256,7 +300,7 @@ export const LocationPickerScreen = () => {
         </TouchableOpacity>
         <View style={styles.headerTitleCol}>
           <Text style={styles.headerTitle}>Google Maps Location</Text>
-          <Text style={styles.headerSub}>Drag the map to pinpoint your location</Text>
+          <Text style={styles.headerSub}>Drag the map to pinpoint your exact spot</Text>
         </View>
         <View style={styles.googleBadge}>
           <Ionicons name="map" size={14} color="#2563EB" />
@@ -345,27 +389,38 @@ export const LocationPickerScreen = () => {
         </View>
       </View>
 
-      {/* Bottom Confirmation Card */}
+      {/* Bottom Confirmation Card with EXACT Location Name */}
       <View style={styles.bottomCard}>
         <View style={styles.addressPreviewBox}>
           <View style={styles.addressIconCircle}>
-            <MaterialCommunityIcons name="map-marker-radius" size={22} color="#DC2626" />
+            <MaterialCommunityIcons name="map-marker-radius" size={24} color="#DC2626" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.addressLabel}>SELECTED LOCATION</Text>
-            <Text style={styles.addressText} numberOfLines={2}>
-              {addressPreview}
+            <View style={styles.labelRow}>
+              <Text style={styles.addressLabel}>EXACT LOCATION NAME</Text>
+              {isResolving && (
+                <View style={styles.resolvingBadge}>
+                  <ActivityIndicator size="small" color="#DC2626" style={{ transform: [{ scale: 0.6 }] }} />
+                  <Text style={styles.resolvingText}>Resolving...</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.exactNameText} numberOfLines={2}>
+              {exactLocationName}
+            </Text>
+            <Text style={styles.detailedSubtext} numberOfLines={1}>
+              {detailedAddress}
             </Text>
             <Text style={styles.coordsText}>
-              {coords.latitude.toFixed(5)}° N, {coords.longitude.toFixed(5)}° E
+              📍 {coords.latitude.toFixed(5)}° N, {coords.longitude.toFixed(5)}° E
             </Text>
           </View>
         </View>
 
         <TouchableOpacity
-          style={styles.confirmBtn}
+          style={[styles.confirmBtn, isResolving && { opacity: 0.7 }]}
           onPress={handleConfirm}
-          disabled={loading}
+          disabled={loading || isResolving}
           activeOpacity={0.8}
         >
           {loading ? (
@@ -373,7 +428,9 @@ export const LocationPickerScreen = () => {
           ) : (
             <>
               <MaterialCommunityIcons name="check-circle" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.confirmBtnText}>Confirm This Location</Text>
+              <Text style={styles.confirmBtnText} numberOfLines={1}>
+                Set Exact Location: {exactLocationName.length > 20 ? exactLocationName.substring(0, 20) + '...' : exactLocationName}
+              </Text>
             </>
           )}
         </TouchableOpacity>
@@ -543,40 +600,62 @@ const styles = StyleSheet.create({
   },
   addressPreviewBox: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 12,
     backgroundColor: '#F8FAFC',
     borderRadius: 16,
-    padding: 12,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     marginBottom: 16,
   },
   addressIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: '#FEE2E2',
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 2,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   addressLabel: {
     fontSize: 10,
     fontFamily: 'Inter_700Bold',
-    color: '#94A3B8',
-    letterSpacing: 0.5,
+    color: '#DC2626',
+    letterSpacing: 0.6,
   },
-  addressText: {
-    fontSize: 14,
-    fontFamily: 'Inter_600SemiBold',
+  resolvingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  resolvingText: {
+    fontSize: 10,
+    fontFamily: 'Inter_500Medium',
+    color: '#DC2626',
+  },
+  exactNameText: {
+    fontSize: 16,
+    fontFamily: 'Inter_700Bold',
     color: '#0F172A',
+    marginTop: 2,
+  },
+  detailedSubtext: {
+    fontSize: 12,
+    fontFamily: 'Inter_400Regular',
+    color: '#64748B',
     marginTop: 2,
   },
   coordsText: {
     fontSize: 11,
     fontFamily: 'Inter_500Medium',
-    color: '#64748B',
-    marginTop: 2,
+    color: '#94A3B8',
+    marginTop: 4,
   },
   confirmBtn: {
     backgroundColor: '#DC2626',
@@ -590,10 +669,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
+    paddingHorizontal: 16,
   },
   confirmBtnText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: 'Inter_700Bold',
   },
 });

@@ -147,6 +147,12 @@ export const EditProfileScreen = () => {
             <Text style={styles.mapBtnText}>Map</Text>
           </TouchableOpacity>
         </View>
+        {cityId ? (
+          <View style={styles.locationTagRow}>
+            <Ionicons name="checkmark-circle" size={14} color="#059669" />
+            <Text style={styles.locationTagText}>Exact location: {cityId}</Text>
+          </View>
+        ) : null}
 
         <View style={styles.spacer} />
 
@@ -287,5 +293,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'Inter_700Bold',
     color: '#DC2626',
+  },
+  locationTagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 6,
+    paddingHorizontal: 4,
+  },
+  locationTagText: {
+    fontSize: 12,
+    fontFamily: 'Inter_600SemiBold',
+    color: '#059669',
   },
 });

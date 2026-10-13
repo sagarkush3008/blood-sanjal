@@ -98,7 +98,7 @@ export const ProfileScreen = () => {
             <View style={styles.statDivider} />
             <View style={styles.statCol}>
               <Text style={styles.statLabel}>Location</Text>
-              <Text style={styles.statValue}>Nepal</Text>
+              <Text style={styles.statValue} numberOfLines={1}>{meData?.cityId || 'Nepal'}</Text>
             </View>
           </View>
         </View>
