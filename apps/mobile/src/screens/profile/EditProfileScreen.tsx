@@ -7,6 +7,7 @@ import { InputField } from '../../components/forms/InputField';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { colors, spacing, typography } from '../../theme';
 import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -140,8 +141,10 @@ export const EditProfileScreen = () => {
           <TouchableOpacity 
             style={styles.mapBtn} 
             onPress={() => navigation.navigate('LocationPicker')}
+            activeOpacity={0.8}
           >
-            <Text style={{ fontSize: 20 }}>📍</Text>
+            <Ionicons name="map" size={18} color="#DC2626" />
+            <Text style={styles.mapBtnText}>Map</Text>
           </TouchableOpacity>
         </View>
 
@@ -270,12 +273,19 @@ const styles = StyleSheet.create({
   },
   mapBtn: {
     height: 52,
-    width: 52,
-    borderRadius: 16,
-    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    backgroundColor: '#FEE2E2',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-  }
+    borderColor: '#FECACA',
+  },
+  mapBtnText: {
+    fontSize: 13,
+    fontFamily: 'Inter_700Bold',
+    color: '#DC2626',
+  },
 });
