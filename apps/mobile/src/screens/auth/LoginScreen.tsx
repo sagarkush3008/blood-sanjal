@@ -53,7 +53,8 @@ export const LoginScreen = () => {
       return AuthAPI.login(payload);
     },
     onSuccess: async (response) => {
-      const data = response.data?.data || response.data || {};
+      // The response interceptor already unwraps { success, data } → data
+      const data = response.data || {};
       const { accessToken, refreshToken, user } = data;
       if (accessToken) {
         await setAuth(accessToken, user, refreshToken);
@@ -77,6 +78,24 @@ export const LoginScreen = () => {
 
   const fillAdmin = () => {
     setValue('email', 'admin@bloodsanjal.org');
+    setValue('password', 'Password123!');
+    setApiError(null);
+  };
+
+  const fillDonor1 = () => {
+    setValue('email', 'donor@bloodsanjal.org');
+    setValue('password', 'Password123!');
+    setApiError(null);
+  };
+
+  const fillDonor2 = () => {
+    setValue('email', 'donor2@bloodsanjal.org');
+    setValue('password', 'Password123!');
+    setApiError(null);
+  };
+
+  const fillRecipient = () => {
+    setValue('email', 'recipient@bloodsanjal.org');
     setValue('password', 'Password123!');
     setApiError(null);
   };
@@ -174,10 +193,24 @@ export const LoginScreen = () => {
             {/* Demo Quick Fill for Ease of Testing */}
             <View style={styles.demoSection}>
               <Text style={styles.demoLabel}>Demo Quick Credentials</Text>
-              <TouchableOpacity style={styles.demoButton} onPress={fillAdmin}>
-                <Ionicons name="shield-checkmark" size={16} color={colors.primary} />
-                <Text style={styles.demoButtonText}>Auto-fill Admin (admin@bloodsanjal.org)</Text>
-              </TouchableOpacity>
+              <View style={styles.demoButtonGroup}>
+                <TouchableOpacity style={styles.demoButton} onPress={fillAdmin}>
+                  <Ionicons name="shield-checkmark" size={14} color={colors.primary} />
+                  <Text style={styles.demoButtonText}>Admin</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.demoButton} onPress={fillDonor1}>
+                  <Ionicons name="water" size={14} color={colors.primary} />
+                  <Text style={styles.demoButtonText}>Donor 1 (O+)</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.demoButton} onPress={fillDonor2}>
+                  <Ionicons name="water" size={14} color="#059669" />
+                  <Text style={styles.demoButtonText}>Donor 2 (B+)</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.demoButton} onPress={fillRecipient}>
+                  <Ionicons name="person" size={14} color={colors.primary} />
+                  <Text style={styles.demoButtonText}>Recipient</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
@@ -293,6 +326,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 8,
+  },
+  demoButtonGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    justifyContent: 'center',
   },
   demoButton: {
     flexDirection: 'row',

@@ -110,3 +110,11 @@ async function run() {
 }
 
 run();
+
+
+// SMTP_HOST=smtp.gmail.com
+// SMTP_PORT=587
+// SMTP_USER=kumarimuskan2004980@gmail.com
+// SMTP_PASS="kzni vjst jugy zano"
+// SMTP_SECURE=false
+// EMAIL_FROM=kumarimuskan2004980@gmail.com

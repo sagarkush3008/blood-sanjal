@@ -102,6 +102,7 @@ apiClient.interceptors.response.use(
           refreshToken: storedRefreshToken,
         });
 
+        // This uses raw axios (not apiClient), so no interceptor unwrap — manual unwrap needed
         const data = refreshResponse.data?.data || refreshResponse.data;
         const newAccessToken = data?.accessToken;
         const newRefreshToken = data?.refreshToken;

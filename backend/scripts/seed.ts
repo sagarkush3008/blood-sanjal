@@ -17,6 +17,7 @@ import { DonationRecord } from '../src/modules/donors/donationRecord.model';
 import { Certificate } from '../src/modules/certificates/certificate.model';
 import { SystemConfig } from '../src/modules/admin/systemConfig.model';
 import { AuditLog } from '../src/modules/audit/auditLog.model';
+import { ContactRequest } from '../src/modules/requests/contactRequest.model';
 
 const isReset = process.argv.includes('--reset');
 
@@ -47,9 +48,17 @@ async function runSeed() {
       console.log("Cleaning demo seed collections for idempotent seed...");
       await Promise.all([
         Location.deleteMany({}),
-        User.deleteMany({ $or: [{ email: /@fictional\.local$/ }, { role: 'ADMIN' }] }),
+        User.deleteMany({
+          $or: [
+            { email: /@fictional\.local$/ },
+            { email: /@bloodsanjal\.org$/ },
+            { phone: { $in: ['9800000000', '9811111111', '9811111112', '9822222222'] } },
+            { role: 'ADMIN' }
+          ]
+        }),
         DonorProfile.deleteMany({}),
         BloodRequest.deleteMany({}),
+        ContactRequest.deleteMany({}),
         Campaign.deleteMany({}),
         PaymentTransaction.deleteMany({}),
         Notification.deleteMany({}),
@@ -118,11 +127,11 @@ async function runSeed() {
     const cities = [cKtm, cLtp, cPkr, cBrt];
 
     // 2. Users & Donors
-    console.log("Seeding administrators, fictional donors, and recipients...");
+    console.log("Seeding administrators, test users, and fictional donors/recipients...");
     const hashedPassword = await bcrypt.hash('Password123!', 10);
     const usersData = [];
     
-    // Seed standard Admin (Only one admin as requested)
+    // Seed standard Admin (Role: ADMIN)
     usersData.push({
       email: 'admin@bloodsanjal.org',
       phone: '9800000000',
@@ -131,6 +140,54 @@ async function runSeed() {
       role: 'ADMIN',
       status: 'ACTIVE',
       emailVerifiedAt: new Date()
+    });
+
+    // Test User 1: Active Verified Donor 1 (Role: USER, Blood Group: O+)
+    usersData.push({
+      email: 'donor@bloodsanjal.org',
+      phone: '9811111111',
+      passwordHash: hashedPassword,
+      name: 'Bikram Thapa (Donor 1)',
+      role: 'USER',
+      status: 'ACTIVE',
+      bloodGroup: 'O+',
+      emailVerifiedAt: new Date(),
+      provinceId: pBagmati._id,
+      districtId: dKtm._id,
+      cityId: cKtm._id,
+      locationCoordinates: cKtm.coordinates
+    });
+
+    // Test User 2: Active Verified Donor 2 (Role: USER, Blood Group: B+)
+    usersData.push({
+      email: 'donor2@bloodsanjal.org',
+      phone: '9811111112',
+      passwordHash: hashedPassword,
+      name: 'Sita Sharma (Donor 2)',
+      role: 'USER',
+      status: 'ACTIVE',
+      bloodGroup: 'B+',
+      emailVerifiedAt: new Date(),
+      provinceId: pBagmati._id,
+      districtId: dLtp._id,
+      cityId: cLtp._id,
+      locationCoordinates: cLtp.coordinates
+    });
+
+    // Test User 3: Recipient / Requester (Role: USER, Blood Group: A+)
+    usersData.push({
+      email: 'recipient@bloodsanjal.org',
+      phone: '9822222222',
+      passwordHash: hashedPassword,
+      name: 'Aarav Sharma (Recipient)',
+      role: 'USER',
+      status: 'ACTIVE',
+      bloodGroup: 'A+',
+      emailVerifiedAt: new Date(),
+      provinceId: pBagmati._id,
+      districtId: dKtm._id,
+      cityId: cKtm._id,
+      locationCoordinates: cKtm.coordinates
     });
 
     // Add 30 fictional users
@@ -151,27 +208,76 @@ async function runSeed() {
     }
 
     const createdUsers = await User.insertMany(usersData);
-    
-    // 20 of them will be active donors distributed across all 8 blood groups
-    const donorUsers = createdUsers.filter(u => u.role === 'USER').slice(0, 24);
-    const donorProfilesData = donorUsers.map((user, idx) => ({
-      userId: user._id,
-      bloodGroup: bloodGroups[idx % bloodGroups.length],
+    const adminUser = createdUsers.find(u => u.email === 'admin@bloodsanjal.org')!;
+    const testDonor1 = createdUsers.find(u => u.email === 'donor@bloodsanjal.org')!;
+    const testDonor2 = createdUsers.find(u => u.email === 'donor2@bloodsanjal.org')!;
+    const testDonor = testDonor1;
+    const testRecipient = createdUsers.find(u => u.email === 'recipient@bloodsanjal.org')!;
+    const fictionalUsers = createdUsers.filter(u => u.email?.endsWith('@fictional.local'));
+
+    // Create Donor Profiles: Test Donors + 23 Fictional Donors across all 8 blood groups
+    const donorProfilesData = [];
+
+    // Test Donor 1 Profile (Active, verified, eligible O+ donor)
+    donorProfilesData.push({
+      userId: testDonor1._id,
+      bloodGroup: 'O+',
       donorStatus: 'ACTIVE',
       isVerified: true,
-      lastDonationDate: Math.random() > 0.4 ? randomDate(new Date(Date.now() - 31536000000), new Date(Date.now() - 8640000000)) : null,
-      totalDonations: Math.floor(Math.random() * 8) + 1,
-      verificationDocumentUrl: 'cloudinary://mock/document.pdf',
+      availabilityMode: 'AVAILABLE',
+      contactPreference: 'PHONE',
+      notificationPreference: 'ALL',
+      lastDonationDate: new Date(Date.now() - 95 * 86400000), // ~3 months ago, ready to donate
+      totalDonations: 4,
+      verificationDocumentUrl: 'cloudinary://mock/donor1_cert.pdf',
       settings: {
         contactRequestEnabled: true,
         autoAcceptEmergencies: false
       }
-    }));
+    });
+
+    // Test Donor 2 Profile (Active, verified, eligible B+ donor)
+    donorProfilesData.push({
+      userId: testDonor2._id,
+      bloodGroup: 'B+',
+      donorStatus: 'ACTIVE',
+      isVerified: true,
+      availabilityMode: 'AVAILABLE',
+      contactPreference: 'PHONE',
+      notificationPreference: 'ALL',
+      lastDonationDate: new Date(Date.now() - 110 * 86400000), // ready to donate
+      totalDonations: 6,
+      verificationDocumentUrl: 'cloudinary://mock/donor2_cert.pdf',
+      settings: {
+        contactRequestEnabled: true,
+        autoAcceptEmergencies: true
+      }
+    });
+
+    // 23 Fictional donors distributed across blood groups
+    const fictionalDonorUsers = fictionalUsers.slice(0, 23);
+    fictionalDonorUsers.forEach((user, idx) => {
+      donorProfilesData.push({
+        userId: user._id,
+        bloodGroup: bloodGroups[idx % bloodGroups.length],
+        donorStatus: 'ACTIVE',
+        isVerified: true,
+        availabilityMode: 'AVAILABLE',
+        contactPreference: 'PHONE',
+        notificationPreference: 'ALL',
+        lastDonationDate: Math.random() > 0.4 ? randomDate(new Date(Date.now() - 31536000000), new Date(Date.now() - 8640000000)) : null,
+        totalDonations: Math.floor(Math.random() * 8) + 1,
+        verificationDocumentUrl: 'cloudinary://mock/document.pdf',
+        settings: {
+          contactRequestEnabled: true,
+          autoAcceptEmergencies: false
+        }
+      });
+    });
     await DonorProfile.insertMany(donorProfilesData);
 
     // 3. Campaigns
     console.log("Seeding community blood drives...");
-    const adminUser = createdUsers[0];
     const campaignsData = Array.from({ length: 5 }).map((_, i) => {
       const city = sample(cities);
       return {
@@ -191,16 +297,60 @@ async function runSeed() {
 
     // 4. Blood Requests (Normal & Emergency)
     console.log("Seeding clinical and emergency blood requests...");
-    const regularUsers = createdUsers.filter(u => u.role === 'USER').slice(24);
-    const requestsData = Array.from({ length: 10 }).map((_, i) => {
-      const city = sample(cities);
-      const isEmergency = i < 3;
-      return {
-        requesterId: sample(regularUsers || createdUsers.slice(2, 6))._id,
-        bloodGroup: sample(bloodGroups),
-        unitsRequired: Math.floor(Math.random() * 4) + 1,
+    const requestsData: any[] = [
+      // Test Recipient's urgent blood request matching Test Donor (O+)
+      {
+        requesterId: testRecipient._id,
+        bloodGroup: 'O+',
+        unitsRequired: 2,
         unitsFulfilled: 0,
-        hospitalName: isEmergency ? 'Tribhuvan University Teaching Hospital (TUTH)' : `City Hospital ${i + 1}`,
+        hospitalName: 'Tribhuvan University Teaching Hospital (TUTH)',
+        hospitalLocation: {
+          address: 'Maharajgunj, Kathmandu',
+          cityId: cKtm._id.toString(),
+          coordinates: (cKtm.coordinates?.coordinates || [85.32, 27.71]) as [number, number]
+        },
+        contactPerson: {
+          name: 'Aarav Sharma',
+          phone: '9822222222'
+        },
+        requiredDate: new Date(Date.now() + 2 * 86400000),
+        urgency: 'EMERGENCY',
+        status: 'ACTIVE'
+      },
+      // Test Recipient's regular blood request
+      {
+        requesterId: testRecipient._id,
+        bloodGroup: 'A+',
+        unitsRequired: 1,
+        unitsFulfilled: 0,
+        hospitalName: 'Bir Hospital',
+        hospitalLocation: {
+          address: 'Kanti Path, Kathmandu',
+          cityId: cKtm._id.toString(),
+          coordinates: (cKtm.coordinates?.coordinates || [85.32, 27.71]) as [number, number]
+        },
+        contactPerson: {
+          name: 'Aarav Sharma',
+          phone: '9822222222'
+        },
+        requiredDate: new Date(Date.now() + 5 * 86400000),
+        urgency: 'NORMAL',
+        status: 'PENDING_VERIFICATION'
+      }
+    ];
+
+    // Fictional requests from other users
+    for (let i = 0; i < 8; i++) {
+      const city = sample(cities);
+      const isEmergency = i < 2;
+      const requester = sample(fictionalUsers.slice(20)) || testRecipient;
+      requestsData.push({
+        requesterId: requester._id,
+        bloodGroup: sample(bloodGroups),
+        unitsRequired: Math.floor(Math.random() * 3) + 1,
+        unitsFulfilled: 0,
+        hospitalName: isEmergency ? 'Patan Hospital' : `City Hospital ${i + 1}`,
         hospitalLocation: {
           address: 'Main Hospital Road',
           cityId: city._id.toString(),
@@ -213,11 +363,21 @@ async function runSeed() {
         requiredDate: randomDate(new Date(), new Date(Date.now() + 604800000)),
         urgency: isEmergency ? 'EMERGENCY' : 'NORMAL',
         status: isEmergency ? 'PENDING_VERIFICATION' : 'ACTIVE'
-      };
-    });
+      });
+    }
     const createdRequests = await BloodRequest.insertMany(requestsData);
 
-    // 5. Payments, Donations, Certificates, Notifications
+    // 5. Seed Contact Request between Test Recipient and Test Donor
+    console.log("Seeding sample contact request...");
+    await ContactRequest.create({
+      requesterId: testRecipient._id,
+      donorId: testDonor._id,
+      status: 'PENDING',
+      message: 'Urgent need for O+ blood for surgery at TUTH. Please accept this contact request.',
+      expiresAt: new Date(Date.now() + 48 * 3600 * 1000)
+    });
+
+    // 6. Payments, Donations, Certificates, Notifications
     console.log("Seeding transactions, verified donations, and digital certificates...");
     
     // Payments (Search fees)
@@ -260,7 +420,8 @@ async function runSeed() {
     await Certificate.insertMany(certificatesData);
 
     // Notifications
-    await Notification.insertMany(donorUsers.map(u => ({
+    const allDonorsToNotify = [testDonor1, testDonor2, ...fictionalDonorUsers];
+    await Notification.insertMany(allDonorsToNotify.map(u => ({
       userId: u._id,
       title: 'Welcome to Blood Sanjal 🩸',
       message: 'Thank you for registering as a volunteer blood donor. Your profile is active and ready to save lives.',
@@ -268,6 +429,34 @@ async function runSeed() {
       isRead: false,
       dedupeKey: `WELCOME_NOTIF_${u._id}`
     })));
+
+    // Specific notifications for test users
+    await Notification.create({
+      userId: testDonor1._id,
+      title: 'New Contact Request 🩸',
+      message: 'Aarav Sharma (Recipient) requested your contact details for an emergency O+ blood request.',
+      type: 'BLOOD_REQUEST',
+      isRead: false,
+      dedupeKey: `SEED_CR_NOTIF_${testDonor1._id}`
+    });
+
+    await Notification.create({
+      userId: testDonor2._id,
+      title: 'Donor Status Active 🩸',
+      message: 'Thank you for being a verified B+ volunteer blood donor in Lalitpur. Ready to save lives.',
+      type: 'SYSTEM',
+      isRead: false,
+      dedupeKey: `SEED_DONOR2_NOTIF_${testDonor2._id}`
+    });
+
+    await Notification.create({
+      userId: testRecipient._id,
+      title: 'Blood Request Published',
+      message: 'Your emergency blood request for O+ blood has been verified and broadcast to matching donors.',
+      type: 'BLOOD_REQUEST',
+      isRead: false,
+      dedupeKey: `SEED_BR_NOTIF_${testRecipient._id}`
+    });
 
     // Seed initial audit log
     await AuditLog.create({
@@ -280,11 +469,16 @@ async function runSeed() {
     console.log("==================================================");
     console.log("✅ Seed completed successfully!");
     console.log("   - System Config: Initialized");
-    console.log("   - Admin Account: admin@bloodsanjal.org (Password123!)");
+    console.log("   - Test Accounts (Password for all: Password123!):");
+    console.log("     1. Admin:     admin@bloodsanjal.org     (Phone: 9800000000, Role: ADMIN)");
+    console.log("     2. Donor 1:   donor@bloodsanjal.org     (Phone: 9811111111, Blood: O+, Kathmandu, Active Verified Donor)");
+    console.log("     3. Donor 2:   donor2@bloodsanjal.org    (Phone: 9811111112, Blood: B+, Lalitpur, Active Verified Donor)");
+    console.log("     4. Recipient: recipient@bloodsanjal.org (Phone: 9822222222, Blood: A+, Active Requester)");
     console.log(`   - Locations: 3 Provinces, 4 Districts, 4 Municipalities`);
     console.log(`   - Users: ${createdUsers.length} total (${donorProfilesData.length} donors across 8 blood groups)`);
     console.log(`   - Blood Drives: ${campaignsData.length} published`);
     console.log(`   - Requests: ${requestsData.length} (including verified emergency requests)`);
+    console.log(`   - Contact Requests: 1 pending request (Recipient -> Donor 1)`);
     console.log(`   - Donations & Certificates: 15 verified donations and issued certificates`);
     console.log("==================================================");
     process.exit(0);

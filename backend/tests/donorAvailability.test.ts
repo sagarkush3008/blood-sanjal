@@ -4,7 +4,7 @@ import { User } from '../src/modules/users/user.model';
 import { DonorProfile } from '../src/modules/donors/donorProfile.model';
 import { AuditLog } from '../src/modules/audit/auditLog.model';
 import mongoose from 'mongoose';
-import { signToken } from '../src/core/utils/jwt';
+import jwt from 'jsonwebtoken';
 
 describe('B2 - Donor Availability tests', () => {
   let donorId: string;
@@ -21,11 +21,11 @@ describe('B2 - Donor Availability tests', () => {
       email: 'donor@test.com',
       passwordHash: 'hashed',
       phone: '9800000000',
-      role: 'DONOR',
+      role: 'USER',
       status: 'ACTIVE'
     });
     donorId = user._id.toString();
-    token = signToken({ userId: donorId, role: 'DONOR' });
+    token = jwt.sign({ userId: donorId, role: 'USER' }, process.env.JWT_ACCESS_SECRET || 'supersecret_access');
     
     await DonorProfile.create({
       userId: donorId,

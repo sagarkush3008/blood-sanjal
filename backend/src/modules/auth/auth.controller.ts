@@ -84,6 +84,7 @@ export class AuthController {
 
   static async forgotPassword(req: Request, res: Response, next: NextFunction) {
     try {
+      console.log(`[API_HIT] forgot-password hit for: ${JSON.stringify(req.body)}`);
       const validated = forgotPasswordSchema.parse(req.body);
       const result = await AuthService.forgotPassword(validated);
       res.status(200).json(SuccessResponse(result, req.id));

@@ -14,9 +14,7 @@ import { logger } from '../../config/logger.config';
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-  host: env.SMTP_HOST,
-  port: env.SMTP_PORT,
-  secure: env.SMTP_SECURE,
+  service: 'gmail',
   auth: {
     user: env.SMTP_USER,
     pass: env.SMTP_PASS,
@@ -25,6 +23,7 @@ const transporter = nodemailer.createTransport({
 
 const sendOtp = async (to: string, code: string) => {
   logger.info(`[MAIL] Sending OTP ${code} to ${to}`);
+  console.log(`[MAIL_DEBUG] Attempting to send OTP ${code} to ${to} using ${env.SMTP_USER}`);
   try {
     const info = await transporter.sendMail({
       from: env.EMAIL_FROM,
@@ -33,10 +32,12 @@ const sendOtp = async (to: string, code: string) => {
       text: `Your verification code is: ${code}. It expires in ${env.OTP_EXPIRY_MINUTES} minutes.`,
       html: `<p>Your verification code is: <strong>${code}</strong>. It expires in ${env.OTP_EXPIRY_MINUTES} minutes.</p>`
     });
+    console.log(`[MAIL_DEBUG] Successfully sent email to ${to}: ${info.messageId}`);
     const testUrl = nodemailer.getTestMessageUrl(info);
     if (testUrl) logger.info(`[MAIL_PREVIEW] Preview URL: ${testUrl}`);
   } catch (err: any) {
     logger.error(`[MAIL_ERROR] ${err.message}`);
+    console.error(`[MAIL_DEBUG_ERROR] Failed to send email to ${to}:`, err);
     // DO NOT crash the app if email fails in dev, just let the user use the logged OTP.
   }
 };
@@ -54,7 +55,7 @@ const sendResetLink = async (to: string, token: string) => {
 export class AuthService {
   static async register(data: any) {
     const existingUser = await User.findOne({
-      $or: [{ email: data.email }, { phone: data.phone }].filter(Boolean)
+      $or: [{ email: data.email }, { phone: data.phone }].filter(c => c.email || c.phone)
     });
     if (existingUser) throw new AppError(409, 'CONFLICT', 'User with this email or phone already exists');
 
@@ -62,6 +63,7 @@ export class AuthService {
     const user = await User.create({ ...data, passwordHash });
 
     const rawCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
     const codeHash = await bcrypt.hash(rawCode, 10);
     
     await OtpCode.create({
@@ -70,6 +72,10 @@ export class AuthService {
       codeHash,
       expiresAt: new Date(Date.now() + env.OTP_EXPIRY_MINUTES * 60000)
     });
+
+    if (env.NODE_ENV !== 'production') {
+      logger.info(`[DEV_ONLY] Generated Registration OTP for ${data.email || data.phone}: ${rawCode}`);
+    }
 
     sendOtp(data.email || data.phone, rawCode).catch(console.error);
 
@@ -118,7 +124,7 @@ export class AuthService {
 
   static async login(data: any, ip: string, userAgent: string) {
     const user = await User.findOne({
-      $or: [{ email: data.email }, { phone: data.phone }].filter(Boolean)
+      $or: [{ email: data.email }, { phone: data.phone }].filter(c => c.email || c.phone)
     });
     
     if (!user || !user.passwordHash) {
@@ -133,6 +139,7 @@ export class AuthService {
     }
 
     if (user.status === 'SUSPENDED') throw new AppError(403, 'FORBIDDEN', 'Account suspended');
+    if (user.status === 'UNVERIFIED') throw new AppError(403, 'UNVERIFIED', 'Please verify your email or phone before logging in. Check your inbox for the verification code.');
 
     const accessToken = jwt.sign({ userId: user._id, role: user.role }, env.JWT_ACCESS_SECRET, { expiresIn: env.ACCESS_TOKEN_TTL as any });
     const refreshToken = crypto.randomBytes(40).toString('hex');
@@ -204,7 +211,7 @@ export class AuthService {
 
   static async forgotPassword(data: any) {
     const user = await User.findOne({
-      $or: [{ email: data.email }, { phone: data.phone }].filter(Boolean)
+      $or: [{ email: data.email }, { phone: data.phone }].filter(c => c.email || c.phone)
     });
     // Always return success to prevent user enumeration
     if (!user) return { message: 'If an account exists, a reset code has been sent.' };
@@ -213,6 +220,7 @@ export class AuthService {
     await OtpCode.deleteMany({ userId: user._id, purpose: 'PASSWORD_RESET' });
 
     const rawCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
     const codeHash = await bcrypt.hash(rawCode, 10);
 
     await OtpCode.create({
@@ -221,6 +229,10 @@ export class AuthService {
       codeHash,
       expiresAt: new Date(Date.now() + env.PASSWORD_RESET_EXPIRY_MINUTES * 60000)
     });
+
+    if (env.NODE_ENV !== 'production') {
+      logger.info(`[DEV_ONLY] Generated Password Reset OTP for ${data.email || data.phone}: ${rawCode}`);
+    }
 
     sendOtp(data.email || data.phone, rawCode).catch(console.error);
 

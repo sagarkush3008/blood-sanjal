@@ -25,7 +25,8 @@ export const ForgotPasswordScreen = () => {
   const forgotMutation = useMutation({
     mutationFn: (data: any) => AuthAPI.forgotPassword(data),
     onSuccess: (res: any) => {
-      const data = res?.data?.data || res?.data;
+      // The response interceptor already unwraps { success, data } → data
+      const data = res?.data || {};
       const userId = data?.userId;
       Alert.alert(
         'Reset Code Dispatched',

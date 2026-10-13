@@ -64,7 +64,8 @@ export const RegisterScreen = () => {
   const registerMutation = useMutation({
     mutationFn: (data: RegisterFormData) => AuthAPI.register(data),
     onSuccess: (response: any) => {
-      const data = response?.data?.data || response?.data;
+      // The response interceptor already unwraps { success, data } → data
+      const data = response?.data || {};
       const userId = data?.userId || data?.user?.id || data?._id;
       if (userId) {
         navigation.navigate('VerifyEmail', {

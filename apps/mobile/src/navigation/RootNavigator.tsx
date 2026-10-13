@@ -60,7 +60,7 @@ export const RootNavigator = () => {
 
   useEffect(() => {
     if (!token) return;
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     
     const sendHeartbeat = () => {
       ActiveStatusAPI.heartbeat(Platform.OS).catch(err => console.log('Heartbeat failed:', err.message));

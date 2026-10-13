@@ -121,7 +121,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Fetch live authoritative state from /me
       try {
         const response = await AuthAPI.getCurrentUser();
-        const profile = response.data?.data || response.data;
+        // The response interceptor already unwraps { success, data } → data
+        const profile = response.data;
         if (profile) {
           const freshUser: UserProfile = {
             id: profile._id || profile.id,
