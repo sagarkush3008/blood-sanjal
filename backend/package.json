@@ -10,7 +10,8 @@
     "build": "tsc",
     "lint": "eslint src/**/*.ts",
     "typecheck": "tsc --noEmit",
-    "seed": "ts-node scripts/seed.ts"
+    "seed": "ts-node scripts/seed.ts",
+    "db:wipe": "ts-node scripts/wipe_database.ts"
   },
   "keywords": [],
   "author": "",
