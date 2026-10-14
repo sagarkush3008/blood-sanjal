@@ -18,6 +18,7 @@ import * as Location from 'expo-location';
 import { Feather, MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getClosestNepalLocation, isCoordinateString } from '../../utils/locationHelper';
 
 type GoogleLayerType = 'standard' | 'satellite' | 'terrain';
 
@@ -286,10 +287,11 @@ export const LocationPickerScreen = () => {
     }
 
     if (currentRequestId === latestRequestIdRef.current) {
-      const fallbackName = `Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-      setExactLocationName(fallbackName);
-      setDetailedAddress(`${lat.toFixed(5)}° N, ${lng.toFixed(5)}° E`);
+      const fallback = getClosestNepalLocation(lat, lng);
+      setExactLocationName(fallback.name);
+      setDetailedAddress(fallback.address);
       setIsResolving(false);
+      addressCache.current.set(cacheKey, { exact: fallback.name, detailed: fallback.address });
     }
   }, []);
 
@@ -449,10 +451,15 @@ export const LocationPickerScreen = () => {
     setLoading(true);
     const returnScreen = route.params?.returnScreen || 'EditProfile';
 
+    let cleanName = exactLocationName;
+    if (isCoordinateString(cleanName) || cleanName.toLowerCase().startsWith('location (')) {
+      cleanName = getClosestNepalLocation(coords.latitude, coords.longitude).name;
+    }
+
     navigation.navigate({
       name: returnScreen,
       params: {
-        selectedLocation: exactLocationName,
+        selectedLocation: cleanName,
         locationAddress: detailedAddress,
         latitude: coords.latitude,
         longitude: coords.longitude,

@@ -19,6 +19,7 @@ import { useAuthStore } from '../../store/authStore';
 import { AuthAPI } from '../../api/auth.api';
 import { RewardsAPI } from '../../api/rewards.api';
 import { colors } from '../../theme';
+import { cleanLocationName } from '../../utils/locationHelper';
 
 export const ProfileScreen = () => {
   const { logout, user } = useAuthStore();
@@ -98,7 +99,7 @@ export const ProfileScreen = () => {
             <View style={styles.statDivider} />
             <View style={styles.statCol}>
               <Text style={styles.statLabel}>Location</Text>
-              <Text style={styles.statValue} numberOfLines={1}>{meData?.cityId || 'Nepal'}</Text>
+              <Text style={styles.statValue} numberOfLines={1}>{cleanLocationName(meData?.cityId || user?.cityId) || 'Nepal'}</Text>
             </View>
           </View>
         </View>

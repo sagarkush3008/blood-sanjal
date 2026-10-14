@@ -8,6 +8,7 @@ import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { colors, spacing, typography } from '../../theme';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+import { cleanLocationName } from '../../utils/locationHelper';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -22,14 +23,14 @@ export const EditProfileScreen = () => {
   });
 
   const [name, setName] = useState(meData?.name || '');
-  const [cityId, setCityId] = useState(meData?.cityId || '');
+  const [cityId, setCityId] = useState(cleanLocationName(meData?.cityId || ''));
   const [bloodGroup, setBloodGroup] = useState(meData?.bloodGroup || '');
   const [avatarUri, setAvatarUri] = useState<string | null>(meData?.avatarAssetId || null);
   const [isUploading, setIsUploading] = useState(false);
 
   React.useEffect(() => {
     if (route.params?.selectedLocation) {
-      setCityId(route.params.selectedLocation);
+      setCityId(cleanLocationName(route.params.selectedLocation));
     }
   }, [route.params?.selectedLocation]);
 

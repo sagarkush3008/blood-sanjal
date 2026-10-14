@@ -22,6 +22,7 @@ import { DonorsAPI } from '../../api/donors.api';
 import { BloodRequestsAPI } from '../../api/requests.api';
 import { RequestCard } from '../../components/requests/RequestCard';
 import { colors } from '../../theme';
+import { cleanLocationName } from '../../utils/locationHelper';
 
 const { width } = Dimensions.get('window');
 
@@ -68,16 +69,7 @@ export const HomeScreen = () => {
   const displayName = meProfile?.name || user?.name || 'Friend';
   const firstName = displayName.split(' ')[0];
   
-  let locationText = 'Nepal';
-  if (meProfile?.cityId && meProfile?.provinceId) {
-    locationText = `${meProfile.cityId}, ${meProfile.provinceId}`;
-  } else if (meProfile?.cityId) {
-    locationText = meProfile.cityId;
-  }
-  
-  if (locationText.includes('Kathamdnu')) {
-    locationText = locationText.replace('Kathamdnu', 'Kathmandu');
-  }
+  const locationText = cleanLocationName(meProfile?.cityId || user?.cityId, meProfile?.provinceId);
   
   const bloodGroup = meProfile?.bloodGroup || donorProfile?.bloodGroup || 'O+';
   const totalDonations = donorProfile?.totalDonations || 0;
@@ -489,7 +481,7 @@ const styles = StyleSheet.create({
 
   greetingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   greetingText: { fontSize: 13, color: '#475569', flex: 1, paddingRight: 10, lineHeight: 18, fontFamily: 'Inter_500Medium' },
-  locationPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0', maxWidth: 140 },
+  locationPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0', maxWidth: 180 },
   locationText: { fontSize: 11, fontFamily: 'Inter_600SemiBold', color: '#64748B', flexShrink: 1 },
 
   donorCard: { borderRadius: 24, padding: 24, marginBottom: 24, shadowColor: '#991B1B', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 10 },
