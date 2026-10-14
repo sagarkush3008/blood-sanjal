@@ -17,6 +17,7 @@ import { TermsScreen } from '../screens/settings/TermsScreen';
 import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
 import { PaymentScreen } from '../screens/payments/PaymentScreen';
 import { PaymentHistoryScreen } from '../screens/payments/PaymentHistoryScreen';
+import { LocationPickerScreen } from '../screens/profile/LocationPickerScreen';
 import { colors } from '../theme';
 
 const Stack = createNativeStackNavigator();
@@ -46,6 +47,7 @@ const AppNavigator = ({ role }: { role?: string }) => {
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Payment" component={PaymentScreen} options={{ headerShown: false }} />
       <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="LocationPicker" component={LocationPickerScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -84,6 +84,19 @@ export const CreateRequestScreen = () => {
   const [city, setCity] = useState('Kathmandu');
   const [requiredDate, setRequiredDate] = useState(new Date().toISOString().split('T')[0]);
   const [urgencyWindow, setUrgencyWindow] = useState('Immediate / As soon as possible');
+
+  useEffect(() => {
+    if (route.params?.selectedLocation) {
+      setHospitalName(route.params.selectedLocation);
+      if (route.params?.locationAddress) {
+        setHospitalAddress(route.params.locationAddress);
+      }
+      const parts = route.params.selectedLocation.split(',');
+      if (parts.length > 1) {
+        setCity(parts[parts.length - 1].trim());
+      }
+    }
+  }, [route.params?.selectedLocation, route.params?.locationAddress]);
 
   // Contact & Reason
   const [attendantName, setAttendantName] = useState(user?.name || '');
@@ -398,7 +411,20 @@ export const CreateRequestScreen = () => {
 
         {/* CARD 4: Hospital Location & Timing */}
         <View style={styles.card}>
-          <Text style={styles.sectionHeader}>Hospital Location & Timing</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <Text style={[styles.sectionHeader, { marginBottom: 0 }]}>Hospital Location & Timing</Text>
+            <TouchableOpacity
+              style={styles.mapPinpointBtn}
+              onPress={() => navigation.navigate('LocationPicker', {
+                selectedLocation: hospitalName || city,
+                returnScreen: 'CreateRequest',
+              })}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="map" size={13} color="#DC2626" />
+              <Text style={styles.mapPinpointText}>Pick on Map</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Hospital Name */}
           <CleanInput
@@ -1021,5 +1047,21 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontFamily: fonts.regular,
     paddingVertical: 12,
+  },
+  mapPinpointBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  mapPinpointText: {
+    fontSize: 11,
+    fontFamily: fonts.bold,
+    color: '#DC2626',
   },
 });

@@ -140,7 +140,10 @@ export const EditProfileScreen = () => {
           </View>
           <TouchableOpacity 
             style={styles.mapBtn} 
-            onPress={() => navigation.navigate('LocationPicker')}
+            onPress={() => navigation.navigate('LocationPicker', {
+              selectedLocation: cityId,
+              returnScreen: 'EditProfile',
+            })}
             activeOpacity={0.8}
           >
             <Ionicons name="map" size={18} color="#DC2626" />
