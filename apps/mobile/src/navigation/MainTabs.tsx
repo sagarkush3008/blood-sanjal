@@ -5,6 +5,7 @@ import {
   FindBloodScreen,
   RequestsScreen,
   DonateScreen,
+  ProfileScreen,
 } from '../screens/MainScreens';
 import { FloatingPillTabBar } from '../components/navigation/FloatingPillTabBar';
 
@@ -22,6 +23,8 @@ export const MainTabs = () => {
       <Tab.Screen name="FindBlood" component={FindBloodScreen} />
       <Tab.Screen name="Donate" component={DonateScreen} />
       <Tab.Screen name="Requests" component={RequestsScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 };
+
