@@ -10,8 +10,8 @@ const startServer = async () => {
   try {
     await connectDB();
 
-    const server = app.listen(env.PORT, () => {
-      logger.info(`Server listening on port ${env.PORT} in ${env.NODE_ENV} mode`);
+    const server = app.listen(env.PORT, '0.0.0.0', () => {
+      logger.info(`Server listening on port ${env.PORT} on 0.0.0.0 in ${env.NODE_ENV} mode`);
     });
 
     // Start automated daily eligibility cron jobs

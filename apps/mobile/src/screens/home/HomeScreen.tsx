@@ -120,16 +120,13 @@ export const HomeScreen = () => {
       {/* HEADER STRIP */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.avatar}>
-            {(meProfile?.avatarAssetId || user?.avatarAssetId) ? (
-              <Image 
-                source={{ uri: (meProfile?.avatarAssetId || user?.avatarAssetId) }} 
-                style={{ width: '100%', height: '100%', borderRadius: 999 }} 
-              />
-            ) : (
-              <Text style={styles.avatarLetter}>{firstName.charAt(0).toUpperCase()}</Text>
-            )}
-          </TouchableOpacity>
+          <View style={styles.logoBox}>
+            <Image 
+              source={require('../../../assets/logo.png')} 
+              style={styles.logoImage} 
+              resizeMode="contain" 
+            />
+          </View>
           <View style={{ flex: 1, justifyContent: 'center' }}>
             <Text style={styles.brandTitle} numberOfLines={1}>BLOOD SANJAL</Text>
             <Text style={styles.brandTagline} numberOfLines={1}>Connecting People. Saving Lives.</Text>
@@ -142,6 +139,16 @@ export const HomeScreen = () => {
               <View style={styles.notificationBadge}>
                 <Text style={styles.notificationBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
               </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.avatar}>
+            {(meProfile?.avatarAssetId || user?.avatarAssetId) ? (
+              <Image 
+                source={{ uri: (meProfile?.avatarAssetId || user?.avatarAssetId) }} 
+                style={{ width: '100%', height: '100%', borderRadius: 999 }} 
+              />
+            ) : (
+              <Text style={styles.avatarLetter}>{firstName.charAt(0).toUpperCase()}</Text>
             )}
           </TouchableOpacity>
           <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.iconBtn}>
@@ -463,21 +470,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, paddingRight: 6 },
-  logoBox: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#DC2626', alignItems: 'center', justifyContent: 'center' },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, paddingRight: 6 },
+  logoBox: { width: 38, height: 38, borderRadius: 10, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  logoImage: { width: '100%', height: '100%' },
   brandTitle: { fontSize: 14, fontFamily: 'Inter_900Black', color: '#0F172A', letterSpacing: -0.5 },
   nepalBadge: { backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   nepalBadgeText: { fontSize: 10, fontFamily: 'Inter_900Black', color: '#DC2626', letterSpacing: 0.5 },
-  brandTagline: { fontSize: 9, color: '#64748B', marginTop: 0, fontFamily: 'Inter_500Medium' },
+  brandTagline: { fontSize: 9, color: '#64748B', marginTop: 1, fontFamily: 'Inter_500Medium' },
   
-  headerActions: { flexDirection: 'row', gap: 12, alignItems: 'center', flexShrink: 0 },
+  headerActions: { flexDirection: 'row', gap: 10, alignItems: 'center', flexShrink: 0 },
   iconBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', position: 'relative', borderWidth: 1, borderColor: '#E2E8F0' },
   notificationBadge: { position: 'absolute', top: -2, right: -2, backgroundColor: '#EF4444', minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFFFFF' },
   notificationBadgeText: { fontSize: 10, fontFamily: 'Inter_700Bold', color: '#FFFFFF' },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#DC2626' },
-  avatarLetter: { fontSize: 18, fontFamily: 'Inter_800ExtraBold', color: '#DC2626' },
+  avatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#DC2626', overflow: 'hidden' },
+  avatarLetter: { fontSize: 15, fontFamily: 'Inter_800ExtraBold', color: '#DC2626' },
 
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 16 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 100, paddingTop: 16 },
 
   greetingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   greetingText: { fontSize: 13, color: '#475569', flex: 1, paddingRight: 10, lineHeight: 18, fontFamily: 'Inter_500Medium' },

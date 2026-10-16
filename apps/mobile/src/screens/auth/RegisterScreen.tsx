@@ -8,6 +8,7 @@ import {
   Platform,
   ScrollView,
   StatusBar,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
@@ -122,7 +123,11 @@ export const RegisterScreen = () => {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.logoBadge}>
-              <Ionicons name="water" size={30} color={colors.primary} />
+              <Image 
+                source={require('../../../assets/logo.png')} 
+                style={styles.logoImage} 
+                resizeMode="contain" 
+              />
             </View>
             <Text style={styles.brandTitle}>Blood Sanjal</Text>
             <Text style={styles.brandTagline}>Connecting People. Saving Lives.</Text>
@@ -272,15 +277,17 @@ const styles = StyleSheet.create({
     marginBottom: spacing.l,
   },
   logoBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.primarySoft,
+    width: 72,
+    height: 72,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.s,
-    borderWidth: 1,
-    borderColor: '#FECACA',
+    overflow: 'hidden',
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   brandTitle: {
     fontSize: 24,

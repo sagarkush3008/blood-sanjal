@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,7 +22,11 @@ export const AboutScreen = () => {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.logoBadge}>
-          <Ionicons name="heart-circle" size={48} color={colors.primary} />
+          <Image 
+            source={require('../../../assets/logo.png')} 
+            style={styles.logoImage} 
+            resizeMode="contain" 
+          />
         </View>
         <Text style={styles.brandTitle}>Blood Sanjal Nepal</Text>
         <Text style={styles.brandTagline}>Connected Lifesavers Across Nepal</Text>
@@ -69,13 +73,15 @@ const styles = StyleSheet.create({
   logoBadge: {
     width: 80,
     height: 80,
-    borderRadius: 24,
-    backgroundColor: '#FEE2E2',
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#FECACA',
+    overflow: 'hidden',
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   brandTitle: { fontSize: 22, fontFamily: 'Inter_900Black', color: '#0F172A', marginBottom: 2 },
   brandTagline: { fontSize: 13, color: '#64748B', marginBottom: 20 },

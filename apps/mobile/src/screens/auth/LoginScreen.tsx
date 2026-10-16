@@ -8,6 +8,7 @@ import {
   Platform,
   ScrollView,
   StatusBar,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
@@ -16,6 +17,7 @@ import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthAPI } from '../../api/auth.api';
+import { API_BASE_URL, apiClient } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
 import { InputField } from '../../components/forms/InputField';
 import { PrimaryButton } from '../../components/common';
@@ -33,6 +35,21 @@ export const LoginScreen = () => {
   const { setAuth } = useAuthStore();
   const navigation = useNavigation<any>();
   const [apiError, setApiError] = useState<string | null>(null);
+  const [serverStatus, setServerStatus] = useState<string | null>(null);
+
+  const testServer = async () => {
+    setServerStatus('Testing...');
+    try {
+      const res = await apiClient.get('/health', { timeout: 6000 });
+      if (res.data?.status === 'UP' || res.status === 200) {
+        setServerStatus('Connected (OK)');
+      } else {
+        setServerStatus('Invalid response');
+      }
+    } catch (e: any) {
+      setServerStatus(`Failed: ${e.message || 'Error'}`);
+    }
+  };
 
   const {
     control,
@@ -52,10 +69,12 @@ export const LoginScreen = () => {
         : { phone: data.email.trim(), password: data.password };
       return AuthAPI.login(payload);
     },
-    onSuccess: async (response) => {
-      // The response interceptor already unwraps { success, data } → data
-      const data = response.data || {};
-      const { accessToken, refreshToken, user } = data;
+    onSuccess: async (response: any) => {
+      const payload = response?.data?.accessToken ? response.data : (response?.data?.data || response?.data || {});
+      const accessToken = payload.accessToken || response?.accessToken;
+      const refreshToken = payload.refreshToken || response?.refreshToken;
+      const user = payload.user || response?.user;
+
       if (accessToken) {
         await setAuth(accessToken, user, refreshToken);
       } else {
@@ -63,9 +82,11 @@ export const LoginScreen = () => {
       }
     },
     onError: (error: any) => {
+      console.warn('[LoginScreen] Error:', error?.response?.data || error?.message);
       const message =
         error.response?.data?.error?.message ||
         error.response?.data?.message ||
+        (error.message?.includes('Network Error') ? 'Network Error: Cannot connect to server. Check your connection.' : error.message) ||
         'Invalid credentials. Please verify your email/phone and password.';
       setApiError(message);
     },
@@ -115,7 +136,11 @@ export const LoginScreen = () => {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.logoBadge}>
-              <Ionicons name="water" size={32} color={colors.primary} />
+              <Image 
+                source={require('../../../assets/logo.png')} 
+                style={styles.logoImage} 
+                resizeMode="contain" 
+              />
             </View>
             <Text style={styles.brandTitle}>Blood Sanjal</Text>
             <Text style={styles.brandTagline}>Connecting People. Saving Lives.</Text>
@@ -211,6 +236,43 @@ export const LoginScreen = () => {
                   <Text style={styles.demoButtonText}>Recipient</Text>
                 </TouchableOpacity>
               </View>
+
+              {/* Live Server Indicator & Test Button */}
+              <View style={{ marginTop: 14, alignItems: 'center' }}>
+                <TouchableOpacity
+                  onPress={testServer}
+                  activeOpacity={0.7}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    backgroundColor: '#F8FAFC',
+                    borderWidth: 1,
+                    borderColor: '#E2E8F0',
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 14,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 7,
+                      height: 7,
+                      borderRadius: 3.5,
+                      backgroundColor: serverStatus?.includes('OK')
+                        ? '#10B981'
+                        : serverStatus?.includes('Failed')
+                        ? '#EF4444'
+                        : '#64748B',
+                    }}
+                  />
+                  <Text style={{ fontSize: 10, color: '#64748B', fontFamily: 'Inter_500Medium' }}>
+                    {serverStatus
+                      ? `Server: ${serverStatus}`
+                      : `Server: ${API_BASE_URL.replace(/^https?:\/\//, '')} (Tap to Test)`}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
@@ -242,15 +304,17 @@ const styles = StyleSheet.create({
     marginTop: spacing.m,
   },
   logoBadge: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.primarySoft,
+    width: 72,
+    height: 72,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.s,
-    borderWidth: 1,
-    borderColor: '#FECACA',
+    overflow: 'hidden',
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   brandTitle: {
     fontSize: 26,

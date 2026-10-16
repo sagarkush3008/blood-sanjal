@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../errors/appError';
 import { ErrorResponse } from '../http/result';
 import { logger } from '../../config/logger.config';
+import { env } from '../../config/env.config';
 
 export const errorMiddleware = (err: Error, req: Request, res: Response, next: NextFunction) => {
   const requestId = req.id || 'unknown';
@@ -22,5 +23,7 @@ export const errorMiddleware = (err: Error, req: Request, res: Response, next: N
   }
 
   logger.error(`[${requestId}] Unhandled Error: ${err.message}`, { stack: err.stack });
-  res.status(500).json(ErrorResponse('INTERNAL_ERROR', 'An unexpected error occurred.', [], requestId));
+  console.error(`[UNHANDLED ERROR ${requestId}]:`, err);
+  const msg = env.NODE_ENV === 'production' ? 'An unexpected error occurred.' : `Internal error: ${err.message}`;
+  res.status(500).json(ErrorResponse('INTERNAL_ERROR', msg, [], requestId));
 };

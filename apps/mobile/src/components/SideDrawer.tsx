@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, Dimensions, Pressable, ScrollView, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, Dimensions, Pressable, ScrollView, Switch, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../store/authStore';
@@ -80,7 +80,11 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({ visible, onClose }) => {
               onPress={() => handleNavigate('Home')}
             >
               <View style={styles.logoCircle}>
-                <Ionicons name="water" size={20} color="#DC2626" />
+                <Image 
+                  source={require('../../assets/logo.png')} 
+                  style={styles.logoImage} 
+                  resizeMode="contain" 
+                />
               </View>
               <Text style={styles.brandTitle}>Blood Sanjal</Text>
             </TouchableOpacity>
@@ -182,12 +186,17 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   logoCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 10,
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   brandTitle: {
     fontSize: 22,
