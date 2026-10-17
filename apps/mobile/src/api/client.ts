@@ -2,12 +2,12 @@ import axios, { AxiosError } from 'axios';
 import { NativeModules, Platform } from 'react-native';
 import { storage } from '../utils/storage';
 
-const ACTIVE_TUNNEL_URL = 'https://cincinnati-williams-density-rotary.trycloudflare.com/api/v1';
+const ACTIVE_TUNNEL_URL = 'https://removing-travelling-survivors-letter.trycloudflare.com/api/v1';
 
 // Dynamic Backend Host Detection
 export const getApiBaseUrl = (): string => {
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
-  if (envUrl && !envUrl.includes('realize-pdt-equity-bat')) {
+  if (envUrl && !envUrl.includes('realize-pdt-equity-bat') && !envUrl.includes('cincinnati-williams')) {
     return envUrl;
   }
 

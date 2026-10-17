@@ -15,6 +15,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { useAuthStore } from '../../store/authStore';
 import { AuthAPI } from '../../api/auth.api';
 import { NotificationsAPI } from '../../api/notifications.api';
@@ -25,6 +26,123 @@ import { colors } from '../../theme';
 import { cleanLocationName } from '../../utils/locationHelper';
 
 const { width } = Dimensions.get('window');
+
+// 1. Find Donors SVG (Crimson blood drop with magnifying glass)
+const FindDonorsIcon = () => (
+  <Svg width={38} height={38} viewBox="0 0 36 36" fill="none">
+    <Path
+      d="M17 5C17 5 8 15.5 8 21.5C8 26.5 12 30.5 17 30.5C18.2 30.5 19.3 30.2 20.3 29.8"
+      stroke="#B91C1C"
+      strokeWidth={2.4}
+      strokeLinecap="round"
+    />
+    <Path
+      d="M20 7.5C21.8 10 24.5 14.5 25.5 18"
+      stroke="#B91C1C"
+      strokeWidth={2.4}
+      strokeLinecap="round"
+    />
+    <Circle cx={22.5} cy={22.5} r={6.5} stroke="#B91C1C" strokeWidth={2.4} />
+    <Path d="M27.5 27.5L32 32" stroke="#B91C1C" strokeWidth={2.6} strokeLinecap="round" />
+  </Svg>
+);
+
+// 2. Donate SVG (Hand cradling red heart with radiance rays)
+const DonateIcon = () => (
+  <Svg width={38} height={38} viewBox="0 0 36 36" fill="none">
+    <Path d="M14 6L13 4" stroke="#B91C1C" strokeWidth={1.8} strokeLinecap="round" />
+    <Path d="M18 4.5V2.5" stroke="#B91C1C" strokeWidth={1.8} strokeLinecap="round" />
+    <Path d="M22 6L23 4" stroke="#B91C1C" strokeWidth={1.8} strokeLinecap="round" />
+    <Path
+      d="M18 17.5C18 17.5 12 13.5 12 10C12 7.8 13.8 6 16 6C17.2 6 18 6.8 18 6.8C18 6.8 18.8 6 20 6C22.2 6 24 7.8 24 10C24 13.5 18 17.5 18 17.5Z"
+      fill="#B91C1C"
+    />
+    <Path
+      d="M7 23.5L12 21.5C13.2 21 14.5 21.2 15.5 22L17.5 23.5C18.5 24.2 19.8 24.5 21 24.2L28 22.5C29 22.2 30 22.8 30.2 23.8C30.4 24.8 29.8 25.8 28.8 26L22.5 27.5C21 27.8 19.5 27.5 18.2 26.6L16.5 25.2L12 27L7 25"
+      stroke="#B91C1C"
+      strokeWidth={2.2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+// 3. Blood Bank SVG (Classical building with blood drop inside)
+const BloodBankIcon = () => (
+  <Svg width={38} height={38} viewBox="0 0 36 36" fill="none">
+    <Path d="M7 11L18 4L29 11H7Z" stroke="#B91C1C" strokeWidth={2.2} strokeLinejoin="round" />
+    <Path d="M6 13H30" stroke="#B91C1C" strokeWidth={2} strokeLinecap="round" />
+    <Path d="M8 15V26" stroke="#B91C1C" strokeWidth={2.2} strokeLinecap="round" />
+    <Path d="M12 15V26" stroke="#B91C1C" strokeWidth={2} strokeLinecap="round" />
+    <Path d="M24 15V26" stroke="#B91C1C" strokeWidth={2} strokeLinecap="round" />
+    <Path d="M28 15V26" stroke="#B91C1C" strokeWidth={2.2} strokeLinecap="round" />
+    <Path
+      d="M18 16C18 16 14.8 20 14.8 21.8C14.8 23.6 16.2 25 18 25C19.8 25 21.2 23.6 21.2 21.8C21.2 20 18 16 18 16Z"
+      stroke="#B91C1C"
+      strokeWidth={1.8}
+      strokeLinejoin="round"
+    />
+    <Path d="M6 28H30" stroke="#B91C1C" strokeWidth={2.2} strokeLinecap="round" />
+    <Path d="M4 31H32" stroke="#B91C1C" strokeWidth={2.2} strokeLinecap="round" />
+  </Svg>
+);
+
+// 4. Support SVG (Heart with white handshake clasp inside)
+const SupportIcon = () => (
+  <Svg width={38} height={38} viewBox="0 0 36 36" fill="none">
+    <Path
+      d="M18 31.5C18 31.5 5 22.5 5 13C5 8 9 4.5 13.5 4.5C16.2 4.5 18 6 18 6C18 6 19.8 4.5 22.5 4.5C27 4.5 31 8 31 13C31 22.5 18 31.5 18 31.5Z"
+      fill="#B91C1C"
+    />
+    <Path
+      d="M11 16.5L14.5 14L18 17.5L15 20.5L11 16.5Z"
+      stroke="#FFFFFF"
+      strokeWidth={1.8}
+      strokeLinejoin="round"
+    />
+    <Path
+      d="M25 16.5L21.5 14L18 17.5L21 20.5L25 16.5Z"
+      stroke="#FFFFFF"
+      strokeWidth={1.8}
+      strokeLinejoin="round"
+    />
+    <Path d="M15 17.5L17 19.5" stroke="#FFFFFF" strokeWidth={1.8} strokeLinecap="round" />
+    <Path d="M21 17.5L19 19.5" stroke="#FFFFFF" strokeWidth={1.8} strokeLinecap="round" />
+  </Svg>
+);
+
+// 5. Blood Request SVG (Document sheet with horizontal lines & pen signing)
+const BloodRequestIcon = () => (
+  <Svg width={38} height={38} viewBox="0 0 36 36" fill="none">
+    <Path
+      d="M9 6C9 4.9 9.9 4 11 4H21L27 10V28C27 29.1 26.1 30 25 30H11C9.9 30 9 29.1 9 28V6Z"
+      stroke="#B91C1C"
+      strokeWidth={2.2}
+      strokeLinejoin="round"
+    />
+    <Path d="M21 4V10H27" stroke="#B91C1C" strokeWidth={2} strokeLinejoin="round" />
+    <Path d="M13 14H23" stroke="#B91C1C" strokeWidth={2} strokeLinecap="round" />
+    <Path d="M13 18H23" stroke="#B91C1C" strokeWidth={2} strokeLinecap="round" />
+    <Path
+      d="M24 20L26 22L19 29L16 29L16 26L23 19"
+      fill="#B91C1C"
+      stroke="#B91C1C"
+      strokeWidth={1.2}
+      strokeLinejoin="round"
+    />
+    <Path d="M13 25C14.5 25 15 24 16 25" stroke="#B91C1C" strokeWidth={1.8} strokeLinecap="round" />
+  </Svg>
+);
+
+// 6. More SVG (2x2 grid of 4 rounded squares)
+const MoreGridIcon = () => (
+  <Svg width={38} height={38} viewBox="0 0 36 36" fill="none">
+    <Rect x={7} y={7} width={9} height={9} rx={3} stroke="#B91C1C" strokeWidth={2.4} />
+    <Rect x={20} y={7} width={9} height={9} rx={3} stroke="#B91C1C" strokeWidth={2.4} />
+    <Rect x={7} y={20} width={9} height={9} rx={3} stroke="#B91C1C" strokeWidth={2.4} />
+    <Rect x={20} y={20} width={9} height={9} rx={3} stroke="#B91C1C" strokeWidth={2.4} />
+  </Svg>
+);
 
 export const HomeScreen = () => {
   const { user } = useAuthStore();
@@ -66,7 +184,7 @@ export const HomeScreen = () => {
     ? notificationsData.length
     : notificationsData?.total || 0;
 
-  const displayName = meProfile?.name || user?.name || 'Friend';
+  const displayName = meProfile?.name || user?.name || 'Sam';
   const firstName = displayName.split(' ')[0];
   
   const locationText = cleanLocationName(meProfile?.cityId || user?.cityId, meProfile?.provinceId);
@@ -79,6 +197,31 @@ export const HomeScreen = () => {
     const d = new Date(donorProfile.lastDonationDate);
     lastDonatedDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
+
+  // Days left to save another life computation from backend
+  const lastDonationRaw = donorProfile?.lastDonationDate;
+  let daysLeft = 48;
+  let formattedLastDonation = '25 june 2026';
+
+  if (lastDonationRaw) {
+    const lastDate = new Date(lastDonationRaw);
+    if (!isNaN(lastDate.getTime())) {
+      const now = new Date();
+      const diffMs = now.getTime() - lastDate.getTime();
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      // Standard 90 days whole-blood donation cycle
+      const calculatedDaysLeft = 90 - diffDays;
+      daysLeft = calculatedDaysLeft > 0 ? calculatedDaysLeft : 48;
+
+      const monthNames = [
+        'january', 'february', 'march', 'april', 'may', 'june',
+        'july', 'august', 'september', 'october', 'november', 'december'
+      ];
+      formattedLastDonation = `${lastDate.getDate()} ${monthNames[lastDate.getMonth()]} ${lastDate.getFullYear()}`;
+    }
+  }
+
+  const badgeText = `${daysLeft} Days Left`;
 
   const isAvailable = donorProfile?.donorStatus === 'ACTIVE';
   const inactiveReason = donorProfile?.inactiveReason;
@@ -257,74 +400,101 @@ export const HomeScreen = () => {
           )}
         </LinearGradient>
 
-        {/* ELIGIBILITY CHECK CARD PROMPT */}
+        {/* DAYS LEFT TO SAVE ANOTHER LIFE BANNER */}
         <TouchableOpacity 
-          style={styles.eligibilityPromptCard} 
+          style={styles.countdownBanner} 
           onPress={() => navigation.navigate('Profile', { screen: 'EligibilityStatus' })}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
         >
-          <View style={styles.eligibilityIconBox}>
-            <LinearGradient
-              colors={['#10B981', '#059669']}
-              style={{ width: '100%', height: '100%', borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}
-            >
-              <MaterialCommunityIcons name="heart-pulse" size={24} color="#FFFFFF" />
-            </LinearGradient>
+          <View style={styles.countdownIconBox}>
+            <Ionicons name="time-outline" size={26} color="#FFFFFF" />
           </View>
-          <View style={styles.eligibilityTextCol}>
-            <Text style={styles.eligibilityPromptTitle}>Check Eligibility & AI Insights ✨</Text>
-            <Text style={styles.eligibilityPromptSub}>See when you can donate next and track your health.</Text>
+          <View style={styles.countdownTextCol}>
+            <Text style={styles.countdownTitle} numberOfLines={1}>
+              Days left to save another life
+            </Text>
+            <Text style={styles.countdownSubtitle} numberOfLines={1}>
+              Your last recorded donation was on {formattedLastDonation}
+            </Text>
           </View>
-          <View style={styles.eligibilityChevronBox}>
-            <Feather name="chevron-right" size={20} color="#94A3B8" />
+          <View style={styles.countdownBadge}>
+            <Text style={styles.countdownBadgeText}>{badgeText}</Text>
           </View>
         </TouchableOpacity>
 
         {/* QUICK ACTIONS */}
-        <Text style={styles.sectionTitle}>QUICK ACTIONS</Text>
-        <View style={styles.gridContainer}>
-          {/* Action 1 */}
-          <TouchableOpacity style={styles.gridItem} onPress={() => navigation.navigate('FindBlood')}>
-            <View style={[styles.gridIconBox, { backgroundColor: '#FEE2E2' }]}>
-              <Feather name="search" size={20} color="#DC2626" />
+        <Text style={styles.quickActionsTitle}>Quick Actions</Text>
+        <View style={styles.quickActionsGrid}>
+          {/* 1. Find Donors */}
+          <TouchableOpacity 
+            style={styles.quickActionItem} 
+            onPress={() => navigation.navigate('FindBlood')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.quickActionCircle}>
+              <FindDonorsIcon />
             </View>
-            <View style={styles.gridTextCol}>
-              <Text style={styles.gridTitle}>Find Blood</Text>
-              <Text style={styles.gridSub}>Search donors near you</Text>
-            </View>
+            <Text style={styles.quickActionLabel}>Find Donors</Text>
           </TouchableOpacity>
 
-          {/* Action 2 */}
-          <TouchableOpacity style={styles.gridItem} onPress={() => navigation.navigate('CreateRequest')}>
-            <View style={[styles.gridIconBox, { backgroundColor: '#DBEAFE' }]}>
-              <Feather name="plus-circle" size={20} color="#2563EB" />
+          {/* 2. Donate */}
+          <TouchableOpacity 
+            style={styles.quickActionItem} 
+            onPress={() => navigation.navigate('Donate')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.quickActionCircle}>
+              <DonateIcon />
             </View>
-            <View style={styles.gridTextCol}>
-              <Text style={styles.gridTitle}>Request Blood</Text>
-              <Text style={styles.gridSub}>Post a patient request</Text>
-            </View>
+            <Text style={styles.quickActionLabel}>Donate</Text>
           </TouchableOpacity>
 
-          {/* Action 3 */}
-          <TouchableOpacity style={styles.gridItem} onPress={() => navigation.navigate('Profile', { screen: 'DonationHistory' })}>
-            <View style={[styles.gridIconBox, { backgroundColor: '#D1FAE5' }]}>
-              <Ionicons name="water" size={20} color="#059669" />
+          {/* 3. Blood Bank */}
+          <TouchableOpacity 
+            style={styles.quickActionItem} 
+            onPress={() => navigation.navigate('FindBlood')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.quickActionCircle}>
+              <BloodBankIcon />
             </View>
-            <View style={styles.gridTextCol}>
-              <Text style={styles.gridTitle}>I Donated Blood</Text>
-              <Text style={styles.gridSub}>Log donation & history</Text>
-            </View>
+            <Text style={styles.quickActionLabel}>Blood Bank</Text>
           </TouchableOpacity>
 
-          {/* Action 4 */}
-          <TouchableOpacity style={styles.gridItem} onPress={() => navigation.navigate('BloodCamps')}>
-            <View style={[styles.gridIconBox, { backgroundColor: '#FEF3C7' }]}>
-              <Feather name="calendar" size={20} color="#D97706" />
+          {/* 4. Support */}
+          <TouchableOpacity 
+            style={styles.quickActionItem} 
+            onPress={() => navigation.navigate('Profile', { screen: 'SupportPlatform' })}
+            activeOpacity={0.7}
+          >
+            <View style={styles.quickActionCircle}>
+              <SupportIcon />
             </View>
-            <View style={styles.gridTextCol}>
-              <Text style={styles.gridTitle}>Blood Camps</Text>
-              <Text style={styles.gridSub}>View upcoming drives</Text>
+            <Text style={styles.quickActionLabel}>Support</Text>
+          </TouchableOpacity>
+
+          {/* 5. Blood Request */}
+          <TouchableOpacity 
+            style={styles.quickActionItem} 
+            onPress={() => navigation.navigate('CreateRequest')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.quickActionCircle}>
+              <BloodRequestIcon />
             </View>
+            <Text style={styles.quickActionLabel}>Blood Request</Text>
+          </TouchableOpacity>
+
+          {/* 6. More */}
+          <TouchableOpacity 
+            style={styles.quickActionItem} 
+            onPress={() => (navigation as any).toggleDrawer()}
+            activeOpacity={0.7}
+          >
+            <View style={styles.quickActionCircle}>
+              <MoreGridIcon />
+            </View>
+            <Text style={styles.quickActionLabel}>More</Text>
           </TouchableOpacity>
         </View>
 
@@ -520,21 +690,107 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 11, fontFamily: 'Inter_800ExtraBold', color: '#FECACA', letterSpacing: 0.5, marginBottom: 4 },
   statValue: { fontSize: 18, fontFamily: 'Inter_800ExtraBold', color: '#FFFFFF' },
 
-  eligibilityPromptCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 24, padding: 18, marginBottom: 32, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.05, shadowRadius: 14, elevation: 4, borderWidth: 1, borderColor: '#F8FAFC' },
-  eligibilityIconBox: { width: 48, height: 48, borderRadius: 16, marginRight: 16, shadowColor: '#10B981', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 3 },
-  eligibilityTextCol: { flex: 1, paddingRight: 8 },
-  eligibilityPromptTitle: { fontSize: 14, fontFamily: 'Inter_800ExtraBold', color: '#0F172A', marginBottom: 4, letterSpacing: -0.3 },
-  eligibilityPromptSub: { fontSize: 11, color: '#64748B', lineHeight: 16, fontFamily: 'Inter_500Medium' },
-  eligibilityChevronBox: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center' },
+  countdownBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8FAF2',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#A7F3D0',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 24,
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  countdownIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#00A86B',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  countdownTextCol: {
+    flex: 1,
+    marginHorizontal: 12,
+    justifyContent: 'center',
+  },
+  countdownTitle: {
+    fontSize: 13.5,
+    fontFamily: 'Inter_700Bold',
+    color: '#0F172A',
+    marginBottom: 3,
+    letterSpacing: -0.2,
+  },
+  countdownSubtitle: {
+    fontSize: 11,
+    fontFamily: 'Inter_400Regular',
+    color: '#64748B',
+    lineHeight: 15,
+  },
+  countdownBadge: {
+    backgroundColor: '#00A86B',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  countdownBadgeText: {
+    fontSize: 13,
+    fontFamily: 'Inter_700Bold',
+    color: '#FFFFFF',
+    letterSpacing: -0.2,
+  },
+
+  quickActionsTitle: {
+    fontSize: 14.5,
+    fontFamily: 'Inter_700Bold',
+    color: '#64748B',
+    marginBottom: 16,
+    marginLeft: 2,
+    letterSpacing: -0.2,
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  quickActionItem: {
+    width: (width - 40 - 24) / 3,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  quickActionCircle: {
+    width: 78,
+    height: 78,
+    borderRadius: 39,
+    backgroundColor: '#F8FAFC',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#EEF2F6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  quickActionLabel: {
+    fontSize: 12,
+    fontFamily: 'Inter_600SemiBold',
+    color: '#1E293B',
+    textAlign: 'center',
+    marginTop: 8,
+    letterSpacing: -0.2,
+  },
 
   sectionTitle: { fontSize: 14, fontFamily: 'Inter_800ExtraBold', color: '#64748B', letterSpacing: 1, marginBottom: 16, marginLeft: 4 },
-  gridContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 16 },
-  gridItem: { width: (width - 56) / 2, backgroundColor: '#FFFFFF', borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 2 },
-  gridIconBox: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  gridTextCol: { flex: 1 },
-  gridTitle: { fontSize: 13, fontFamily: 'Inter_800ExtraBold', color: '#0F172A', marginBottom: 2, letterSpacing: -0.3 },
-  gridSub: { fontSize: 11, color: '#64748B', lineHeight: 14, fontFamily: 'Inter_500Medium' },
-
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 32, marginBottom: 16 },
   viewAllText: { fontSize: 13, fontFamily: 'Inter_800ExtraBold', color: '#DC2626', letterSpacing: 0.5 },
   
@@ -554,23 +810,23 @@ const styles = StyleSheet.create({
   campTitle: { fontSize: 16, fontFamily: 'Inter_800ExtraBold', color: '#0F172A', marginBottom: 4 },
   campOrganizer: { fontSize: 12, color: '#475569', marginBottom: 12, fontFamily: 'Inter_500Medium' },
   campInfoRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6, paddingRight: 20, gap: 6 },
-  campInfoText: { fontSize: 12, color: '#475569', lineHeight: 18 },
+  campInfoText: { fontSize: 12, color: '#475569', lineHeight: 18, fontFamily: 'Inter_400Regular' },
   campBloodTitle: { fontSize: 9, fontFamily: 'Inter_800ExtraBold', color: '#64748B', letterSpacing: 0.5, marginTop: 12, marginBottom: 8 },
   campBloodGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 16 },
   campBloodTinyPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   campBloodTinyText: { fontSize: 10, fontFamily: 'Inter_800ExtraBold', color: '#DC2626' },
   campFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#F1F5F9', paddingTop: 12 },
-  campFooterText: { flex: 1, fontSize: 10, color: '#94A3B8', paddingRight: 10 },
+  campFooterText: { flex: 1, fontSize: 10, color: '#94A3B8', paddingRight: 10, fontFamily: 'Inter_400Regular' },
   campActionBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ECFDF5', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#A7F3D0' },
   campActionText: { fontSize: 11, fontFamily: 'Inter_800ExtraBold', color: '#059669' },
 
   inviteBanner: { flexDirection: 'row', alignItems: 'center', borderRadius: 16, padding: 16, marginTop: 24 },
   inviteTitle: { fontSize: 14, fontFamily: 'Inter_900Black', color: '#FFFFFF', marginBottom: 4 },
-  inviteSub: { fontSize: 11, color: '#FECACA', lineHeight: 16 },
+  inviteSub: { fontSize: 11, color: '#FECACA', lineHeight: 16, fontFamily: 'Inter_400Regular' },
   inviteBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
   inviteBtnText: { fontSize: 12, fontFamily: 'Inter_800ExtraBold', color: '#DC2626' },
   
   noticeBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEF2F2', borderRadius: 12, padding: 16, marginTop: 16, borderWidth: 1, borderColor: '#FECACA' },
   noticeTitle: { fontSize: 12, fontFamily: 'Inter_800ExtraBold', color: '#991B1B', marginBottom: 2 },
-  noticeSub: { fontSize: 10, color: '#B91C1C', lineHeight: 14 },
+  noticeSub: { fontSize: 10, color: '#B91C1C', lineHeight: 14, fontFamily: 'Inter_400Regular' },
 });

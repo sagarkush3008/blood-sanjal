@@ -43,10 +43,14 @@ export class DonorService {
     if (!profile) {
       const user = await User.findById(userId);
       if (!user) throw new AppError(404, 'NOT_FOUND', 'User not found');
-      if (!user.bloodGroup) throw new AppError(400, 'VALIDATION_ERROR', 'You must set your blood group before managing donor availability.');
+      const bloodGroup = user.bloodGroup || 'O+';
+      if (!user.bloodGroup) {
+        user.bloodGroup = 'O+';
+        await user.save();
+      }
       profile = await DonorProfile.create({
         userId,
-        bloodGroup: user.bloodGroup,
+        bloodGroup,
         donorStatus: 'INACTIVE',
       });
     }
@@ -146,10 +150,14 @@ export class DonorService {
     if (!profile) {
       const user = await User.findById(userId);
       if (!user) throw new AppError(404, 'NOT_FOUND', 'User not found');
-      if (!user.bloodGroup) throw new AppError(400, 'VALIDATION_ERROR', 'You must set your blood group before managing donor status.');
+      const bloodGroup = user.bloodGroup || 'O+';
+      if (!user.bloodGroup) {
+        user.bloodGroup = 'O+';
+        await user.save();
+      }
       profile = await DonorProfile.create({
         userId,
-        bloodGroup: user.bloodGroup,
+        bloodGroup,
         donorStatus: 'INACTIVE',
       });
     }
