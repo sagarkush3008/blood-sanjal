@@ -46,7 +46,7 @@ export class BloodRequestService {
       requesterId: userId,
       bloodGroup: data.bloodGroup,
       patientName: data.patientName,
-      status: { $in: ['PENDING_VERIFICATION', 'ACTIVE', 'PARTIALLY_FULFILLED'] }
+      status: { $in: ['pending', 'PENDING_VERIFICATION', 'ACTIVE', 'PARTIALLY_FULFILLED'] }
     });
     if (duplicate) {
       throw new AppError(409, 'CONFLICT', 'You already have an active request for this blood group');
@@ -87,7 +87,7 @@ export class BloodRequestService {
       paymentReference: data.paymentReference,
       paymentProvider: data.paymentProvider,
       platformFeeNpr: data.platformFeeNpr,
-      status: 'PENDING_VERIFICATION'
+      status: data.status || 'pending'
     });
 
     if (data.paymentReference) {

@@ -28,13 +28,15 @@ router.post('/donors/:id/verify', AdminController.verifyDonor);
 // Blood Requests
 router.get('/requests', AdminController.listRequests);
 router.get('/blood-requests', AdminController.listRequests);
+router.get('/pending-requests', AdminController.getPendingRequests);
 router.get('/requests/:id', AdminController.getRequestDetails);
 router.get('/blood-requests/:id', AdminController.getRequestDetails);
 router.get('/blood-requests/:id/matching-donors', AdminController.getMatchingDonors);
 router.post('/blood-requests/:id/verify', AdminController.verifyBloodRequest);
 router.post('/blood-requests/:id/fulfill', AdminController.fulfillRequestUnits);
-router.patch('/requests/:id/status', AdminController.updateRequestStatus);
-router.patch('/blood-requests/:id/status', AdminController.updateRequestStatus);
+router.patch('/request/:id/status', AdminController.updateRequestApprovalStatus);
+router.patch('/requests/:id/status', AdminController.updateRequestApprovalStatus);
+router.patch('/blood-requests/:id/status', AdminController.updateRequestApprovalStatus);
 router.delete('/requests/:id', AdminController.softDeleteRequest);
 router.delete('/blood-requests/:id', AdminController.softDeleteRequest);
 

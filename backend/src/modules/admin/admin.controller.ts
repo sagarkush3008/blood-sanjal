@@ -92,6 +92,26 @@ export class AdminController {
     } catch (error) { next(error); }
   }
 
+  static async getPendingRequests(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await AdminService.getPendingRequests();
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
+  static async updateRequestApprovalStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { status, reason } = req.body;
+      const result = await AdminService.updateRequestApprovalStatus(
+        req.params.id as string,
+        status,
+        reason,
+        req.user?.userId
+      );
+      res.json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
+
   static async updateRequestStatus(req: Request, res: Response, next: NextFunction) {
     try {
       const { status, urgency } = req.body;

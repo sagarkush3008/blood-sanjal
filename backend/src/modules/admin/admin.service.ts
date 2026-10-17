@@ -369,6 +369,46 @@ export class AdminService {
     return request;
   }
 
+  // --- ADMIN APPROVAL WORKFLOW ---
+  static async getPendingRequests() {
+    console.log('🔍 [ADMIN_PENDING_DEBUG] Fetching pending requests from database...');
+    const pendingRequests = await BloodRequest.find({
+      status: { $in: ['pending', 'PENDING_VERIFICATION'] },
+      deletedAt: { $exists: false }
+    })
+      .populate('requesterId', 'name email phone bloodGroup')
+      .sort({ createdAt: -1 });
+
+    console.log(`✅ [ADMIN_PENDING_DEBUG] Retrieved ${pendingRequests.length} pending request(s) from DB.`);
+    return pendingRequests;
+  }
+
+  static async updateRequestApprovalStatus(requestId: string, status: string, reason?: string, actorId?: string) {
+    console.log(`🔄 [ADMIN_PENDING_DEBUG] Updating request ${requestId} to status: "${status}"`);
+    const request = await BloodRequest.findById(requestId).populate('requesterId', 'name email phone');
+    if (!request || request.deletedAt) {
+      throw new AppError(404, 'NOT_FOUND', 'Request not found');
+    }
+
+    let normalizedStatus: string = status;
+    if (status === 'approved' || status === 'APPROVE') {
+      normalizedStatus = 'approved';
+    } else if (status === 'rejected' || status === 'REJECT') {
+      normalizedStatus = 'rejected';
+    }
+
+    request.status = normalizedStatus as any;
+    if (reason) request.additionalInfo = reason;
+    await request.save();
+
+    if (actorId) {
+      await this.logAudit(actorId, `REQUEST_${normalizedStatus.toUpperCase()}`, 'BLOOD_REQUEST', requestId);
+    }
+
+    console.log(`✅ [ADMIN_PENDING_DEBUG] Request ${requestId} successfully updated to status: "${normalizedStatus}"`);
+    return request;
+  }
+
   static async softDeleteRequest(requestId: string, actorId: string) {
     const request = await BloodRequest.findById(requestId);
     if (!request || request.deletedAt) throw new AppError(404, 'NOT_FOUND', 'Request not found');

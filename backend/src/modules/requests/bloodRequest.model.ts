@@ -31,7 +31,7 @@ export interface IBloodRequest extends Document {
   paymentReference?: string;
   paymentProvider?: string;
   platformFeeNpr?: number;
-  status: 'DRAFT' | 'PENDING_VERIFICATION' | 'VERIFIED' | 'ACTIVE' | 'PARTIALLY_FULFILLED' | 'FULFILLED' | 'CANCELLED' | 'EXPIRED';
+  status: 'DRAFT' | 'PENDING_VERIFICATION' | 'VERIFIED' | 'ACTIVE' | 'PARTIALLY_FULFILLED' | 'FULFILLED' | 'CANCELLED' | 'EXPIRED' | 'pending' | 'approved' | 'rejected';
   deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -71,8 +71,8 @@ const bloodRequestSchema = new Schema<IBloodRequest>(
     platformFeeNpr: { type: Number },
     status: {
       type: String,
-      enum: ['DRAFT', 'PENDING_VERIFICATION', 'VERIFIED', 'ACTIVE', 'PARTIALLY_FULFILLED', 'FULFILLED', 'CANCELLED', 'EXPIRED'],
-      default: 'PENDING_VERIFICATION'
+      enum: ['DRAFT', 'PENDING_VERIFICATION', 'VERIFIED', 'ACTIVE', 'PARTIALLY_FULFILLED', 'FULFILLED', 'CANCELLED', 'EXPIRED', 'pending', 'approved', 'rejected'],
+      default: 'pending'
     },
     deletedAt: { type: Date },
   },

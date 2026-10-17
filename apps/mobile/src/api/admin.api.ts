@@ -20,6 +20,8 @@ export const AdminAPI = {
   // Blood Requests
   getBloodRequests: (params?: any) => apiClient.get('/admin/blood-requests', { params }),
   getRequests: (params?: any) => apiClient.get('/admin/blood-requests', { params }),
+  getPendingRequests: () => apiClient.get('/admin/pending-requests'),
+  updateRequestApprovalStatus: (id: string, status: 'approved' | 'rejected') => apiClient.patch(`/admin/request/${id}/status`, { status }),
   getBloodRequestDetails: (id: string) => apiClient.get(`/admin/blood-requests/${id}`),
   verifyBloodRequest: (id: string, data: { activate?: boolean }) => apiClient.post(`/admin/blood-requests/${id}/verify`, data),
   fulfillBloodRequest: (id: string, data: { unitsFulfilled: number }) => apiClient.post(`/admin/blood-requests/${id}/fulfill`, data),
