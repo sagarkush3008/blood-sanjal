@@ -22,6 +22,7 @@ import {
 } from '@expo-google-fonts/inter';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { colors } from './src/theme';
+import './src/i18n';
 
 // Globally set Inter as default font for all React Native Text & TextInput
 const defaultFont = Platform.select({

@@ -1,0 +1,20 @@
+{
+  "common": {
+    "welcome_message": "नमस्ते, {{name}} 👋 जीवन बचाउने कार्यको लागि धन्यवाद",
+    "donate_blood": "रक्तदान गर्नुहोस्",
+    "find_donors": "रक्तदाता खोज्नुहोस्",
+    "quick_actions": "द्रुत कार्यहरू",
+    "blood_bank": "ब्लड बैंक",
+    "support": "सहयोग",
+    "blood_request": "रगतको अनुरोध",
+    "more": "थप",
+    "days_left_save_life": "अर्को जीवन बचाउन बाँकी दिनहरू",
+    "last_recorded_donation": "तपाईंको अन्तिम रक्तदान मिति: {{date}}",
+    "days_left": "{{count}} दिन बाँकी",
+    "eligible_now": "अहिले योग्य! 🩸",
+    "active": "सक्रिय",
+    "inactive": "निष्क्रिय",
+    "become_active": "सक्रिय बन्नुहोस्",
+    "pause_for": "{{duration}} को लागि पज गर्नुहोस्"
+  }
+}

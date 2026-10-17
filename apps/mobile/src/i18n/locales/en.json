@@ -1,0 +1,20 @@
+{
+  "common": {
+    "welcome_message": "Hello, {{name}} 👋 Thank you for being a lifesaver",
+    "donate_blood": "Donate Blood",
+    "find_donors": "Find Donors",
+    "quick_actions": "Quick Actions",
+    "blood_bank": "Blood Bank",
+    "support": "Support",
+    "blood_request": "Blood Request",
+    "more": "More",
+    "days_left_save_life": "Days left to save another life",
+    "last_recorded_donation": "Your last recorded donation was on {{date}}",
+    "days_left": "{{count}} Days Left",
+    "eligible_now": "Eligible Now! 🩸",
+    "active": "Active",
+    "inactive": "Inactive",
+    "become_active": "Become Active",
+    "pause_for": "Pause for {{duration}}"
+  }
+}
