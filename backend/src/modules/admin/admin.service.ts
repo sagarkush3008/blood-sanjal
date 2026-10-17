@@ -27,6 +27,13 @@ export class AdminService {
 
   // --- DASHBOARD SUMMARY ---
   static async getDashboardSummary() {
+    const systemSeedEmails = [
+      'admin@bloodsanjal.org',
+      'donor@bloodsanjal.org',
+      'donor2@bloodsanjal.org',
+      'recipient@bloodsanjal.org',
+    ];
+
     const [
       totalUsers,
       activeUsers,
@@ -41,8 +48,17 @@ export class AdminService {
       paymentsSummary,
       recentAudit
     ] = await Promise.all([
-      User.countDocuments({ deletedAt: { $exists: false } }).catch(() => 0),
-      User.countDocuments({ status: 'ACTIVE', deletedAt: { $exists: false } }).catch(() => 0),
+      User.countDocuments({ 
+        role: { $ne: 'ADMIN' } as any, 
+        email: { $nin: systemSeedEmails }, 
+        deletedAt: { $exists: false } 
+      }).catch(() => 0),
+      User.countDocuments({ 
+        role: { $ne: 'ADMIN' } as any, 
+        email: { $nin: systemSeedEmails }, 
+        status: 'ACTIVE', 
+        deletedAt: { $exists: false } 
+      }).catch(() => 0),
       DonorProfile.countDocuments({ deletedAt: { $exists: false } }).catch(() => 0),
       DonorProfile.countDocuments({
         $or: [
