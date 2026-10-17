@@ -11,7 +11,8 @@
     "lint": "eslint src/**/*.ts",
     "typecheck": "tsc --noEmit",
     "seed": "ts-node scripts/seed.ts",
-    "db:wipe": "ts-node scripts/wipe_database.ts"
+    "db:wipe": "ts-node scripts/wipe_database.ts",
+    "db:reset": "ts-node scripts/resetDatabase.ts"
   },
   "keywords": [],
   "author": "",

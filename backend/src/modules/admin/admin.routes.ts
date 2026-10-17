@@ -132,4 +132,7 @@ router.patch('/settings/:key', AdminSettingsController.updateSettingByKey);
 router.get('/audit', AdminSettingsController.getAuditLogs);
 router.get('/audit-events', AdminSettingsController.getAuditLogs);
 
+// Database Reset (Dev / Test only)
+router.post('/reset-db', AdminController.resetDatabase);
+
 export default router;
