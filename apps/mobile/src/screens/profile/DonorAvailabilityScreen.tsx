@@ -9,7 +9,6 @@ import {
   Alert,
   StatusBar,
   TextInput,
-  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -170,14 +169,6 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
   const returnInfo = formatReturnTime(inactiveUntil);
   const selectedPreset = PRESETS.find((p) => p.id === selectedPresetId);
 
-  const handleToggleSwitch = () => {
-    if (isActive) {
-      handleApplyBreak();
-    } else {
-      makeActiveMutation.mutate();
-    }
-  };
-
   const handleApplyBreak = () => {
     if (showCustom) {
       const val = parseInt(customValue.trim(), 10);
@@ -253,60 +244,47 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* 2. Hero Status Card with Toggle Switch */}
+        {/* 2. Hero Status Card with Big Red "Become Active" Button (No Switch) */}
         <View style={[styles.heroCard, isActive ? styles.heroCardActive : styles.heroCardInactive]}>
-          <View style={styles.heroTopRow}>
-            <View style={styles.heroStatusCol}>
-              <View style={styles.statusBadgeRow}>
-                <View style={[styles.statusDot, isActive ? styles.statusDotActive : styles.statusDotInactive]}>
-                  <View style={[styles.statusDotCore, isActive ? styles.statusDotCoreActive : styles.statusDotCoreInactive]} />
-                </View>
-                <Text style={[styles.statusHeading, isActive ? styles.statusHeadingActive : styles.statusHeadingInactive]}>
-                  {isActive ? 'Available to Donate' : 'Temporarily Paused'}
-                </Text>
-              </View>
-
-              <Text style={styles.statusDescription}>
-                {isActive
-                  ? 'You are live and visible to emergency patients in need of blood.'
-                  : returnInfo
-                  ? `Reactivates ${returnInfo.relative} (${returnInfo.exact}).`
-                  : 'Emergency broadcast alerts are paused.'}
-              </Text>
+          <View style={styles.statusBadgeRow}>
+            <View style={[styles.statusDot, isActive ? styles.statusDotActive : styles.statusDotInactive]}>
+              <View style={[styles.statusDotCore, isActive ? styles.statusDotCoreActive : styles.statusDotCoreInactive]} />
             </View>
-
-            {/* Smooth Switch */}
-            <Switch
-              value={isActive}
-              onValueChange={handleToggleSwitch}
-              disabled={isPendingAction}
-              trackColor={{ false: '#CBD5E1', true: '#FCA5A5' }}
-              thumbColor={isActive ? '#DC2626' : '#FFFFFF'}
-              ios_backgroundColor="#E2E8F0"
-              style={{ transform: [{ scaleX: 0.95 }, { scaleY: 0.95 }] }}
-            />
+            <Text style={[styles.statusHeading, isActive ? styles.statusHeadingActive : styles.statusHeadingInactive]}>
+              {isActive ? 'Available to Donate' : 'Temporarily Paused'}
+            </Text>
           </View>
 
-          {/* Top Status Card Action: Vibrant Red "Become Active" Button (Reason Line Completely Removed) */}
-          {!isActive && (
-            <View style={styles.inactiveActionBox}>
-              <TouchableOpacity
-                style={styles.becomeActiveBtn}
-                onPress={() => makeActiveMutation.mutate()}
-                disabled={isPendingAction}
-                activeOpacity={0.88}
-              >
-                {makeActiveMutation.isPending ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <View style={styles.becomeActiveContent}>
-                    <Ionicons name="flash" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-                    <Text style={styles.becomeActiveText}>Become Active</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
-          )}
+          <Text style={styles.statusDescription}>
+            {isActive
+              ? 'You are live and visible to emergency patients in need of blood.'
+              : returnInfo
+              ? `Reactivates ${returnInfo.relative} (${returnInfo.exact}).`
+              : 'Emergency broadcast alerts are paused.'}
+          </Text>
+
+          {/* Big Vibrant Red Action Button (Replacing the old switch) */}
+          <TouchableOpacity
+            style={styles.becomeActiveBtn}
+            onPress={() => {
+              if (!isActive) {
+                makeActiveMutation.mutate();
+              } else {
+                Alert.alert('Status Active 🩸', 'You are already active and visible to emergency patients.');
+              }
+            }}
+            disabled={isPendingAction}
+            activeOpacity={0.88}
+          >
+            {makeActiveMutation.isPending ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <View style={styles.becomeActiveContent}>
+                <Ionicons name="flash" size={17} color="#FFFFFF" style={{ marginRight: 6 }} />
+                <Text style={styles.becomeActiveText}>Become Active</Text>
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* 3. Section Title */}
@@ -338,11 +316,11 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
                     <Ionicons
                       name={item.icon}
                       size={18}
-                      color={isSelected ? '#059669' : '#475569'}
+                      color={isSelected ? '#DC2626' : '#475569'}
                     />
                   </View>
                   {isSelected ? (
-                    <Ionicons name="checkmark-circle" size={18} color="#059669" />
+                    <Ionicons name="checkmark-circle" size={18} color="#DC2626" />
                   ) : (
                     <View style={styles.emptyRadioCircle} />
                   )}
@@ -358,19 +336,19 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
           })}
         </View>
 
-        {/* 5. Main Confirmation Button: Placed directly below the time duration cards in vibrant RED */}
+        {/* 5. Minimal Confirmation Button (Directly below time duration cards) */}
         <TouchableOpacity
-          style={styles.actionBtn}
+          style={styles.minimalActionBtn}
           onPress={handleApplyBreak}
           disabled={isPendingAction}
-          activeOpacity={0.88}
+          activeOpacity={0.75}
         >
           {setAvailabilityMutation.isPending ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator size="small" color="#DC2626" />
           ) : (
             <View style={styles.actionBtnRow}>
-              <Ionicons name="pause-circle-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.actionBtnText}>
+              <Ionicons name="pause-circle-outline" size={18} color="#DC2626" style={{ marginRight: 8 }} />
+              <Text style={styles.minimalActionBtnText}>
                 {showCustom
                   ? `Pause for ${customValue || '1'} ${customUnit.toLowerCase()}`
                   : `Pause for ${selectedPreset?.label || 'Selected Break'}`}
@@ -532,19 +510,10 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
   },
-  heroTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  heroStatusCol: {
-    flex: 1,
-    paddingRight: 12,
-  },
   statusBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   statusDot: {
     width: 14,
@@ -587,19 +556,16 @@ const styles = StyleSheet.create({
     fontFamily: FONT_REGULAR,
     color: '#475569',
     lineHeight: 17,
+    marginBottom: 4,
   },
-  inactiveActionBox: {
-    marginTop: 14,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#FDE68A',
-  },
+  /* Big Red "Become Active" Button */
   becomeActiveBtn: {
     backgroundColor: '#DC2626',
-    borderRadius: 12,
-    paddingVertical: 12,
+    borderRadius: 14,
+    paddingVertical: 13,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 14,
     shadowColor: '#DC2626',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
@@ -611,7 +577,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   becomeActiveText: {
-    fontSize: 14,
+    fontSize: 14.5,
     fontFamily: FONT_BOLD,
     color: '#FFFFFF',
     letterSpacing: -0.2,
@@ -637,7 +603,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 14,
+    marginBottom: 12,
   },
   presetCard: {
     width: '48.5%',
@@ -649,8 +615,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   presetCardSelected: {
-    backgroundColor: '#F0FDF4',
-    borderColor: '#059669',
+    backgroundColor: '#FEF2F2',
+    borderColor: '#DC2626',
   },
   presetTopRow: {
     flexDirection: 'row',
@@ -669,8 +635,8 @@ const styles = StyleSheet.create({
     borderColor: '#EEF2F6',
   },
   presetIconBoxSelected: {
-    backgroundColor: '#DCFCE7',
-    borderColor: '#86EFAC',
+    backgroundColor: '#FEE2E2',
+    borderColor: '#FECACA',
   },
   emptyRadioCircle: {
     width: 14,
@@ -686,7 +652,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   presetLabelSelected: {
-    color: '#059669',
+    color: '#DC2626',
   },
   presetSub: {
     fontSize: 11,
@@ -694,28 +660,30 @@ const styles = StyleSheet.create({
     color: '#64748B',
     lineHeight: 15,
   },
-  /* Primary Confirmation Action Button (Directly below duration cards) */
-  actionBtn: {
-    backgroundColor: '#DC2626',
-    borderRadius: 12,
-    paddingVertical: 14,
+  /* Minimal Confirmation Button (Directly below duration cards) */
+  minimalActionBtn: {
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1.5,
+    borderColor: '#DC2626',
+    borderRadius: 14,
+    paddingVertical: 13,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
     shadowColor: '#DC2626',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
   actionBtnRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  actionBtnText: {
-    fontSize: 15,
+  minimalActionBtnText: {
+    fontSize: 14.5,
     fontFamily: FONT_BOLD,
-    color: '#FFFFFF',
+    color: '#DC2626',
     letterSpacing: -0.2,
   },
   /* Custom Duration Accordion */
