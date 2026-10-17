@@ -118,7 +118,6 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
   const isInactive = statusData?.status === 'INACTIVE' || profileData?.donorStatus === 'INACTIVE';
   const isActive = !isInactive;
   const inactiveUntil = profileData?.inactiveUntil;
-  const inactiveReason = profileData?.inactiveReason;
 
   const onRefresh = () => {
     refetchStatus();
@@ -221,7 +220,7 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#059669" />
+          <ActivityIndicator size="large" color="#DC2626" />
           <Text style={styles.loadingText}>Fetching status...</Text>
         </View>
       </SafeAreaView>
@@ -232,7 +231,7 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* 1. Fresh Minimal Header */}
+      {/* 1. Header */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -281,22 +280,16 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
               value={isActive}
               onValueChange={handleToggleSwitch}
               disabled={isPendingAction}
-              trackColor={{ false: '#CBD5E1', true: '#A7F3D0' }}
-              thumbColor={isActive ? '#059669' : '#FFFFFF'}
+              trackColor={{ false: '#CBD5E1', true: '#FCA5A5' }}
+              thumbColor={isActive ? '#DC2626' : '#FFFFFF'}
               ios_backgroundColor="#E2E8F0"
               style={{ transform: [{ scaleX: 0.95 }, { scaleY: 0.95 }] }}
             />
           </View>
 
-          {/* Quick Activate Bar when Inactive */}
+          {/* Top Status Card Action: Vibrant Red "Become Active" Button (Reason Line Completely Removed) */}
           {!isActive && (
             <View style={styles.inactiveActionBox}>
-              {inactiveReason ? (
-                <Text style={styles.inactiveReasonText} numberOfLines={1}>
-                  Reason: "{inactiveReason}"
-                </Text>
-              ) : null}
-
               <TouchableOpacity
                 style={styles.becomeActiveBtn}
                 onPress={() => makeActiveMutation.mutate()}
@@ -307,8 +300,8 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
                   <View style={styles.becomeActiveContent}>
-                    <Ionicons name="flash" size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
-                    <Text style={styles.becomeActiveText}>Turn Back Online Now</Text>
+                    <Ionicons name="flash" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+                    <Text style={styles.becomeActiveText}>Become Active</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -326,7 +319,7 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
           </Text>
         </View>
 
-        {/* 4. Minimal 2x2 Presets Grid */}
+        {/* 4. Time Duration Cards (2x2 Presets Grid) */}
         <View style={styles.presetsGrid}>
           {PRESETS.map((item) => {
             const isSelected = selectedPresetId === item.id && !showCustom;
@@ -365,7 +358,28 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
           })}
         </View>
 
-        {/* 5. Custom Duration Accordion */}
+        {/* 5. Main Confirmation Button: Placed directly below the time duration cards in vibrant RED */}
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={handleApplyBreak}
+          disabled={isPendingAction}
+          activeOpacity={0.88}
+        >
+          {setAvailabilityMutation.isPending ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <View style={styles.actionBtnRow}>
+              <Ionicons name="pause-circle-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={styles.actionBtnText}>
+                {showCustom
+                  ? `Pause for ${customValue || '1'} ${customUnit.toLowerCase()}`
+                  : `Pause for ${selectedPreset?.label || 'Selected Break'}`}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {/* 6. Custom Duration Accordion */}
         <TouchableOpacity
           style={[styles.customTrigger, showCustom && styles.customTriggerActive]}
           onPress={() => setShowCustom(!showCustom)}
@@ -376,7 +390,7 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
               <Ionicons
                 name="options-outline"
                 size={16}
-                color={showCustom ? '#059669' : '#64748B'}
+                color={showCustom ? '#DC2626' : '#64748B'}
               />
             </View>
             <Text style={[styles.customTriggerText, showCustom && styles.customTriggerTextActive]}>
@@ -386,7 +400,7 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
           <Ionicons
             name={showCustom ? 'chevron-up' : 'chevron-down'}
             size={18}
-            color={showCustom ? '#059669' : '#94A3B8'}
+            color={showCustom ? '#DC2626' : '#94A3B8'}
           />
         </TouchableOpacity>
 
@@ -435,27 +449,6 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
             />
           </View>
         )}
-
-        {/* 6. Primary Action Button */}
-        <TouchableOpacity
-          style={styles.actionBtn}
-          onPress={handleApplyBreak}
-          disabled={isPendingAction}
-          activeOpacity={0.88}
-        >
-          {setAvailabilityMutation.isPending ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <View style={styles.actionBtnRow}>
-              <Ionicons name="pause-circle-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.actionBtnText}>
-                {showCustom
-                  ? `Pause for ${customValue || '1'} ${customUnit.toLowerCase()}`
-                  : `Pause for ${selectedPreset?.label || 'Selected Break'}`}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
 
         {/* 7. Minimal Privacy / Info Note */}
         <View style={styles.infoFooter}>
@@ -601,26 +594,24 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#FDE68A',
   },
-  inactiveReasonText: {
-    fontSize: 11,
-    fontFamily: FONT_MEDIUM,
-    color: '#92400E',
-    marginBottom: 10,
-    fontStyle: 'italic',
-  },
   becomeActiveBtn: {
-    backgroundColor: '#059669',
-    borderRadius: 10,
-    paddingVertical: 10,
+    backgroundColor: '#DC2626',
+    borderRadius: 12,
+    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#DC2626',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
   },
   becomeActiveContent: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   becomeActiveText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: FONT_BOLD,
     color: '#FFFFFF',
     letterSpacing: -0.2,
@@ -703,6 +694,30 @@ const styles = StyleSheet.create({
     color: '#64748B',
     lineHeight: 15,
   },
+  /* Primary Confirmation Action Button (Directly below duration cards) */
+  actionBtn: {
+    backgroundColor: '#DC2626',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    shadowColor: '#DC2626',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  actionBtnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionBtnText: {
+    fontSize: 15,
+    fontFamily: FONT_BOLD,
+    color: '#FFFFFF',
+    letterSpacing: -0.2,
+  },
   /* Custom Duration Accordion */
   customTrigger: {
     flexDirection: 'row',
@@ -717,8 +732,8 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   customTriggerActive: {
-    borderColor: '#059669',
-    backgroundColor: '#F0FDF4',
+    borderColor: '#DC2626',
+    backgroundColor: '#FEF2F2',
   },
   customTriggerLeft: {
     flexDirection: 'row',
@@ -734,7 +749,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   customIconBoxActive: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: '#FEE2E2',
   },
   customTriggerText: {
     fontSize: 13,
@@ -742,7 +757,7 @@ const styles = StyleSheet.create({
     color: '#475569',
   },
   customTriggerTextActive: {
-    color: '#059669',
+    color: '#DC2626',
     fontFamily: FONT_BOLD,
   },
   customFormBox: {
@@ -818,30 +833,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: FONT_REGULAR,
     color: '#0F172A',
-  },
-  /* Primary Action Button */
-  actionBtn: {
-    backgroundColor: '#0F172A',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  actionBtnRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  actionBtnText: {
-    fontSize: 14,
-    fontFamily: FONT_BOLD,
-    color: '#FFFFFF',
-    letterSpacing: -0.2,
   },
   /* Footer Notice */
   infoFooter: {
