@@ -29,8 +29,9 @@ export const MetricsAPI = {
 
     try {
       const res = await apiClient.get('/metrics');
-      if (res.data?.data) {
-         return { ...defaultData, ...res.data.data };
+      const payload = res.data?.data || res.data;
+      if (payload && typeof payload === 'object') {
+         return { ...defaultData, ...payload };
       }
       return defaultData;
     } catch {

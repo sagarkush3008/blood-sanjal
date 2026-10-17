@@ -6,11 +6,21 @@ import { AuditLog } from '../src/modules/audit/auditLog.model';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 
+jest.setTimeout(30000);
+
 describe('B2 - Donor Availability tests', () => {
   let donorId: string;
   let token: string;
   
   beforeAll(async () => {
+    if (mongoose.connection.readyState !== 1) {
+      if (mongoose.connection.readyState !== 0) {
+        await mongoose.disconnect();
+      }
+      await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/blood-sanjal', {
+        serverSelectionTimeoutMS: 5000
+      });
+    }
     // Clean up
     await User.deleteMany({});
     await DonorProfile.deleteMany({});

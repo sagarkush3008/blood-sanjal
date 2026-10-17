@@ -123,25 +123,63 @@ export class AuthService {
   }
 
   static async login(data: any, ip: string, userAgent: string) {
+    // 1. Email & Phone Normalization
+    const normalizedEmail = data.email ? String(data.email).toLowerCase().trim() : undefined;
+    const normalizedPhone = data.phone ? String(data.phone).trim() : undefined;
+
+    console.log('🔍 [AUTH_DEBUG] 2. Querying Database for User:');
+    console.log('   - Query parameters:', { email: normalizedEmail, phone: normalizedPhone });
+
+    // 3. Database Query Validation
     const user = await User.findOne({
-      $or: [{ email: data.email }, { phone: data.phone }].filter(c => c.email || c.phone)
+      $or: [{ email: normalizedEmail }, { phone: normalizedPhone }].filter(c => c.email || c.phone)
     });
     
+    console.log('   - Database result:', user ? {
+      _id: user._id.toString(),
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      status: user.status,
+      hasPasswordHash: Boolean(user.passwordHash)
+    } : 'NULL (User not found!)');
+
     if (!user || !user.passwordHash) {
+      console.warn('❌ [AUTH_DEBUG] Failed at Step 3: No user found matching credentials or password hash is empty.');
       await AuditLog.create({ action: 'LOGIN_FAILURE', ipHash: ip, userAgent });
       throw new AppError(401, 'UNAUTHENTICATED', 'Invalid credentials');
     }
 
+    // 2. Password Comparison (Bcrypt Debugging)
+    console.log('🔑 [AUTH_DEBUG] 4. Bcrypt Password Verification:');
+    console.log('   - Incoming Plain-text Password:', data.password ? `"${data.password}" (length: ${data.password.length})` : 'UNDEFINED');
+    console.log('   - Stored DB Bcrypt Hash:', user.passwordHash);
+
     const isValid = await bcrypt.compare(data.password, user.passwordHash);
+    console.log('   - Bcrypt comparison outcome:', isValid ? '✅ MATCHED' : '❌ MISMATCH');
+
     if (!isValid) {
+      console.warn('❌ [AUTH_DEBUG] Failed at Step 2: Bcrypt comparison failed (password does not match hash).');
       await AuditLog.create({ action: 'LOGIN_FAILURE', entityId: user._id.toString(), ipHash: ip, userAgent });
       throw new AppError(401, 'UNAUTHENTICATED', 'Invalid credentials');
     }
 
-    if (user.status === 'SUSPENDED') throw new AppError(403, 'FORBIDDEN', 'Account suspended');
-    if (user.status === 'UNVERIFIED') throw new AppError(403, 'UNVERIFIED', 'Please verify your email or phone before logging in. Check your inbox for the verification code.');
+    if (user.status === 'SUSPENDED') {
+      console.warn('⛔ [AUTH_DEBUG] Account is SUSPENDED for user:', user._id);
+      throw new AppError(403, 'FORBIDDEN', 'Account suspended');
+    }
+    if (user.status === 'UNVERIFIED') {
+      console.warn('⚠️ [AUTH_DEBUG] Account is UNVERIFIED for user:', user._id);
+      throw new AppError(403, 'UNVERIFIED', 'Please verify your email or phone before logging in. Check your inbox for the verification code.');
+    }
 
-    const accessToken = jwt.sign({ userId: user._id, role: user.role }, env.JWT_ACCESS_SECRET, { expiresIn: env.ACCESS_TOKEN_TTL as any });
+    // 4. JWT Token Generation
+    console.log('🎟️ [AUTH_DEBUG] 5. Generating JWT & Refresh Session:');
+    const accessToken = jwt.sign(
+      { userId: user._id, role: user.role },
+      env.JWT_ACCESS_SECRET,
+      { expiresIn: env.ACCESS_TOKEN_TTL as any }
+    );
     const refreshToken = crypto.randomBytes(40).toString('hex');
     const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
 
@@ -158,6 +196,7 @@ export class AuthService {
     await user.save();
     
     await AuditLog.create({ actorId: user._id, action: 'LOGIN_SUCCESS', ipHash: ip, userAgent });
+    console.log('   - Access Token generated successfully (TTL:', env.ACCESS_TOKEN_TTL, ')');
 
     return { user: { id: user._id, name: user.name, role: user.role }, accessToken, refreshToken };
   }

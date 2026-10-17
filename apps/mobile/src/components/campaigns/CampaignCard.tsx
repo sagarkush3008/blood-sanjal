@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StatusBadge } from '../common/StatusBadge';
 import { BloodGroupChip } from '../common/BloodGroupChip';
 import { colors, spacing } from '../../theme';
+import { cleanLocationName } from '../../utils/locationHelper';
 
 interface CampaignCardProps {
   campaign: {
@@ -71,7 +72,7 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
         <View style={styles.detailItem}>
           <Ionicons name="location-outline" size={14} color="#64748B" />
           <Text style={styles.detailText} numberOfLines={1}>
-            {campaign.location}
+            {cleanLocationName(campaign.location)}
           </Text>
         </View>
 

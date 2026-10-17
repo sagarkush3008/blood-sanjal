@@ -202,7 +202,7 @@ export const HomeScreen = () => {
                 <TouchableOpacity 
                   style={styles.statusPill}
                   activeOpacity={0.7}
-                  onPress={() => navigation.navigate('Profile', { screen: 'DonorAvailability' })}
+                  onPress={() => navigation.navigate('DonorAvailability')}
                 >
                   <View style={[styles.statusDot, { backgroundColor: isAvailable ? '#22C55E' : '#EF4444' }]} />
                   <Text style={styles.statusText}>{isAvailable ? 'Active' : 'Inactive'}</Text>
@@ -220,7 +220,7 @@ export const HomeScreen = () => {
                    <Feather name="moon" size={14} color="#FCA5A5" />
                    <Text style={styles.inactivePremiumTitle}>Temporarily Unavailable</Text>
                  </View>
-                 <TouchableOpacity onPress={() => navigation.navigate('Profile', { screen: 'DonorAvailability' })}>
+                 <TouchableOpacity onPress={() => navigation.navigate('DonorAvailability')}>
                    <Text style={styles.inactivePremiumAction}>Change</Text>
                  </TouchableOpacity>
                </View>
@@ -343,7 +343,7 @@ export const HomeScreen = () => {
               id={item._id || item.id}
               bloodGroup={item.bloodGroup}
               patientName={item.patientName || 'Patient in Need'}
-              location={item.hospitalName || item.hospitalLocation?.address || 'Hospital'}
+              location={cleanLocationName(item.hospitalName || item.hospitalLocation?.address || 'Hospital')}
               unitsRequired={item.unitsRequired || 1}
               urgency={item.urgency || 'NORMAL'}
               status={item.status || 'ACTIVE'}

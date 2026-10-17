@@ -18,7 +18,7 @@ import * as Location from 'expo-location';
 import { Feather, MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getClosestNepalLocation, isCoordinateString } from '../../utils/locationHelper';
+import { getClosestNepalLocation, isCoordinateString, cleanLocationName } from '../../utils/locationHelper';
 
 type GoogleLayerType = 'standard' | 'satellite' | 'terrain';
 
@@ -57,7 +57,7 @@ export const LocationPickerScreen = () => {
   // Initial coords from route params if provided, otherwise default to Kathmandu
   const initialLat = typeof route.params?.latitude === 'number' ? route.params.latitude : 27.7172;
   const initialLng = typeof route.params?.longitude === 'number' ? route.params.longitude : 85.3240;
-  const initialLocName = route.params?.selectedLocation || route.params?.locationName || 'Kathmandu';
+  const initialLocName = cleanLocationName(route.params?.selectedLocation || route.params?.locationName || 'Kathmandu');
 
   const [coords, setCoords] = useState<{ latitude: number; longitude: number }>({
     latitude: initialLat,
@@ -174,7 +174,7 @@ export const LocationPickerScreen = () => {
     const cacheKey = `${lat.toFixed(4)}_${lng.toFixed(4)}`;
     if (addressCache.current.has(cacheKey)) {
       const cached = addressCache.current.get(cacheKey)!;
-      setExactLocationName(cached.exact);
+      setExactLocationName(cleanLocationName(cached.exact));
       setDetailedAddress(cached.detailed);
       setIsResolving(false);
       return;
@@ -184,11 +184,11 @@ export const LocationPickerScreen = () => {
     setIsResolving(true);
 
     try {
-      // 1. Check if pinned near any known Nepal hospital/landmark preset within ~150 meters
+      // 1. Check if pinned near any known Nepal hospital/landmark preset within ~250 meters
       for (const preset of PRESET_LOCATIONS) {
         const dLat = Math.abs(preset.latitude - lat);
         const dLng = Math.abs(preset.longitude - lng);
-        if (dLat < 0.0015 && dLng < 0.0015) {
+        if (dLat < 0.0025 && dLng < 0.0025) {
           if (currentRequestId === latestRequestIdRef.current) {
             setExactLocationName(preset.name);
             setDetailedAddress(preset.address);
@@ -209,7 +209,15 @@ export const LocationPickerScreen = () => {
 
       if (nativeResults && nativeResults.length > 0) {
         const p = nativeResults[0];
-        const specificName = p.name || p.street;
+        let specificName = p.name || p.street || '';
+        // If specificName looks like raw coordinates or plus codes or numbers, discard it
+        if (isCoordinateString(specificName) || /^[\d\+\s\-\.,°NESW]+$/.test(specificName)) {
+          specificName = p.street || '';
+        }
+        if (isCoordinateString(specificName)) {
+          specificName = '';
+        }
+
         const municipalityOrCity = p.city || p.subregion || p.district;
 
         let exact = '';
@@ -221,10 +229,12 @@ export const LocationPickerScreen = () => {
           exact = municipalityOrCity;
         }
 
-        const fullParts = [p.name, p.street, p.subregion || p.city, p.region].filter(Boolean);
+        exact = cleanLocationName(exact);
+
+        const fullParts = [specificName, p.street, p.subregion || p.city, p.region].filter(Boolean);
         const detailed = fullParts.length > 0 ? Array.from(new Set(fullParts)).join(', ') : exact;
 
-        if (exact && !exact.match(/^[\d\+\s\-\.,]+$/)) {
+        if (exact && !isCoordinateString(exact) && exact !== 'Kathmandu' && exact.length > 2) {
           setExactLocationName(exact);
           setDetailedAddress(detailed);
           setIsResolving(false);
@@ -255,16 +265,19 @@ export const LocationPickerScreen = () => {
           const place =
             addr.amenity ||
             addr.hospital ||
+            addr.clinic ||
+            addr.building ||
             addr.tourism ||
             addr.neighbourhood ||
             addr.suburb ||
             addr.quarter ||
             addr.village ||
-            addr.road;
+            addr.road ||
+            addr.residential;
           const city = addr.city || addr.town || addr.municipality || addr.district || addr.county;
 
           let exact = '';
-          if (place && city && place !== city) {
+          if (place && city && place.toLowerCase() !== city.toLowerCase()) {
             exact = `${place}, ${city}`;
           } else if (place) {
             exact = place;
@@ -272,7 +285,9 @@ export const LocationPickerScreen = () => {
             exact = city;
           }
 
-          if (exact) {
+          exact = cleanLocationName(exact);
+
+          if (exact && !isCoordinateString(exact)) {
             const detailed = data.display_name ? data.display_name.split(',').slice(0, 3).join(', ') : exact;
             setExactLocationName(exact);
             setDetailedAddress(detailed);
@@ -451,16 +466,21 @@ export const LocationPickerScreen = () => {
     setLoading(true);
     const returnScreen = route.params?.returnScreen || 'EditProfile';
 
-    let cleanName = exactLocationName;
+    let cleanName = cleanLocationName(exactLocationName);
     if (isCoordinateString(cleanName) || cleanName.toLowerCase().startsWith('location (')) {
       cleanName = getClosestNepalLocation(coords.latitude, coords.longitude).name;
+    }
+
+    let cleanAddress = cleanLocationName(detailedAddress);
+    if (isCoordinateString(cleanAddress) || cleanAddress.toLowerCase().startsWith('location (')) {
+      cleanAddress = getClosestNepalLocation(coords.latitude, coords.longitude).address;
     }
 
     navigation.navigate({
       name: returnScreen,
       params: {
         selectedLocation: cleanName,
-        locationAddress: detailedAddress,
+        locationAddress: cleanAddress,
         latitude: coords.latitude,
         longitude: coords.longitude,
       },
@@ -738,7 +758,7 @@ export const LocationPickerScreen = () => {
           >
             <View style={styles.pinBubble}>
               <Text style={styles.pinBubbleText} numberOfLines={1}>
-                {isMapMoving ? 'Locating...' : exactLocationName.split(',')[0]}
+                {isMapMoving ? 'Locating...' : cleanLocationName(exactLocationName).split(',')[0]}
               </Text>
             </View>
             <MaterialCommunityIcons name="map-marker" size={46} color="#DC2626" />
@@ -864,9 +884,10 @@ export const LocationPickerScreen = () => {
                     <Text style={styles.resolvingText}>Resolving...</Text>
                   </>
                 ) : (
-                  <Text style={styles.coordsBadgeText}>
-                    {coords.latitude.toFixed(4)}°N, {coords.longitude.toFixed(4)}°E
-                  </Text>
+                  <View style={styles.gpsVerifiedTag}>
+                    <Ionicons name="checkmark-circle" size={12} color="#059669" />
+                    <Text style={styles.gpsVerifiedText}>GPS Verified</Text>
+                  </View>
                 )}
               </View>
             </View>
@@ -1279,10 +1300,21 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_500Medium',
     color: '#DC2626',
   },
-  coordsBadgeText: {
+  gpsVerifiedTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  gpsVerifiedText: {
     fontSize: 10,
-    fontFamily: 'Inter_500Medium',
-    color: '#64748B',
+    fontFamily: 'Inter_700Bold',
+    color: '#059669',
   },
   exactNameText: {
     fontSize: 14,

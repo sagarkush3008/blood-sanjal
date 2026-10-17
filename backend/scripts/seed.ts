@@ -201,7 +201,7 @@ async function runSeed() {
         role: 'USER',
         status: 'ACTIVE',
         emailVerifiedAt: new Date(),
-        provinceId: city.parent,
+        provinceId: city.parentId ? String(city.parentId) : undefined,
         cityId: city._id,
         locationCoordinates: city.coordinates
       });

@@ -10,6 +10,7 @@ import { RequestDetailScreen } from '../requests/RequestDetailScreen';
 import { ProfileNavigator } from '../profile/ProfileNavigator';
 import { FindBloodNavigator } from '../findBlood/FindBloodNavigator';
 import { RewardsScreen } from '../profile/RewardsScreen';
+import { DonorAvailabilityScreen } from '../profile/DonorAvailabilityScreen';
 import { colors } from '../../theme';
 
 const Stack = createNativeStackNavigator();
@@ -33,6 +34,7 @@ export const HomeNavigator = () => {
       <Stack.Screen name="CreateRequest" component={CreateRequestScreen} options={{ title: 'Create Blood Request' }} />
       <Stack.Screen name="RequestDetail" component={RequestDetailScreen} options={{ title: 'Request Details' }} />
       <Stack.Screen name="Rewards" component={RewardsScreen} options={{ title: 'Milestones & Badges' }} />
+      <Stack.Screen name="DonorAvailability" component={DonorAvailabilityScreen} options={{ headerShown: false, presentation: 'modal' }} />
       <Stack.Screen name="Profile" component={ProfileNavigator} options={{ headerShown: false }} />
     </Stack.Navigator>
   );

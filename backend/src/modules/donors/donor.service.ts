@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { DonorProfile } from './donorProfile.model';
 import { DonationRecord } from './donationRecord.model';
 import { User } from '../users/user.model';
@@ -57,11 +58,16 @@ export class DonorService {
     if (data.status === 'ACTIVE') {
       profile.donorStatus = 'ACTIVE';
       profile.availabilityMode = 'AVAILABLE';
-      profile.inactiveUntil = null;
-      profile.inactiveReason = null;
-      profile.inactiveUnit = null;
-      profile.inactiveDuration = null;
-      profile.inactiveStartedAt = null;
+      profile.inactiveUntil = undefined;
+      profile.inactiveReason = undefined;
+      profile.inactiveUnit = undefined;
+      profile.inactiveDuration = undefined;
+      profile.inactiveStartedAt = undefined;
+      delete profile.inactiveUntil;
+      delete profile.inactiveReason;
+      delete profile.inactiveUnit;
+      delete profile.inactiveDuration;
+      delete profile.inactiveStartedAt;
     } else if (data.status === 'INACTIVE') {
       profile.donorStatus = 'INACTIVE';
       profile.inactiveStartedAt = now;
@@ -112,19 +118,25 @@ export class DonorService {
       console.error("Failed to sync donor status to activeStatusService:", e);
     }
 
-    const { AuditLog } = await import('../audit/auditLog.model');
-    await AuditLog.create({
-      actorId: userId,
-      action: data.status === 'ACTIVE' ? 'DONOR_AVAILABLE' : 'DONOR_UNAVAILABLE',
-      entityType: 'DonorProfile',
-      entityId: profile._id.toString(),
-      metadata: { 
-        status: data.status,
-        durationHours: data.durationHours,
-        durationDays: data.durationDays,
-        reason: data.reason ? 'REDACTED' : undefined 
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const { AuditLog } = await import('../audit/auditLog.model');
+        await AuditLog.create({
+          actorId: mongoose.isValidObjectId(userId) ? new mongoose.Types.ObjectId(userId) : undefined,
+          action: data.status === 'ACTIVE' ? 'DONOR_AVAILABLE' : 'DONOR_UNAVAILABLE',
+          entityType: 'DonorProfile',
+          entityId: profile._id?.toString?.() || String(profile._id),
+          metadata: { 
+            status: data.status,
+            durationHours: data.durationHours,
+            durationDays: data.durationDays,
+            reason: data.reason ? 'REDACTED' : undefined 
+          }
+        });
+      } catch (auditErr) {
+        // safe fallback
       }
-    });
+    }
 
     return profile;
   }
@@ -177,18 +189,24 @@ export class DonorService {
       console.error("Failed to sync donor status to activeStatusService:", e);
     }
 
-    const { AuditLog } = await import('../audit/auditLog.model');
-    await AuditLog.create({
-      actorId: userId,
-      action: 'DONOR_STATUS_CHANGED',
-      entityType: 'DonorProfile',
-      entityId: profile._id.toString(),
-      metadata: { 
-        oldStatus,
-        newStatus: data.status,
-        timestamp: now
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const { AuditLog } = await import('../audit/auditLog.model');
+        await AuditLog.create({
+          actorId: mongoose.isValidObjectId(userId) ? new mongoose.Types.ObjectId(userId) : undefined,
+          action: 'DONOR_STATUS_CHANGED',
+          entityType: 'DonorProfile',
+          entityId: profile._id?.toString?.() || String(profile._id),
+          metadata: { 
+            oldStatus,
+            newStatus: data.status,
+            timestamp: now
+          }
+        });
+      } catch (auditErr) {
+        // safe fallback
       }
-    });
+    }
 
     return profile;
   }

@@ -18,6 +18,7 @@ import { useAuthStore } from '../../store/authStore';
 import { StatusBadge, ConfirmDialog, SkeletonCard, PrimaryButton } from '../../components/common';
 import { Timeline, TimelineEvent } from '../../components/requests/Timeline';
 import { colors, spacing } from '../../theme';
+import { cleanLocationName } from '../../utils/locationHelper';
 
 export const RequestDetailScreen = () => {
   const route = useRoute<any>();
@@ -224,14 +225,14 @@ export const RequestDetailScreen = () => {
           <View style={styles.infoRow}>
             <Ionicons name="business-outline" size={16} color={colors.primary} />
             <Text style={styles.infoLabel}>Hospital:</Text>
-            <Text style={styles.infoValue}>{request.hospitalName || request.hospital || 'Hospital'}</Text>
+            <Text style={styles.infoValue}>{cleanLocationName(request.hospitalName || request.hospital || 'Hospital')}</Text>
           </View>
 
           {request.hospitalLocation?.address ? (
             <View style={styles.infoRow}>
               <Ionicons name="location-outline" size={16} color="#64748B" />
               <Text style={styles.infoLabel}>Location:</Text>
-              <Text style={styles.infoValue}>{request.hospitalLocation.address}</Text>
+              <Text style={styles.infoValue}>{cleanLocationName(request.hospitalLocation.address)}</Text>
             </View>
           ) : null}
 

@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import mongoose from 'mongoose';
 import {
   BloodGroup,
   DonorStatus,
@@ -11,6 +12,10 @@ import {
   UpdateDonorStatusPayload,
   HeartbeatPayload
 } from './activeStatus.dto';
+import { User } from '../users/user.model';
+import { DonorProfile } from '../donors/donorProfile.model';
+import { BloodRequest } from '../requests/bloodRequest.model';
+import { AuditLog } from '../audit/auditLog.model';
 
 const ONLINE_HEARTBEAT_THRESHOLD_MS = 90 * 1000; // 90 seconds
 
@@ -21,197 +26,139 @@ class ActiveStatusService {
   private sseClients: Set<Response> = new Set();
   private expirationTimer: NodeJS.Timeout | null = null;
   private startTime: number = Date.now();
+  private isInitialized: boolean = false;
 
   constructor() {
-    this.seedInitialData();
-    this.startAutoExpirationWorker();
+    if (process.env.NODE_ENV !== 'test') {
+      this.startAutoExpirationWorker();
+      const timeout = setTimeout(() => {
+        this.syncWithDatabase().catch((err) =>
+          console.error('[ActiveStatusService] Initial DB sync error:', err)
+        );
+      }, 1000);
+      timeout.unref?.();
+    }
   }
 
-  private seedInitialData() {
-    const nowIso = new Date().toISOString();
-
-    const initialDonors: DonorActiveStatusRecord[] = [
-      {
-        userId: 'user_1',
-        userName: 'Aarav Sharma',
-        userPhone: '9804512345',
-        userEmail: 'aarav.sharma@example.com',
-        bloodGroup: 'B+',
-        location: {
-          provinceId: 'Madhesh Province',
-          districtId: 'Parsa',
-          cityId: 'Birgunj Metropolitan City'
-        },
-        donorStatus: 'ACTIVE',
-        isOnline: true,
-        lastHeartbeat: new Date(Date.now() - 10000).toISOString(),
-        visibility: true,
-        totalDonations: 4,
-        lastDonationDate: '2025-11-20',
-        updatedAt: nowIso
-      },
-      {
-        userId: 'user_2',
-        userName: 'Suman Gupta',
-        userPhone: '9812345678',
-        userEmail: 'suman.gupta@example.com',
-        bloodGroup: 'O+',
-        location: {
-          provinceId: 'Madhesh Province',
-          districtId: 'Parsa',
-          cityId: 'Birgunj Metropolitan City'
-        },
-        donorStatus: 'ACTIVE',
-        isOnline: true,
-        lastHeartbeat: new Date(Date.now() - 25000).toISOString(),
-        visibility: true,
-        totalDonations: 2,
-        lastDonationDate: '2026-01-14',
-        updatedAt: nowIso
-      },
-      {
-        userId: 'user_3',
-        userName: 'Pooja Shrestha',
-        userPhone: '9845678901',
-        userEmail: 'pooja.shrestha@example.com',
-        bloodGroup: 'A+',
-        location: {
-          provinceId: 'Madhesh Province',
-          districtId: 'Parsa',
-          cityId: 'Birgunj Metropolitan City'
-        },
-        donorStatus: 'INACTIVE',
-        isOnline: false,
-        lastHeartbeat: new Date(Date.now() - 3600000).toISOString(),
-        visibility: false,
-        inactiveUntil: new Date(Date.now() + 2 * 3600000).toISOString(),
-        inactiveReason: 'In office meeting & class',
-        totalDonations: 6,
-        lastDonationDate: '2025-08-10',
-        updatedAt: nowIso
-      },
-      {
-        userId: 'user_4',
-        userName: 'Rajesh Patel',
-        userPhone: '9801122334',
-        userEmail: 'rajesh.patel@example.com',
-        bloodGroup: 'AB+',
-        location: {
-          provinceId: 'Madhesh Province',
-          districtId: 'Parsa',
-          cityId: 'Birgunj Metropolitan City'
-        },
-        donorStatus: 'ACTIVE',
-        isOnline: false,
-        lastHeartbeat: new Date(Date.now() - 300000).toISOString(),
-        visibility: true,
-        totalDonations: 1,
-        lastDonationDate: '2026-03-05',
-        updatedAt: nowIso
-      },
-      {
-        userId: 'user_5',
-        userName: 'Anjali Shah',
-        userPhone: '9819988776',
-        userEmail: 'anjali.shah@example.com',
-        bloodGroup: 'O-',
-        location: {
-          provinceId: 'Madhesh Province',
-          districtId: 'Parsa',
-          cityId: 'Birgunj Metropolitan City'
-        },
-        donorStatus: 'ACTIVE',
-        isOnline: true,
-        lastHeartbeat: new Date(Date.now() - 5000).toISOString(),
-        visibility: true,
-        totalDonations: 3,
-        lastDonationDate: '2025-10-18',
-        updatedAt: nowIso
-      }
-    ];
-
-    for (const d of initialDonors) {
-      this.donors.set(d.userId, d);
+  public stop(): void {
+    if (this.expirationTimer) {
+      clearInterval(this.expirationTimer);
+      this.expirationTimer = null;
     }
+  }
 
-    const initialRequests: ActiveBloodRequestRecord[] = [
-      {
-        id: 'req_1',
-        requesterId: 'user_2',
-        requesterName: 'Suman Gupta',
-        bloodGroup: 'B+',
-        unitsRequired: 2,
-        hospital: 'Narayani Sub-Regional Hospital',
-        hospitalLocation: {
-          provinceId: 'Madhesh Province',
-          districtId: 'Parsa',
-          cityId: 'Birgunj Metropolitan City'
-        },
-        urgency: 'EMERGENCY',
-        status: 'ACTIVE',
-        isEmergency: true,
-        requiredDate: new Date().toISOString().split('T')[0],
-        requiredTime: 'Immediate',
-        description: 'Urgent emergency needed for road traffic trauma surgery in ICU.',
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-        updatedAt: nowIso
-      },
-      {
-        id: 'req_2',
-        requesterId: 'user_4',
-        requesterName: 'Rajesh Patel',
-        bloodGroup: 'AB+',
-        unitsRequired: 1,
-        hospital: 'National Medical College (NMC)',
-        hospitalLocation: {
-          provinceId: 'Madhesh Province',
-          districtId: 'Parsa',
-          cityId: 'Birgunj Metropolitan City'
-        },
-        urgency: 'URGENT',
-        status: 'ACTIVE',
-        isEmergency: false,
-        requiredDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        requiredTime: '11:00 AM',
-        description: 'Needed for scheduled C-Section delivery tomorrow morning.',
-        createdAt: new Date(Date.now() - 7200000).toISOString(),
-        updatedAt: nowIso
+  public async syncWithDatabase(): Promise<void> {
+    try {
+      const profilesQuery = DonorProfile.find();
+      const profiles = (profilesQuery && typeof profilesQuery.populate === 'function')
+        ? await profilesQuery.populate('userId')
+        : [];
+      if (!Array.isArray(profiles)) return;
+      const now = Date.now();
+
+      for (const p of profiles) {
+        const u = p.userId as any;
+        if (!u || !u._id) continue;
+        const userIdStr = u._id.toString();
+
+        const lastHb = u.lastHeartbeat
+          ? new Date(u.lastHeartbeat).toISOString()
+          : new Date(Date.now() - 300000).toISOString();
+        const isOnline = now - new Date(lastHb).getTime() <= ONLINE_HEARTBEAT_THRESHOLD_MS;
+
+        this.donors.set(userIdStr, {
+          userId: userIdStr,
+          userName: u.name || 'Donor',
+          userPhone: u.phone || '',
+          userEmail: u.email || '',
+          bloodGroup: (p.bloodGroup || u.bloodGroup || 'O+') as BloodGroup,
+          location: {
+            provinceId: u.provinceId ? String(u.provinceId) : '',
+            districtId: u.districtId ? String(u.districtId) : '',
+            cityId: u.cityId ? String(u.cityId) : ''
+          },
+          donorStatus: p.donorStatus === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
+          isOnline,
+          lastHeartbeat: lastHb,
+          visibility: p.donorStatus === 'ACTIVE',
+          inactiveUntil: p.inactiveUntil ? p.inactiveUntil.toISOString() : undefined,
+          inactiveReason: p.inactiveReason || undefined,
+          totalDonations: p.totalDonations || 0,
+          lastDonationDate: p.lastDonationDate
+            ? p.lastDonationDate.toISOString().split('T')[0]
+            : undefined,
+          updatedAt: ((p as any).updatedAt || new Date()).toISOString()
+        });
       }
-    ];
 
-    for (const r of initialRequests) {
-      this.requests.set(r.id, r);
+      const reqQuery = BloodRequest.find({
+        status: { $in: ['ACTIVE', 'PENDING_VERIFICATION'] }
+      });
+      const activeReqs = (reqQuery && typeof reqQuery.populate === 'function')
+        ? await reqQuery.populate('requesterId')
+        : [];
+      if (!Array.isArray(activeReqs)) return;
+
+      for (const r of activeReqs) {
+        if (!r || !r._id) continue;
+        const reqUser = r.requesterId as any;
+        const reqIdStr = r._id.toString();
+        const requesterIdStr = reqUser?._id
+          ? reqUser._id.toString()
+          : (r.requesterId ? r.requesterId.toString() : 'unknown');
+
+        this.requests.set(reqIdStr, {
+          id: reqIdStr,
+          requesterId: requesterIdStr,
+          requesterName: reqUser?.name || 'Patient Family',
+          bloodGroup: (r.bloodGroup || 'O+') as BloodGroup,
+          unitsRequired: r.unitsRequired || 1,
+          hospital: r.hospitalName || 'Hospital',
+          hospitalLocation: {
+            provinceId: r.hospitalLocation?.provinceId || '',
+            districtId: r.hospitalLocation?.districtId || '',
+            cityId: r.hospitalLocation?.cityId || ''
+          },
+          urgency: (r.urgency as RequestUrgency) || 'NORMAL',
+          status: (r.status as RequestStatus) || 'ACTIVE',
+          isEmergency: r.urgency === 'EMERGENCY',
+          requiredDate: r.requiredDate ? r.requiredDate.toISOString() : new Date().toISOString(),
+          requiredTime: 'ASAP',
+          description: r.reason || '',
+          createdAt: (r.createdAt || new Date()).toISOString(),
+          updatedAt: (r.updatedAt || new Date()).toISOString()
+        });
+      }
+
+      this.isInitialized = true;
+    } catch (e) {
+      console.error('[ActiveStatusService] syncWithDatabase error:', e);
     }
-
-    this.auditLogs.push({
-      id: 'audit_init',
-      entityType: 'donor',
-      entityId: 'system',
-      entityName: 'Blood Sanjal Active Status Engine',
-      previousStatus: 'offline',
-      newStatus: 'active',
-      reason: 'Backend active status service initialized successfully',
-      changedBy: 'system',
-      timestamp: nowIso
-    });
   }
 
   private startAutoExpirationWorker() {
     this.expirationTimer = setInterval(() => {
-      // this.checkExpiredSnoozes(); // Disabled in favor of centralized DB-driven cron in server.ts
-      this.checkExpiredRequests();
-    }, 10000);
+      this.checkExpiredSnoozes().catch((err) =>
+        console.error('[ActiveStatusService] Auto-restore error:', err)
+      );
+      this.checkExpiredRequests().catch((err) =>
+        console.error('[ActiveStatusService] Request expiration error:', err)
+      );
+    }, 15000);
+    this.expirationTimer.unref?.();
   }
 
-  public checkExpiredSnoozes() {
-    const now = Date.now();
+  public async checkExpiredSnoozes(): Promise<number> {
+    const now = new Date();
+    const nowMs = now.getTime();
     const restoredDonors: DonorActiveStatusRecord[] = [];
 
+    // 1. Check in-memory map
     for (const [userId, donor] of this.donors.entries()) {
       if (
         donor.donorStatus === 'INACTIVE' &&
         donor.inactiveUntil &&
-        new Date(donor.inactiveUntil).getTime() <= now
+        new Date(donor.inactiveUntil).getTime() <= nowMs
       ) {
         const previousStatus = donor.donorStatus;
         const previousReason = donor.inactiveReason;
@@ -220,7 +167,7 @@ class ActiveStatusService {
         donor.visibility = true;
         donor.inactiveUntil = undefined;
         donor.inactiveReason = undefined;
-        donor.updatedAt = new Date().toISOString();
+        donor.updatedAt = now.toISOString();
 
         this.donors.set(userId, donor);
         restoredDonors.push(donor);
@@ -234,14 +181,34 @@ class ActiveStatusService {
           newStatus: 'ACTIVE',
           reason: `Auto-restored to Active after scheduled pause elapsed (${previousReason || 'Timed snooze completed'})`,
           changedBy: 'auto_engine',
-          timestamp: new Date().toISOString()
+          timestamp: now.toISOString()
         };
         this.auditLogs.unshift(auditEntry);
+        if (this.auditLogs.length > 200) this.auditLogs.pop();
+      }
+    }
 
-        if (this.auditLogs.length > 200) {
-          this.auditLogs.pop();
+    // 2. Persist to MongoDB DonorProfile
+    try {
+      const expiredDbDonors = await DonorProfile.find({
+        donorStatus: 'INACTIVE',
+        inactiveUntil: { $lte: now }
+      });
+
+      if (Array.isArray(expiredDbDonors)) {
+        for (const p of expiredDbDonors) {
+          p.donorStatus = 'ACTIVE';
+          p.availabilityMode = 'AVAILABLE';
+          p.inactiveUntil = null;
+          p.inactiveReason = null;
+          p.inactiveUnit = null;
+          p.inactiveDuration = null;
+          p.lastStatusChangedAt = now;
+          await p.save();
         }
       }
+    } catch (e) {
+      console.error('[ActiveStatusService] DB restore error:', e);
     }
 
     if (restoredDonors.length > 0) {
@@ -255,17 +222,23 @@ class ActiveStatusService {
         }))
       });
     }
+
+    return restoredDonors.length;
   }
 
-  public checkExpiredRequests() {
+  public async checkExpiredRequests(): Promise<void> {
     const now = Date.now();
     for (const [reqId, req] of this.requests.entries()) {
       if (req.status === 'ACTIVE' && req.requiredDate) {
         const reqTimeMs = new Date(req.requiredDate).getTime() + 24 * 3600000;
         if (reqTimeMs < now - 48 * 3600000) {
-          req.status = 'CLOSED'; // Using CLOSED instead of 'expired' which isn't in RequestStatus type
+          req.status = 'CLOSED';
           req.updatedAt = new Date().toISOString();
           this.requests.set(reqId, req);
+
+          try {
+            await BloodRequest.findByIdAndUpdate(reqId, { status: 'CLOSED' });
+          } catch (e) {}
 
           this.broadcast('request_status_updated', {
             id: req.id,
@@ -277,7 +250,7 @@ class ActiveStatusService {
     }
   }
 
-  public addSseClient(res: Response) {
+  public addSseClient(res: Response): void {
     this.sseClients.add(res);
 
     const snapshot = {
@@ -293,7 +266,7 @@ class ActiveStatusService {
     });
   }
 
-  public broadcast(event: string, payload: any) {
+  public broadcast(event: string, payload: any): void {
     const data = JSON.stringify({ event, payload, timestamp: new Date().toISOString() });
     for (const client of this.sseClients) {
       try {
@@ -325,7 +298,8 @@ class ActiveStatusService {
 
     for (const donor of this.donors.values()) {
       totalDonors++;
-      const isOnline = now - new Date(donor.lastHeartbeat).getTime() <= ONLINE_HEARTBEAT_THRESHOLD_MS;
+      const isOnline =
+        now - new Date(donor.lastHeartbeat).getTime() <= ONLINE_HEARTBEAT_THRESHOLD_MS;
 
       if (donor.bloodGroup && bloodGroupBreakdown[donor.bloodGroup]) {
         bloodGroupBreakdown[donor.bloodGroup].total++;
@@ -345,9 +319,17 @@ class ActiveStatusService {
           break;
         case 'INACTIVE':
           inactiveDonorsCount++;
+          if (donor.inactiveUntil) {
+            busyDonorsCount++;
+          }
           break;
-        // The prompt's code used 'recently_donated' and 'busy' but they are not in DonorStatus type.
-        // I will map them accordingly or skip if not matching.
+      }
+
+      if (donor.lastDonationDate) {
+        const donationTime = new Date(donor.lastDonationDate).getTime();
+        if (now - donationTime < 90 * 86400000) {
+          recentlyDonatedCount++;
+        }
       }
     }
 
@@ -401,7 +383,9 @@ class ActiveStatusService {
       }
       if (filters.district) {
         result = result.filter(
-          (d) => d.location.districtId.toLowerCase() === filters.district!.toLowerCase()
+          (d) =>
+            d.location?.districtId &&
+            d.location.districtId.toLowerCase() === filters.district!.toLowerCase()
         );
       }
       if (filters.onlineOnly) {
@@ -412,7 +396,7 @@ class ActiveStatusService {
         result = result.filter(
           (d) =>
             d.userName.toLowerCase().includes(query) ||
-            d.location.cityId.toLowerCase().includes(query) ||
+            (d.location?.cityId && d.location.cityId.toLowerCase().includes(query)) ||
             d.bloodGroup.toLowerCase().includes(query)
         );
       }
@@ -430,37 +414,57 @@ class ActiveStatusService {
     };
   }
 
-  public updateDonorStatus(
+  public async updateDonorStatus(
     userId: string,
     payload: UpdateDonorStatusPayload
-  ): DonorActiveStatusRecord {
+  ): Promise<DonorActiveStatusRecord> {
+    const now = new Date();
+    const nowIso = now.toISOString();
     let donor = this.donors.get(userId);
 
+    // If not in map, look up user from DB
     if (!donor) {
+      let userName = payload.changedBy || 'Donor User';
+      let bloodGroup: BloodGroup = 'O+';
+      let location = { provinceId: '', districtId: '', cityId: '' };
+
+      if (mongoose.connection.readyState === 1) {
+        try {
+          const u = await User.findById(userId);
+          if (u) {
+            userName = u.name;
+            bloodGroup = (u.bloodGroup as BloodGroup) || 'O+';
+            location = {
+              provinceId: u.provinceId ? String(u.provinceId) : '',
+              districtId: u.districtId ? String(u.districtId) : '',
+              cityId: u.cityId ? String(u.cityId) : ''
+            };
+          }
+        } catch (e) {}
+      }
+
       donor = {
         userId,
-        userName: payload.changedBy || 'Donor User',
+        userName,
         userPhone: '',
         userEmail: '',
-        bloodGroup: 'O+',
-        location: {
-          provinceId: 'Madhesh Province',
-          districtId: 'Parsa',
-          cityId: 'Birgunj Metropolitan City'
-        },
+        bloodGroup,
+        location,
         donorStatus: payload.status,
         isOnline: true,
-        lastHeartbeat: new Date().toISOString(),
-        visibility: payload.visibility ?? (payload.status === 'ACTIVE'),
+        lastHeartbeat: nowIso,
+        visibility: payload.visibility ?? payload.status === 'ACTIVE',
         totalDonations: 0,
-        updatedAt: new Date().toISOString()
+        updatedAt: nowIso
       };
     }
 
     const previousStatus = donor.donorStatus;
     donor.donorStatus = payload.status;
-    donor.visibility = payload.visibility ?? (payload.status === 'ACTIVE');
-    donor.updatedAt = new Date().toISOString();
+    donor.visibility = payload.visibility ?? payload.status === 'ACTIVE';
+    donor.updatedAt = nowIso;
+
+    let inactiveUntilDate: Date | null = null;
 
     if (payload.status === 'ACTIVE') {
       donor.inactiveUntil = undefined;
@@ -468,10 +472,13 @@ class ActiveStatusService {
     } else if (payload.status === 'INACTIVE') {
       if (payload.inactiveUntil) {
         donor.inactiveUntil = payload.inactiveUntil;
+        inactiveUntilDate = new Date(payload.inactiveUntil);
       } else if (payload.inactiveHours) {
-        donor.inactiveUntil = new Date(Date.now() + payload.inactiveHours * 3600000).toISOString();
+        inactiveUntilDate = new Date(Date.now() + payload.inactiveHours * 3600000);
+        donor.inactiveUntil = inactiveUntilDate.toISOString();
       } else if (payload.inactiveDays) {
-        donor.inactiveUntil = new Date(Date.now() + payload.inactiveDays * 86400000).toISOString();
+        inactiveUntilDate = new Date(Date.now() + payload.inactiveDays * 86400000);
+        donor.inactiveUntil = inactiveUntilDate.toISOString();
       } else {
         donor.inactiveUntil = undefined;
       }
@@ -480,6 +487,58 @@ class ActiveStatusService {
 
     this.donors.set(userId, donor);
 
+    // Persist to MongoDB DonorProfile!
+    if (mongoose.connection.readyState === 1) {
+      try {
+        let profile = await DonorProfile.findOne({ userId });
+        if (!profile) {
+          const u = await User.findById(userId);
+          profile = await DonorProfile.create({
+            userId,
+            bloodGroup: u?.bloodGroup || donor.bloodGroup || 'O+',
+            donorStatus: payload.status
+          });
+        }
+
+        profile.donorStatus = payload.status;
+        profile.lastStatusChangedAt = now;
+        if (payload.changedBy && mongoose.isValidObjectId(payload.changedBy)) {
+          profile.lastStatusChangedBy = payload.changedBy as any;
+        }
+
+        if (payload.status === 'ACTIVE') {
+          profile.availabilityMode = 'AVAILABLE';
+          profile.inactiveUntil = undefined;
+          profile.inactiveReason = undefined;
+          profile.inactiveUnit = undefined;
+          profile.inactiveDuration = undefined;
+          profile.inactiveStartedAt = undefined;
+          delete profile.inactiveUntil;
+          delete profile.inactiveReason;
+          delete profile.inactiveUnit;
+          delete profile.inactiveDuration;
+          delete profile.inactiveStartedAt;
+        } else {
+          profile.availabilityMode = inactiveUntilDate ? 'TEMPORARY_INACTIVE' : 'INDEFINITE_INACTIVE';
+          profile.inactiveUntil = inactiveUntilDate;
+          profile.inactiveReason = payload.inactiveReason || null;
+          profile.inactiveStartedAt = now;
+          if (payload.inactiveHours) {
+            profile.inactiveUnit = 'HOURS';
+            profile.inactiveDuration = payload.inactiveHours;
+          } else if (payload.inactiveDays) {
+            profile.inactiveUnit = 'DAYS';
+            profile.inactiveDuration = payload.inactiveDays;
+          }
+        }
+
+        await profile.save();
+      } catch (err) {
+        console.error('[ActiveStatusService] Error persisting to DonorProfile:', err);
+      }
+    }
+
+    // Persist Audit Log
     const auditEntry: StatusAuditEntry = {
       id: `audit_${Date.now()}_${userId}`,
       entityType: 'donor',
@@ -487,12 +546,32 @@ class ActiveStatusService {
       entityName: donor.userName,
       previousStatus,
       newStatus: payload.status,
-      reason: payload.inactiveReason || (payload.status === 'ACTIVE' ? 'Marked active by user' : undefined),
+      reason:
+        payload.inactiveReason || (payload.status === 'ACTIVE' ? 'Marked active by user' : undefined),
       changedBy: payload.changedBy || userId,
-      timestamp: new Date().toISOString()
+      timestamp: nowIso
     };
     this.auditLogs.unshift(auditEntry);
     if (this.auditLogs.length > 200) this.auditLogs.pop();
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await AuditLog.create({
+          actorId: (payload.changedBy && mongoose.isValidObjectId(payload.changedBy))
+            ? new mongoose.Types.ObjectId(payload.changedBy)
+            : (mongoose.isValidObjectId(userId) ? new mongoose.Types.ObjectId(userId) : undefined),
+          action: payload.status === 'ACTIVE' ? 'DONOR_AVAILABLE' : 'DONOR_UNAVAILABLE',
+          entityType: 'DonorProfile',
+          entityId: userId,
+          metadata: {
+            previousStatus,
+            newStatus: payload.status,
+            inactiveUntil: donor.inactiveUntil,
+            reason: payload.inactiveReason
+          }
+        });
+      } catch (e) {}
+    }
 
     const result = {
       ...donor,
@@ -508,7 +587,9 @@ class ActiveStatusService {
     return result;
   }
 
-  public recordHeartbeat(payload: HeartbeatPayload): { success: boolean; isOnline: boolean } {
+  public async recordHeartbeat(
+    payload: HeartbeatPayload
+  ): Promise<{ success: boolean; isOnline: boolean }> {
     const nowIso = new Date().toISOString();
     let donor = this.donors.get(payload.userId);
 
@@ -516,7 +597,45 @@ class ActiveStatusService {
       donor.lastHeartbeat = nowIso;
       donor.isOnline = true;
       this.donors.set(payload.userId, donor);
+    } else {
+      try {
+        const u = await User.findById(payload.userId);
+        if (u) {
+          const p = await DonorProfile.findOne({ userId: payload.userId });
+          donor = {
+            userId: payload.userId,
+            userName: u.name || 'Donor',
+            userPhone: u.phone || '',
+            userEmail: u.email || '',
+            bloodGroup: (p?.bloodGroup || u.bloodGroup || 'O+') as BloodGroup,
+            location: {
+              provinceId: u.provinceId ? String(u.provinceId) : '',
+              districtId: u.districtId ? String(u.districtId) : '',
+              cityId: u.cityId ? String(u.cityId) : ''
+            },
+            donorStatus: (p?.donorStatus === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE') as DonorStatus,
+            isOnline: true,
+            lastHeartbeat: nowIso,
+            visibility: p?.donorStatus === 'ACTIVE',
+            inactiveUntil: p?.inactiveUntil ? p.inactiveUntil.toISOString() : undefined,
+            inactiveReason: p?.inactiveReason || undefined,
+            totalDonations: p?.totalDonations || 0,
+            lastDonationDate: p?.lastDonationDate
+              ? p.lastDonationDate.toISOString().split('T')[0]
+              : undefined,
+            updatedAt: nowIso
+          };
+          this.donors.set(payload.userId, donor);
+        }
+      } catch (e) {}
     }
+
+    try {
+      await User.findByIdAndUpdate(payload.userId, {
+        lastHeartbeat: new Date(),
+        onlinePlatform: payload.platform || 'mobile'
+      });
+    } catch (e) {}
 
     this.broadcast('heartbeat_ping', {
       userId: payload.userId,
@@ -552,12 +671,12 @@ class ActiveStatusService {
     });
   }
 
-  public updateRequestStatus(
+  public async updateRequestStatus(
     requestId: string,
     newStatus: RequestStatus,
     changedBy: string = 'admin',
     reason?: string
-  ): ActiveBloodRequestRecord | null {
+  ): Promise<ActiveBloodRequestRecord | null> {
     const req = this.requests.get(requestId);
     if (!req) return null;
 
@@ -565,6 +684,10 @@ class ActiveStatusService {
     req.status = newStatus;
     req.updatedAt = new Date().toISOString();
     this.requests.set(requestId, req);
+
+    try {
+      await BloodRequest.findByIdAndUpdate(requestId, { status: newStatus });
+    } catch (e) {}
 
     const auditEntry: StatusAuditEntry = {
       id: `audit_req_${Date.now()}_${requestId}`,
@@ -618,7 +741,7 @@ class ActiveStatusService {
     return this.auditLogs.slice(0, limit);
   }
 
-  public destroy() {
+  public destroy(): void {
     if (this.expirationTimer) {
       clearInterval(this.expirationTimer);
     }

@@ -21,6 +21,7 @@ import { PaymentsAPI } from '../../api/payments.api';
 import { BloodGroupChip, EmptyState, SkeletonCard, PrimaryButton } from '../../components/common';
 import { DonorCard } from '../../components/donors/DonorCard';
 import { colors, spacing } from '../../theme';
+import { cleanLocationName } from '../../utils/locationHelper';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const DISTANCES = [5, 10, 25, 50];
@@ -272,11 +273,12 @@ export const FindBloodScreen = () => {
                   reminderDate={item.reminderDate}
                   inactiveUntil={item.inactiveUntil}
                   inactiveReason={item.inactiveReason}
-                  location={
+                  location={cleanLocationName(
                     item.approximateLocation?.districtId ||
                     item.approximateLocation?.cityId ||
-                    'Broad Region'
-                  }
+                    item.approximateLocation?.provinceId ||
+                    'Nepal'
+                  )}
                   isRequested={isRequested}
                   onRequestContact={() => handleOpenContactModal(item)}
                 />

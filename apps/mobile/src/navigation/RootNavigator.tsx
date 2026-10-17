@@ -18,6 +18,7 @@ import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
 import { PaymentScreen } from '../screens/payments/PaymentScreen';
 import { PaymentHistoryScreen } from '../screens/payments/PaymentHistoryScreen';
 import { LocationPickerScreen } from '../screens/profile/LocationPickerScreen';
+import { DonorAvailabilityScreen } from '../screens/profile/DonorAvailabilityScreen';
 import { colors } from '../theme';
 
 const Stack = createNativeStackNavigator();
@@ -46,7 +47,7 @@ const AppNavigator = ({ role }: { role?: string }) => {
       <Stack.Screen name="Terms" component={TermsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Payment" component={PaymentScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="DonorAvailability" component={DonorAvailabilityScreen} options={{ headerShown: false, presentation: 'modal' }} />
       <Stack.Screen name="LocationPicker" component={LocationPickerScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );

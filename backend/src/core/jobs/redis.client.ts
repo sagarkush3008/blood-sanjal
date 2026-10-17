@@ -5,9 +5,13 @@ const isRediss = env.REDIS_URL.startsWith('rediss://');
 
 export const redisConnection = new Redis(env.REDIS_URL, {
   maxRetriesPerRequest: null,
-  family: 0, // Favor IPv4 for Upstash
+  family: 4, // Force IPv4 to prevent Windows IPv6 DNS ENOTFOUND timeouts
   enableReadyCheck: false,
   keepAlive: 10000,
+  retryStrategy(times) {
+    const delay = Math.min(times * 1000, 10000);
+    return delay;
+  },
   ...(isRediss ? { tls: { rejectUnauthorized: false } } : {})
 });
 

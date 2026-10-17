@@ -18,6 +18,7 @@ import { BloodRequestsAPI } from '../../api/requests.api';
 import { useAuthStore } from '../../store/authStore';
 import { SideDrawer } from '../../components/SideDrawer';
 import { colors, fonts } from '../../theme';
+import { cleanLocationName } from '../../utils/locationHelper';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
@@ -87,13 +88,16 @@ export const CreateRequestScreen = () => {
 
   useEffect(() => {
     if (route.params?.selectedLocation) {
-      setHospitalName(route.params.selectedLocation);
+      const cleanLoc = cleanLocationName(route.params.selectedLocation);
+      setHospitalName(cleanLoc);
       if (route.params?.locationAddress) {
-        setHospitalAddress(route.params.locationAddress);
+        setHospitalAddress(cleanLocationName(route.params.locationAddress));
       }
-      const parts = route.params.selectedLocation.split(',');
+      const parts = cleanLoc.split(',');
       if (parts.length > 1) {
         setCity(parts[parts.length - 1].trim());
+      } else {
+        setCity(cleanLoc);
       }
     }
   }, [route.params?.selectedLocation, route.params?.locationAddress]);

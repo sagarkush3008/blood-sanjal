@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 export const registerSchema = z.object({
   name: z.string().min(2),
-  email: z.string().email().optional(),
-  phone: z.string().min(7).optional(),
+  email: z.string().email().transform(e => e.toLowerCase().trim()).optional(),
+  phone: z.string().min(7).transform(p => p.trim()).optional(),
   password: z.string().min(8),
   bloodGroup: z.string().optional(),
 }).refine(data => data.email || data.phone, {
@@ -12,8 +12,8 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
+  email: z.string().email().transform(e => e.toLowerCase().trim()).optional(),
+  phone: z.string().transform(p => p.trim()).optional(),
   password: z.string(),
 }).refine(data => data.email || data.phone, {
   message: "Either email or phone is required",

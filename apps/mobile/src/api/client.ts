@@ -2,26 +2,20 @@ import axios, { AxiosError } from 'axios';
 import { NativeModules, Platform } from 'react-native';
 import { storage } from '../utils/storage';
 
-// Live Cloudflare Tunnel URL - connects directly over HTTPS without firewall or Wi-Fi IP restrictions
-export const CLOUDFLARE_TUNNEL_URL = 'https://realize-pdt-equity-bat.trycloudflare.com/api/v1';
+const ACTIVE_TUNNEL_URL = 'https://cincinnati-williams-density-rotary.trycloudflare.com/api/v1';
 
-// Dynamically grab the local IP address of the machine running Expo
-let HOST = '192.168.1.71';
-if (__DEV__) {
-  const scriptURL = NativeModules.SourceCode?.scriptURL;
-  if (scriptURL) {
-    const address = scriptURL.split('://')[1]?.split('/')[0];
-    HOST = address?.split(':')[0] || '192.168.1.71';
-  } else {
-    HOST = Platform.OS === 'android' ? '10.0.2.2' : '192.168.1.71';
+// Dynamic Backend Host Detection
+export const getApiBaseUrl = (): string => {
+  const envUrl = process.env.EXPO_PUBLIC_API_URL;
+  if (envUrl && !envUrl.includes('realize-pdt-equity-bat')) {
+    return envUrl;
   }
-}
 
-// Use Cloudflare HTTPS tunnel as primary so Android devices connect seamlessly without cleartext or firewall issues
-export const API_BASE_URL =
-  (process.env.EXPO_PUBLIC_API_URL && !process.env.EXPO_PUBLIC_API_URL.includes('192.168.1.80'))
-    ? process.env.EXPO_PUBLIC_API_URL
-    : CLOUDFLARE_TUNNEL_URL;
+  // Active public Cloudflare tunnel (works everywhere: cellular mobile data, Wi-Fi, emulator)
+  return ACTIVE_TUNNEL_URL;
+};
+
+export const API_BASE_URL = getApiBaseUrl();
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -36,7 +30,7 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   async (config) => {
     try {
-      config.baseURL = API_BASE_URL;
+      config.baseURL = getApiBaseUrl();
       const token = await storage.getItem('accessToken');
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -109,7 +103,7 @@ apiClient.interceptors.response.use(
           throw new Error('No refresh token available');
         }
 
-        const refreshResponse = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+        const refreshResponse = await axios.post(`${getApiBaseUrl()}/auth/refresh`, {
           refreshToken: storedRefreshToken,
         });
 

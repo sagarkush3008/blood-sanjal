@@ -25,6 +25,24 @@ export class AuthController {
 
   static async login(req: Request, res: Response, next: NextFunction) {
     try {
+      // 5. Frontend Payload Check: Verify incoming request body and headers
+      console.log('\n--- [AUTH_DEBUG] INCOMING LOGIN REQUEST ---');
+      console.log('• Request Method & URL:', req.method, req.originalUrl);
+      console.log('• Content-Type Header:', req.headers['content-type']);
+      console.log('• Incoming req.body:', JSON.stringify(req.body, null, 2));
+
+      if (!req.headers['content-type']?.includes('application/json')) {
+        console.warn('⚠️ [AUTH_DEBUG] WARNING: Content-Type is not application/json! Verify frontend headers.');
+      }
+
+      // 1. Email Normalization at Controller boundary (in case zod raw input has whitespace)
+      if (req.body && typeof req.body.email === 'string') {
+        req.body.email = req.body.email.toLowerCase().trim();
+      }
+      if (req.body && typeof req.body.phone === 'string') {
+        req.body.phone = req.body.phone.trim();
+      }
+
       const validated = loginSchema.parse(req.body);
       const result = await AuthService.login(validated, req.ip || '', req.headers['user-agent'] || '');
       
@@ -39,6 +57,8 @@ export class AuthController {
         sameSite: 'strict',
         maxAge: days * 24 * 60 * 60 * 1000
       });
+
+      console.log('✅ [AUTH_DEBUG] Login successful! Returning 200 with tokens.\n');
 
       res.status(200).json(SuccessResponse({
         user: result.user,

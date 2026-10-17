@@ -13,3 +13,4 @@ export * from './files.api';
 export * from './legal.api';
 export * from './metrics.api';
 export * from './admin.api';
+export * from './activeStatus.api';

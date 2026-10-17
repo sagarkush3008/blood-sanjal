@@ -14,7 +14,14 @@ export const createBloodRequestSchema = z.object({
     cityName: z.string().optional(),
     coordinates: z.tuple([z.number(), z.number()]).optional(),
   }).optional(),
-  requiredDate: z.string().optional(),
+  requiredDate: z.string().refine(
+    (val) => {
+      if (!val) return true;
+      const d = new Date(val);
+      return !isNaN(d.getTime()) && d.getTime() >= Date.now() - 5 * 60 * 1000;
+    },
+    { message: 'Required date cannot be in the past' }
+  ).optional(),
   urgency: z.enum(['NORMAL', 'URGENT', 'EMERGENCY']).default('NORMAL'),
   urgencyWindow: z.string().optional(),
   contactPerson: z.object({

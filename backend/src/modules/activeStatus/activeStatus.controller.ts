@@ -8,7 +8,7 @@ export class ActiveStatusController {
     try {
       if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
       const payload = { ...req.body, userId: req.user.userId };
-      const result = activeStatusService.recordHeartbeat(payload);
+      const result = await activeStatusService.recordHeartbeat(payload);
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) {
       next(error);
@@ -82,7 +82,7 @@ export class ActiveStatusController {
         changedBy: req.user.userId
       };
 
-      const donor = activeStatusService.updateDonorStatus(req.params.userId as string, payload);
+      const donor = await activeStatusService.updateDonorStatus(req.params.userId as string, payload);
       res.status(200).json(SuccessResponse(donor, req.id));
     } catch (error) {
       next(error);
@@ -141,7 +141,7 @@ export class ActiveStatusController {
         throw new AppError(400, 'VALIDATION_ERROR', 'Status is required');
       }
 
-      const updated = activeStatusService.updateRequestStatus(id as string, status, req.user.userId, reason);
+      const updated = await activeStatusService.updateRequestStatus(id as string, status, req.user.userId, reason);
       if (!updated) {
         throw new AppError(404, 'NOT_FOUND', 'Blood request not found');
       }

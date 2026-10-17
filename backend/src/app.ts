@@ -100,17 +100,21 @@ app.use(globalLimiter);
 import mongoose from 'mongoose';
 
 // Health and Readiness
-app.get('/health', (req, res) => {
+const handleHealth = (req: any, res: any) => {
   res.status(200).json(SuccessResponse({ status: 'UP' }, req.id));
-});
-app.get('/ready', (req, res) => {
+};
+const handleReady = (req: any, res: any) => {
   const isDbReady = mongoose.connection.readyState === 1; // 1 = connected
   if (isDbReady) {
     res.status(200).json(SuccessResponse({ status: 'READY' }, req.id));
   } else {
     res.status(503).json(ErrorResponse('SERVICE_UNAVAILABLE', 'Database not ready', [], req.id));
   }
-});
+};
+app.get('/health', handleHealth);
+app.get('/api/v1/health', handleHealth);
+app.get('/ready', handleReady);
+app.get('/api/v1/ready', handleReady);
 
 // Swagger Documentation Route (Disabled in production)
 if (swaggerDocument && env.NODE_ENV !== 'production') {
@@ -136,6 +140,7 @@ app.use('/api/v1/media', mediaRoutes);
 app.use('/api/v1/legal', legalRoutes);
 import activeStatusRoutes from './modules/activeStatus/activeStatus.routes';
 app.use('/api/active-status', activeStatusRoutes);
+app.use('/api/v1/active-status', activeStatusRoutes);
 
 app.get('/api', (_req, res) => {
   res.json({

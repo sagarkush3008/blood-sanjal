@@ -1,5 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
+import mongoose from 'mongoose';
+mongoose.set('bufferCommands', false);
 
 jest.mock('ioredis', () => {
   return {

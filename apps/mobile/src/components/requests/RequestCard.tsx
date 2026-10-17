@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { colors } from '../../theme';
+import { cleanLocationName } from '../../utils/locationHelper';
 
 interface RequestCardProps {
   id?: string;
@@ -62,7 +63,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({
       {/* HOSPITAL & LOCATION */}
       <View style={styles.hospitalRow}>
          <Feather name="plus-square" size={14} color="#DC2626" style={{marginTop: 2}} />
-         <Text style={styles.hospitalText}>{location || 'Hospital Location'}</Text>
+         <Text style={styles.hospitalText}>{cleanLocationName(location) || 'Hospital Location'}</Text>
       </View>
       
       {/* DATE & TIME */}

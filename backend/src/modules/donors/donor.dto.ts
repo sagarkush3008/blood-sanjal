@@ -12,9 +12,9 @@ export const toPublicDonorDTO = (donor: any, user: any) => {
     totalDonations: donor.totalDonations,
     // Redact exact coordinates and personal identifiable info (email, phone, address)
     approximateLocation: {
-      provinceId: user.provinceId,
-      districtId: user.districtId,
-      cityId: user.cityId
+      provinceId: typeof user.provinceId === 'function' ? null : (user.provinceId ? String(user.provinceId) : null),
+      districtId: typeof user.districtId === 'function' ? null : (user.districtId ? String(user.districtId) : null),
+      cityId: typeof user.cityId === 'function' ? null : (user.cityId ? String(user.cityId) : null)
     }
   };
 };

@@ -15,6 +15,7 @@ import { BloodRequestsAPI } from '../../api/requests.api';
 import { RequestCard } from '../../components/requests/RequestCard';
 import { SkeletonCard, EmptyState } from '../../components/common';
 import { colors, spacing } from '../../theme';
+import { cleanLocationName } from '../../utils/locationHelper';
 
 export const RequestsScreen = () => {
   const navigation = useNavigation<any>();
@@ -145,10 +146,12 @@ export const RequestsScreen = () => {
                 bloodGroup={item.bloodGroup}
                 patientName={item.patientName || 'Patient in Need'}
                 location={
-                  item.hospitalName ||
-                  item.hospital ||
-                  item.hospitalLocation?.address ||
-                  'Hospital'
+                  cleanLocationName(
+                    item.hospitalName ||
+                    item.hospital ||
+                    item.hospitalLocation?.address ||
+                    'Hospital'
+                  )
                 }
                 unitsRequired={item.unitsRequired || item.units || 1}
                 urgency={item.urgency || 'NORMAL'}

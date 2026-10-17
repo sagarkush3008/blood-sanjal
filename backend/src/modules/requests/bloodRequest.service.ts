@@ -65,6 +65,10 @@ export class BloodRequestService {
       ? new Date(data.requiredDate)
       : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
+    if (isNaN(requiredDate.getTime()) || requiredDate.getTime() < Date.now() - 5 * 60 * 1000) {
+      throw new AppError(422, 'VALIDATION_ERROR', 'Required date cannot be in the past');
+    }
+
     const additionalInfo = data.additionalInfo || data.reason;
 
     const unitsRequired = Number(data.unitsRequired) || 1;

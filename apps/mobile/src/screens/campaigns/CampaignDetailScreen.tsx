@@ -20,6 +20,7 @@ import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { SkeletonCard } from '../../components/common/SkeletonCard';
 import { colors, spacing } from '../../theme';
+import { cleanLocationName } from '../../utils/locationHelper';
 
 export const CampaignDetailScreen = () => {
   const route = useRoute<any>();
@@ -194,7 +195,7 @@ export const CampaignDetailScreen = () => {
             </View>
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Venue Location</Text>
-              <Text style={styles.infoValue}>{campaign.location}</Text>
+              <Text style={styles.infoValue}>{cleanLocationName(campaign.location)}</Text>
             </View>
           </View>
 

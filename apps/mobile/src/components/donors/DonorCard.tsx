@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme';
 import { StatusBadge } from '../common/StatusBadge';
+import { cleanLocationName } from '../../utils/locationHelper';
 
 export interface DonorCardProps {
   name: string;
@@ -107,7 +108,7 @@ export const DonorCard: React.FC<DonorCardProps> = ({
           <View style={styles.locationRow}>
             <Ionicons name="location-outline" size={14} color="#64748B" />
             <Text style={styles.locationText} numberOfLines={1}>
-              {location || 'Nepal (Broad Area)'}
+              {cleanLocationName(location) || 'Nepal'}
             </Text>
           </View>
         </View>

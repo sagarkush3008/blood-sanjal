@@ -76,7 +76,7 @@ export const EditProfileScreen = () => {
   };
 
   const handleSave = () => {
-    updateMutation.mutate({ name, cityId, bloodGroup });
+    updateMutation.mutate({ name, cityId: cleanLocationName(cityId), bloodGroup });
   };
 
   return (
@@ -154,7 +154,7 @@ export const EditProfileScreen = () => {
         {cityId ? (
           <View style={styles.locationTagRow}>
             <Ionicons name="checkmark-circle" size={14} color="#059669" />
-            <Text style={styles.locationTagText}>Exact location: {cityId}</Text>
+            <Text style={styles.locationTagText}>Exact location: {cleanLocationName(cityId)}</Text>
           </View>
         ) : null}
 
