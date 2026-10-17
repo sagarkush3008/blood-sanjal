@@ -9,7 +9,7 @@ import { activeStatusService } from '../activeStatus/activeStatus.service';
 export class DonorService {
   static async upsertProfile(userId: string, data: any) {
     // Prevent forced selection of protected aggregate fields
-    delete data.totalDonations; 
+    delete data.totalDonations;
     delete data.isVerified;
 
     const profile = await DonorProfile.findOneAndUpdate(
@@ -75,10 +75,10 @@ export class DonorService {
     } else if (data.status === 'INACTIVE') {
       profile.donorStatus = 'INACTIVE';
       profile.inactiveStartedAt = now;
-      
+
       if (data.reason) profile.inactiveReason = data.reason;
       else profile.inactiveReason = null;
-      
+
       let inactiveUntil = null;
       if (data.durationHours !== undefined || data.durationDays !== undefined) {
         profile.availabilityMode = 'TEMPORARY_INACTIVE';
@@ -106,7 +106,7 @@ export class DonorService {
     } else {
       throw new AppError(400, 'VALIDATION_ERROR', 'Invalid status. Must be ACTIVE or INACTIVE.');
     }
-    
+
     await profile.save();
 
     // Sync with real-time active status service
@@ -130,11 +130,11 @@ export class DonorService {
           action: data.status === 'ACTIVE' ? 'DONOR_AVAILABLE' : 'DONOR_UNAVAILABLE',
           entityType: 'DonorProfile',
           entityId: profile._id?.toString?.() || String(profile._id),
-          metadata: { 
+          metadata: {
             status: data.status,
             durationHours: data.durationHours,
             durationDays: data.durationDays,
-            reason: data.reason ? 'REDACTED' : undefined 
+            reason: data.reason ? 'REDACTED' : undefined
           }
         });
       } catch (auditErr) {
@@ -184,7 +184,7 @@ export class DonorService {
       profile.inactiveUnit = null;
       profile.inactiveDuration = null;
     }
-    
+
     await profile.save();
 
     // Sync with real-time active status service
@@ -205,7 +205,7 @@ export class DonorService {
           action: 'DONOR_STATUS_CHANGED',
           entityType: 'DonorProfile',
           entityId: profile._id?.toString?.() || String(profile._id),
-          metadata: { 
+          metadata: {
             oldStatus,
             newStatus: data.status,
             timestamp: now
@@ -282,9 +282,9 @@ export class DonorService {
     };
     if (filters.bloodGroup) profileQuery.bloodGroup = filters.bloodGroup;
 
-    const userQuery: any = { 
+    const userQuery: any = {
       status: { $in: ['ACTIVE', 'UNVERIFIED'] },
-      'privacySettings.donorSearchVisibility': { $ne: false } 
+      'privacySettings.donorSearchVisibility': { $ne: false }
     };
     if (filters.provinceId) userQuery.provinceId = filters.provinceId;
     if (filters.districtId) userQuery.districtId = filters.districtId;
@@ -292,12 +292,12 @@ export class DonorService {
     if (filters.areaId) userQuery.areaId = filters.areaId;
 
     if (filters.lon && filters.lat) {
-       userQuery.locationCoordinates = {
-         $near: {
-           $geometry: { type: 'Point', coordinates: [parseFloat(filters.lon), parseFloat(filters.lat)] },
-           $maxDistance: parseInt(filters.distance) || 5000,
-         }
-       };
+      userQuery.locationCoordinates = {
+        $near: {
+          $geometry: { type: 'Point', coordinates: [parseFloat(filters.lon), parseFloat(filters.lat)] },
+          $maxDistance: parseInt(filters.distance) || 5000,
+        }
+      };
     }
 
     const page = parseInt(filters.page) || 1;

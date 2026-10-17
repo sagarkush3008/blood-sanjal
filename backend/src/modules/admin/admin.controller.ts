@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import mongoose from 'mongoose';
 import { AdminService } from './admin.service';
 import { SuccessResponse } from '../../core/http/result';
 import { AppError } from '../../core/errors/appError';
@@ -257,30 +256,6 @@ export class AdminController {
     try {
       const result = await AdminService.getEmailLogs(req.query);
       res.json(SuccessResponse(result, req.id));
-    } catch (error) { next(error); }
-  }
-
-  static async resetDatabase(req: Request, res: Response, next: NextFunction) {
-    try {
-      if (process.env.NODE_ENV === 'production') {
-        throw new AppError(403, 'FORBIDDEN', 'Database reset is strictly prohibited in production environment');
-      }
-      const db = mongoose.connection.db;
-      if (!db) {
-        throw new AppError(500, 'INTERNAL_ERROR', 'Database connection not available');
-      }
-      const collections = await db.listCollections().toArray();
-      const results: { collection: string; deletedCount: number }[] = [];
-      for (const colInfo of collections) {
-        if (colInfo.name.startsWith('system.')) continue;
-        const col = db.collection(colInfo.name);
-        const delRes = await col.deleteMany({});
-        results.push({ collection: colInfo.name, deletedCount: delRes.deletedCount ?? 0 });
-      }
-      res.json(SuccessResponse({
-        message: 'Database reset successfully. All rows wiped to 0. Schemas and indexes preserved.',
-        wipedCollections: results,
-      }, req.id));
     } catch (error) { next(error); }
   }
 }
