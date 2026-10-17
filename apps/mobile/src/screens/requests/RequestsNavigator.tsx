@@ -25,7 +25,13 @@ export const RequestsNavigator = () => {
       <Stack.Screen
         name="CreateRequest"
         component={CreateRequestScreen}
-        options={{ title: 'New Blood Request' }}
+        options={{
+          title: 'New Blood Request',
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: '#FFFFFF' },
+          headerTitleStyle: { fontFamily: 'Inter_700Bold', fontSize: 17, color: '#0F172A' },
+          headerTintColor: '#DC2626',
+        }}
       />
       <Stack.Screen
         name="EmergencyRequest"

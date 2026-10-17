@@ -8,52 +8,82 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  StatusBar,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { BloodRequestsAPI } from '../../api/requests.api';
 import { useAuthStore } from '../../store/authStore';
-import { SideDrawer } from '../../components/SideDrawer';
-import { colors, fonts } from '../../theme';
 import { cleanLocationName } from '../../utils/locationHelper';
 
-const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+// Typography Tokens
+const FONT_REGULAR = 'Inter_400Regular';
+const FONT_MEDIUM = 'Inter_500Medium';
+const FONT_SEMIBOLD = 'Inter_600SemiBold';
+const FONT_BOLD = 'Inter_700Bold';
 
-interface CleanInputProps {
+// Color Palette
+const BRAND_RED = '#DC2626';
+const BRAND_RED_LIGHT = '#FEF2F2';
+const BORDER_COLOR = '#E2E8F0';
+const BORDER_FOCUS = '#DC2626';
+const TEXT_PRIMARY = '#0F172A';
+const TEXT_SECONDARY = '#64748B';
+const BG_SURFACE = '#FFFFFF';
+const BG_PAGE = '#F8FAFC';
+
+const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+const TIMEFRAMES = ['Immediate', 'Within 3 Hours', 'Today', 'Tomorrow'];
+
+interface MinimalInputProps {
   label: string;
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
-  icon?: React.ReactNode;
+  iconName?: keyof typeof Ionicons.glyphMap;
   keyboardType?: 'default' | 'phone-pad' | 'numeric';
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  required?: boolean;
 }
 
-const CleanInput: React.FC<CleanInputProps> = ({
+const MinimalInput: React.FC<MinimalInputProps> = ({
   label,
   value,
   onChangeText,
   placeholder,
-  icon,
+  iconName,
   keyboardType = 'default',
   autoCapitalize = 'sentences',
+  required = false,
 }) => {
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
-    <View style={styles.inputContainer}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <View style={styles.inputWrapper}>
-        {icon && <View style={styles.inputIcon}>{icon}</View>}
+    <View style={styles.inputGroup}>
+      <Text style={styles.inputLabel}>
+        {label} {required && <Text style={styles.asterisk}>*</Text>}
+      </Text>
+      <View style={[styles.inputFieldWrapper, isFocused && styles.inputFieldFocused]}>
+        {iconName && (
+          <Ionicons
+            name={iconName}
+            size={17}
+            color={isFocused ? BRAND_RED : '#94A3B8'}
+            style={styles.inputFieldIcon}
+          />
+        )}
         <TextInput
-          style={styles.textInput}
+          style={styles.inputFieldText}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
           placeholderTextColor="#94A3B8"
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
         />
       </View>
     </View>
@@ -66,11 +96,7 @@ export const CreateRequestScreen = () => {
   const route = useRoute<any>();
   const { user } = useAuthStore();
 
-  // App Bar state
-  const [isDark, setIsDark] = useState(false);
-  const [drawerVisible, setDrawerVisible] = useState(false);
-
-  // Form state
+  // Form State
   const initialUrgency = route.params?.urgency === 'EMERGENCY' ? 'EMERGENCY' : 'NORMAL';
   const initialGroup = route.params?.bloodGroup || 'O+';
 
@@ -79,13 +105,25 @@ export const CreateRequestScreen = () => {
   const [bloodGroup, setBloodGroup] = useState<string>(initialGroup);
   const [units, setUnits] = useState<number>(2);
 
-  // Hospital & Timing
+  // Hospital & Location
   const [hospitalName, setHospitalName] = useState('');
   const [hospitalAddress, setHospitalAddress] = useState('');
   const [city, setCity] = useState('Kathmandu');
   const [requiredDate, setRequiredDate] = useState(new Date().toISOString().split('T')[0]);
-  const [urgencyWindow, setUrgencyWindow] = useState('Immediate / As soon as possible');
+  const [urgencyWindow, setUrgencyWindow] = useState('Immediate');
 
+  // Attendant Contact & Reason
+  const [attendantName, setAttendantName] = useState(user?.name || '');
+  const [contactPhone, setContactPhone] = useState(user?.phone || '');
+  const [reason, setReason] = useState('Surgical procedure / blood replacement');
+  const [clinicalInstructions, setClinicalInstructions] = useState('');
+
+  // Platform Verification Fee
+  const [walletProvider, setWalletProvider] = useState<'eSewa' | 'Khalti'>('eSewa');
+  const [transactionRef, setTransactionRef] = useState('');
+  const platformFee = 15;
+
+  // Handle Return from Map Location Picker
   useEffect(() => {
     if (route.params?.selectedLocation) {
       const cleanLoc = cleanLocationName(route.params.selectedLocation);
@@ -102,24 +140,13 @@ export const CreateRequestScreen = () => {
     }
   }, [route.params?.selectedLocation, route.params?.locationAddress]);
 
-  // Contact & Reason
-  const [attendantName, setAttendantName] = useState(user?.name || '');
-  const [contactPhone, setContactPhone] = useState(user?.phone || '');
-  const [reason, setReason] = useState('Surgical procedure / blood replacement');
-  const [clinicalInstructions, setClinicalInstructions] = useState('');
-
-  // Platform Maintenance Fee
-  const [walletProvider, setWalletProvider] = useState<'eSewa' | 'Khalti'>('eSewa');
-  const [transactionRef, setTransactionRef] = useState('');
-  const platformFee = 15;
-
   const createMutation = useMutation({
     mutationFn: (payload: any) => BloodRequestsAPI.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blood-requests'] });
       queryClient.invalidateQueries({ queryKey: ['platform-metrics'] });
       Alert.alert(
-        'Blood Request Submitted! 🩸',
+        'Request Published 🩸',
         urgency === 'EMERGENCY'
           ? 'Your emergency request has been prioritized with URGENT badge and sent for verified donor broadcast dispatch.'
           : 'Your blood request has been published and matched with verified donors in your hospital vicinity.',
@@ -183,197 +210,100 @@ export const CreateRequestScreen = () => {
     createMutation.mutate(payload);
   };
 
-  const userName = user?.name || 'David Chen';
-
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* TOP HEADER: BloodLink App Bar */}
-      <View style={styles.appBar}>
-        <TouchableOpacity
-          style={styles.iconCircle}
-          onPress={() => setDrawerVisible(true)}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="menu" size={22} color="#0F172A" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.brandRow}
-          activeOpacity={0.7}
-          onPress={() => navigation.navigate('Home')}
-        >
-          <View style={styles.logoCircle}>
-            <Ionicons name="water" size={16} color="#FFFFFF" />
-          </View>
-          <Text style={styles.brandText}>Blood Sanjal</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.themeToggle}
-          onPress={() => setIsDark(!isDark)}
-          activeOpacity={0.8}
-        >
-          <View style={[styles.themeThumb, isDark && styles.themeThumbDark]}>
-            <Text style={{ fontSize: 11 }}>{isDark ? '🌙' : '☀️'}</Text>
-          </View>
-        </TouchableOpacity>
-
-        <View style={styles.userBadge}>
-          <Ionicons name="person-circle" size={17} color="#DC2626" />
-          <Text style={styles.userBadgeText} numberOfLines={1}>
-            {userName}
-          </Text>
-        </View>
-
-        <TouchableOpacity
-          style={styles.iconCircle}
-          onPress={() => navigation.navigate('Notifications')}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="notifications" size={20} color="#0F172A" />
-          <View style={styles.bellBadge}>
-            <Text style={styles.bellBadgeText}>2</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-
+    <KeyboardAvoidingView
+      style={styles.screenContainer}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* CARD 1: Header Card */}
-        <View style={styles.card}>
-          <Text style={styles.mainTitle}>Submit Blood Request</Text>
-          <Text style={styles.mainSubtitle}>
-            Request blood units from certified banks & matched eligible donors. Every request is verified.
-          </Text>
-        </View>
-
-        {/* CARD 2: Urgency Type */}
-        <View style={styles.card}>
-          <Text style={styles.sectionHeader}>Urgency Type (Normal or Emergency) *</Text>
-          <View style={styles.urgencyRow}>
-            {/* Normal Request Option */}
-            <TouchableOpacity
+        {/* 1. Urgency Segmented Control (Minimal & High Contrast) */}
+        <View style={styles.urgencySegmentWrapper}>
+          <TouchableOpacity
+            style={[
+              styles.urgencySegmentBtn,
+              urgency === 'NORMAL' && styles.urgencySegmentBtnActiveNormal,
+            ]}
+            onPress={() => setUrgency('NORMAL')}
+            activeOpacity={0.8}
+          >
+            <Text
               style={[
-                styles.urgencyOption,
-                urgency === 'NORMAL' && styles.urgencyOptionNormalSelected,
+                styles.urgencySegmentText,
+                urgency === 'NORMAL' && styles.urgencySegmentTextActive,
               ]}
-              onPress={() => setUrgency('NORMAL')}
-              activeOpacity={0.85}
             >
-              <Text
-                style={[
-                  styles.urgencyTitle,
-                  urgency === 'NORMAL' && styles.urgencyTitleNormalSelected,
-                ]}
-              >
-                Normal Request
-              </Text>
-              <Text
-                style={[
-                  styles.urgencySub,
-                  urgency === 'NORMAL' && styles.urgencySubNormalSelected,
-                ]}
-              >
-                Scheduled surgery / general care. Displayed in Public Requests.
-              </Text>
-            </TouchableOpacity>
+              Normal Request
+            </Text>
+          </TouchableOpacity>
 
-            {/* Emergency Blood Option */}
-            <TouchableOpacity
+          <TouchableOpacity
+            style={[
+              styles.urgencySegmentBtn,
+              urgency === 'EMERGENCY' && styles.urgencySegmentBtnActiveEmergency,
+            ]}
+            onPress={() => setUrgency('EMERGENCY')}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="alert-circle"
+              size={15}
+              color={urgency === 'EMERGENCY' ? '#FFFFFF' : BRAND_RED}
+              style={{ marginRight: 5 }}
+            />
+            <Text
               style={[
-                styles.urgencyOption,
+                styles.urgencySegmentText,
                 urgency === 'EMERGENCY'
-                  ? styles.urgencyOptionEmergencySelected
-                  : styles.urgencyOptionEmergencyUnselected,
+                  ? styles.urgencySegmentTextActiveEmergency
+                  : styles.urgencySegmentTextInactiveEmergency,
               ]}
-              onPress={() => setUrgency('EMERGENCY')}
-              activeOpacity={0.85}
             >
-              <View style={styles.emergencyTitleRow}>
-                <Ionicons
-                  name="warning"
-                  size={14}
-                  color={urgency === 'EMERGENCY' ? '#FFFFFF' : '#DC2626'}
-                  style={{ marginRight: 4 }}
-                />
-                <Text
-                  style={[
-                    styles.urgencyTitle,
-                    urgency === 'EMERGENCY' && styles.urgencyTitleEmergencyText,
-                  ]}
-                >
-                  Emergency Blood
-                </Text>
-              </View>
-              <Text
-                style={[
-                  styles.urgencySub,
-                  urgency === 'EMERGENCY' && styles.urgencySubEmergencyText,
-                ]}
-              >
-                Critical need. Displayed in Emergency Blood with URGENT badge.
-              </Text>
-            </TouchableOpacity>
-          </View>
+              Emergency Blood
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {/* CARD 3: Patient & Blood Details */}
+        {/* 2. CARD: Patient & Blood Requirement */}
         <View style={styles.card}>
-          <Text style={styles.sectionHeader}>Patient & Blood Details</Text>
+          <Text style={styles.cardTitle}>Patient & Blood Details</Text>
 
           {/* Patient Full Name */}
-          <CleanInput
+          <MinimalInput
             label="Patient Full Name"
             value={patientName}
             onChangeText={setPatientName}
-            placeholder="e.g. John Doe"
-            icon={<Ionicons name="person-outline" size={18} color="#64748B" />}
+            placeholder="e.g. Maya Shrestha"
+            iconName="person-outline"
+            required
+            autoCapitalize="words"
           />
 
-          {/* Required Blood Group */}
-          <Text style={styles.fieldLabel}>Required Blood Group *</Text>
-          <View style={styles.bloodGrid}>
-            <View style={styles.bloodRow}>
-              {BLOOD_GROUPS.slice(0, 6).map((bg) => {
+          {/* Symmetrical 4x2 Blood Group Grid */}
+          <View style={styles.fieldBlock}>
+            <Text style={styles.inputLabel}>
+              Required Blood Group <Text style={styles.asterisk}>*</Text>
+            </Text>
+            <View style={styles.bloodGrid}>
+              {BLOOD_GROUPS.map((bg) => {
                 const isSelected = bloodGroup === bg;
                 return (
                   <TouchableOpacity
                     key={bg}
-                    style={[styles.bloodPill, isSelected && styles.bloodPillSelected]}
+                    style={[
+                      styles.bloodChip,
+                      isSelected ? styles.bloodChipSelected : styles.bloodChipUnselected,
+                    ]}
                     onPress={() => setBloodGroup(bg)}
-                    activeOpacity={0.8}
+                    activeOpacity={0.7}
                   >
                     <Text
                       style={[
-                        styles.bloodPillText,
-                        isSelected && styles.bloodPillTextSelected,
-                      ]}
-                    >
-                      {bg}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            <View style={[styles.bloodRow, { marginTop: 8 }]}>
-              {BLOOD_GROUPS.slice(6, 8).map((bg) => {
-                const isSelected = bloodGroup === bg;
-                return (
-                  <TouchableOpacity
-                    key={bg}
-                    style={[styles.bloodPill, isSelected && styles.bloodPillSelected]}
-                    onPress={() => setBloodGroup(bg)}
-                    activeOpacity={0.8}
-                  >
-                    <Text
-                      style={[
-                        styles.bloodPillText,
-                        isSelected && styles.bloodPillTextSelected,
+                        styles.bloodChipText,
+                        isSelected ? styles.bloodChipTextSelected : styles.bloodChipTextUnselected,
                       ]}
                     >
                       {bg}
@@ -384,73 +314,78 @@ export const CreateRequestScreen = () => {
             </View>
           </View>
 
-          {/* Required Units Stepper */}
-          <View style={styles.unitsSection}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.unitsTitle}>Required Units (Bags) *</Text>
-              <Text style={styles.unitsSub}>Standard adult unit ≈ 450 ml</Text>
+          {/* Units Needed Stepper */}
+          <View style={styles.unitsRow}>
+            <View>
+              <Text style={styles.inputLabel}>Required Units (Bags)</Text>
+              <Text style={styles.unitsHelperText}>Standard adult unit ≈ 450 ml</Text>
             </View>
 
-            <View style={styles.stepperContainer}>
+            <View style={styles.stepperBox}>
               <TouchableOpacity
-                style={styles.stepperBtn}
+                style={[styles.stepperActionBtn, units <= 1 && styles.stepperActionBtnDisabled]}
                 onPress={() => setUnits(Math.max(1, units - 1))}
+                disabled={units <= 1}
                 activeOpacity={0.7}
               >
-                <Ionicons name="remove" size={18} color="#0F172A" />
+                <Ionicons name="remove" size={17} color={units <= 1 ? '#CBD5E1' : TEXT_PRIMARY} />
               </TouchableOpacity>
 
-              <Text style={styles.unitsCount}>{units}</Text>
+              <Text style={styles.stepperValue}>{units}</Text>
 
               <TouchableOpacity
-                style={styles.stepperBtn}
+                style={[styles.stepperActionBtn, units >= 10 && styles.stepperActionBtnDisabled]}
                 onPress={() => setUnits(Math.min(10, units + 1))}
+                disabled={units >= 10}
                 activeOpacity={0.7}
               >
-                <Ionicons name="add" size={18} color="#0F172A" />
+                <Ionicons name="add" size={17} color={units >= 10 ? '#CBD5E1' : TEXT_PRIMARY} />
               </TouchableOpacity>
             </View>
           </View>
         </View>
 
-        {/* CARD 4: Hospital Location & Timing */}
+        {/* 3. CARD: Hospital Location & Timing */}
         <View style={styles.card}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <Text style={[styles.sectionHeader, { marginBottom: 0 }]}>Hospital Location & Timing</Text>
+          <View style={styles.cardTitleRow}>
+            <Text style={styles.cardTitle}>Hospital Location & Timing</Text>
             <TouchableOpacity
-              style={styles.mapPinpointBtn}
-              onPress={() => navigation.navigate('LocationPicker', {
-                selectedLocation: hospitalName || city,
-                returnScreen: 'CreateRequest',
-              })}
-              activeOpacity={0.8}
+              style={styles.mapActionBtn}
+              onPress={() =>
+                navigation.navigate('LocationPicker', {
+                  selectedLocation: hospitalName || city,
+                  returnScreen: 'CreateRequest',
+                })
+              }
+              activeOpacity={0.75}
             >
-              <Ionicons name="map" size={13} color="#DC2626" />
-              <Text style={styles.mapPinpointText}>Pick on Map</Text>
+              <Ionicons name="map-outline" size={13} color={BRAND_RED} />
+              <Text style={styles.mapActionText}>Pick on Map</Text>
             </TouchableOpacity>
           </View>
 
           {/* Hospital Name */}
-          <CleanInput
+          <MinimalInput
             label="Hospital Name"
             value={hospitalName}
             onChangeText={setHospitalName}
             placeholder="e.g. Kathmandu Medical College"
-            icon={<Ionicons name="medkit-outline" size={18} color="#64748B" />}
+            iconName="medkit-outline"
+            required
           />
 
           {/* Hospital Address / Ward / Room */}
-          <CleanInput
-            label="Hospital Address / Ward / Room"
+          <MinimalInput
+            label="Hospital Address / Ward / Bed"
             value={hospitalAddress}
             onChangeText={setHospitalAddress}
             placeholder="e.g. Ward 4, ICU Bed 12"
           />
 
-          {/* City & Date side-by-side */}
-          <View style={styles.twoColRow}>
+          {/* City & Date Row */}
+          <View style={styles.twoColumnRow}>
             <View style={{ flex: 1 }}>
-              <CleanInput
+              <MinimalInput
                 label="City"
                 value={city}
                 onChangeText={setCity}
@@ -458,119 +393,138 @@ export const CreateRequestScreen = () => {
               />
             </View>
             <View style={{ flex: 1.1 }}>
-              <CleanInput
+              <MinimalInput
                 label="Required Date"
                 value={requiredDate}
                 onChangeText={setRequiredDate}
                 placeholder="YYYY-MM-DD"
-                icon={<Ionicons name="calendar-outline" size={16} color="#64748B" />}
+                iconName="calendar-outline"
               />
             </View>
           </View>
 
-          {/* Required Time / Urgency Window */}
-          <CleanInput
-            label="Required Time / Window"
-            value={urgencyWindow}
-            onChangeText={setUrgencyWindow}
-            placeholder="e.g. Immediate / Within 3 hours"
-          />
+          {/* Required Timeframe Pill Row */}
+          <View style={styles.fieldBlock}>
+            <Text style={styles.inputLabel}>Required Time Window</Text>
+            <View style={styles.pillWrapRow}>
+              {TIMEFRAMES.map((t) => {
+                const isSelected = urgencyWindow === t;
+                return (
+                  <TouchableOpacity
+                    key={t}
+                    style={[
+                      styles.timeframePill,
+                      isSelected ? styles.timeframePillSelected : styles.timeframePillUnselected,
+                    ]}
+                    onPress={() => setUrgencyWindow(t)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.timeframePillText,
+                        isSelected && styles.timeframePillTextSelected,
+                      ]}
+                    >
+                      {t}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
         </View>
 
-        {/* CARD 5: Contact Person & Medical Reason */}
+        {/* 4. CARD: Attendant Contact & Medical Reason */}
         <View style={styles.card}>
-          <Text style={styles.sectionHeader}>Contact Person & Medical Reason</Text>
+          <Text style={styles.cardTitle}>Contact Person & Medical Reason</Text>
 
-          {/* Attendant / Doctor Name */}
-          <CleanInput
+          <MinimalInput
             label="Attendant / Doctor Name"
             value={attendantName}
             onChangeText={setAttendantName}
             placeholder="e.g. Dr. Koirala / Relative Name"
-            icon={<Ionicons name="person-outline" size={16} color="#64748B" />}
+            iconName="person-outline"
           />
 
-          {/* Contact Phone Number */}
-          <CleanInput
+          <MinimalInput
             label="Contact Phone Number"
             value={contactPhone}
             onChangeText={setContactPhone}
-            placeholder="+977-98XXXXXXXX"
+            placeholder="98XXXXXXXX"
             keyboardType="phone-pad"
-            icon={<Ionicons name="call-outline" size={16} color="#64748B" />}
+            iconName="call-outline"
+            required
           />
 
-          {/* Reason / Medical Condition */}
-          <CleanInput
+          <MinimalInput
             label="Reason / Medical Condition"
             value={reason}
             onChangeText={setReason}
-            placeholder="e.g. Emergency bypass surgery"
+            placeholder="e.g. Emergency surgery / anemia replacement"
           />
 
-          {/* Additional Clinical Instructions */}
-          <CleanInput
-            label="Additional Instructions (Optional)"
-            value={clinicalInstructions}
-            onChangeText={setClinicalInstructions}
-            placeholder="Any specific requirement"
-          />
+          {/* Additional Instructions */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Additional Instructions (Optional)</Text>
+            <View style={[styles.inputFieldWrapper, styles.textAreaWrapper]}>
+              <TextInput
+                style={[styles.inputFieldText, styles.textAreaText]}
+                value={clinicalInstructions}
+                onChangeText={setClinicalInstructions}
+                placeholder="Any special requirements, cross-match instructions..."
+                placeholderTextColor="#94A3B8"
+                multiline
+                numberOfLines={2}
+                textAlignVertical="top"
+              />
+            </View>
+          </View>
         </View>
 
-        {/* CARD 6: Platform Maintenance Fee */}
+        {/* 5. CARD: Platform Verification Fee (Streamlined & Clean) */}
         <View style={styles.card}>
-          <View style={styles.feeHeaderRow}>
-            <Text style={styles.feeHeaderTitle}>Platform Maintenance Fee</Text>
+          <View style={styles.cardTitleRow}>
+            <View>
+              <Text style={styles.cardTitle}>Platform Maintenance Fee</Text>
+              <Text style={styles.feeSubText}>Donor network upkeep & SMS alerts</Text>
+            </View>
             <View style={styles.feeBadge}>
               <Text style={styles.feeBadgeText}>NPR {platformFee}</Text>
             </View>
           </View>
 
-          <Text style={styles.feeSubtitle}>
-            Required for donor dispatch network upkeep
-          </Text>
-
-          <Text style={styles.walletLabel}>Select Digital Wallet Provider:</Text>
-
-          <View style={styles.walletRow}>
-            {/* eSewa */}
+          {/* Wallet Toggle */}
+          <View style={styles.walletToggleRow}>
             <TouchableOpacity
               style={[
-                styles.walletBtn,
-                walletProvider === 'eSewa'
-                  ? styles.walletBtnEsewaSelected
-                  : styles.walletBtnUnselected,
+                styles.walletOptionBtn,
+                walletProvider === 'eSewa' && styles.walletOptionEsewaSelected,
               ]}
               onPress={() => setWalletProvider('eSewa')}
-              activeOpacity={0.85}
+              activeOpacity={0.8}
             >
               <Text
                 style={[
-                  styles.walletBtnText,
-                  walletProvider === 'eSewa' && styles.walletBtnTextSelected,
+                  styles.walletOptionText,
+                  walletProvider === 'eSewa' ? styles.walletOptionTextSelected : styles.walletOptionTextEsewa,
                 ]}
               >
                 eSewa
               </Text>
             </TouchableOpacity>
 
-            {/* Khalti */}
             <TouchableOpacity
               style={[
-                styles.walletBtn,
-                walletProvider === 'Khalti'
-                  ? styles.walletBtnKhaltiSelected
-                  : styles.walletBtnUnselected,
+                styles.walletOptionBtn,
+                walletProvider === 'Khalti' && styles.walletOptionKhaltiSelected,
               ]}
               onPress={() => setWalletProvider('Khalti')}
-              activeOpacity={0.85}
+              activeOpacity={0.8}
             >
               <Text
                 style={[
-                  styles.walletBtnText,
-                  walletProvider === 'Khalti'
-                    ? styles.walletBtnTextSelected
-                    : styles.walletBtnTextKhalti,
+                  styles.walletOptionText,
+                  walletProvider === 'Khalti' ? styles.walletOptionTextSelected : styles.walletOptionTextKhalti,
                 ]}
               >
                 Khalti
@@ -578,18 +532,17 @@ export const CreateRequestScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Instructions Box */}
+          {/* Wallet Reference Info Box */}
           <View style={styles.walletInfoBox}>
             <Text style={styles.walletIdText}>
-              {walletProvider === 'eSewa' ? 'eSewa' : 'Khalti'} ID: 9801234567 • Blood Sanjal Network
+              {walletProvider === 'eSewa' ? 'eSewa' : 'Khalti'} ID: <Text style={{ fontFamily: FONT_BOLD, color: TEXT_PRIMARY }}>9801234567</Text>
             </Text>
-            <Text style={styles.walletInstructionText}>
-              Transfer NPR {platformFee} and paste the Transaction Reference Number below.
+            <Text style={styles.walletInfoSub}>
+              Transfer NPR {platformFee} and enter reference code below:
             </Text>
           </View>
 
-          {/* Transaction Reference ID / Code */}
-          <CleanInput
+          <MinimalInput
             label="Transaction Reference ID"
             value={transactionRef}
             onChangeText={setTransactionRef}
@@ -598,474 +551,403 @@ export const CreateRequestScreen = () => {
           />
         </View>
 
-        {/* BOTTOM SUBMIT BUTTON */}
-        <TouchableOpacity
-          style={styles.submitBtn}
-          onPress={handleSubmit}
-          activeOpacity={0.88}
-          disabled={createMutation.isPending}
-        >
-          {createMutation.isPending ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
-          ) : (
-            <View style={styles.submitBtnContent}>
-              <View style={styles.submitCheckCircle}>
-                <Ionicons name="checkmark" size={14} color="#DC2626" />
+        {/* 6. Primary Action Button */}
+        <View style={styles.submitContainer}>
+          <TouchableOpacity
+            style={[styles.submitBtn, createMutation.isPending && styles.submitBtnDisabled]}
+            onPress={handleSubmit}
+            disabled={createMutation.isPending}
+            activeOpacity={0.85}
+          >
+            {createMutation.isPending ? (
+              <View style={styles.submitBtnContent}>
+                <ActivityIndicator color="#FFFFFF" size="small" />
+                <Text style={styles.submitBtnText}>Broadcasting Request...</Text>
               </View>
-              <Text style={styles.submitBtnText}>Submit Blood Request</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+            ) : (
+              <View style={styles.submitBtnContent}>
+                <Ionicons
+                  name={urgency === 'EMERGENCY' ? 'flash' : 'paper-plane'}
+                  size={17}
+                  color="#FFFFFF"
+                  style={{ marginRight: 8 }}
+                />
+                <Text style={styles.submitBtnText}>
+                  {urgency === 'EMERGENCY' ? 'Post Emergency Broadcast' : 'Submit Blood Request'}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
 
-        <View style={{ height: 32 }} />
+        <View style={{ height: 40 }} />
       </ScrollView>
-      <SideDrawer visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  screenContainer: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  appBar: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  iconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#F1F5F9',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  logoCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#DC2626',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  brandText: {
-    fontSize: 18,
-    fontFamily: 'Inter_800ExtraBold',
-    color: '#0F172A',
-  },
-  themeToggle: {
-    width: 48,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#FEF08A',
-    justifyContent: 'center',
-    paddingHorizontal: 2,
-    borderWidth: 1,
-    borderColor: '#FDE047',
-  },
-  themeThumb: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  themeThumbDark: {
-    alignSelf: 'flex-end',
-  },
-  userBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEE2E2',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 16,
-    gap: 4,
-    maxWidth: 110,
-  },
-  userBadgeText: {
-    fontSize: 12,
-    fontFamily: 'Inter_700Bold',
-    color: '#DC2626',
-  },
-  bellBadge: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: '#DC2626',
-    borderRadius: 8,
-    minWidth: 14,
-    height: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 2,
-  },
-  bellBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontFamily: 'Inter_800ExtraBold',
+    backgroundColor: BG_PAGE,
   },
   scrollContent: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
     paddingBottom: 40,
-    flexGrow: 1,
-    gap: 14,
   },
-  card: {
+
+  /* Urgency Segmented Control */
+  urgencySegmentWrapper: {
+    flexDirection: 'row',
+    backgroundColor: '#EDF2F7',
+    borderRadius: 12,
+    padding: 3,
+    marginBottom: 16,
+  },
+  urgencySegmentBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 9,
+  },
+  urgencySegmentBtnActiveNormal: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#000',
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  urgencySegmentBtnActiveEmergency: {
+    backgroundColor: BRAND_RED,
+    shadowColor: BRAND_RED,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
     shadowRadius: 3,
-    elevation: 1,
+    elevation: 2,
   },
-  mainTitle: {
-    fontSize: 22,
-    fontFamily: 'Inter_800ExtraBold',
-    color: '#0F172A',
-    marginBottom: 6,
-  },
-  mainSubtitle: {
+  urgencySegmentText: {
     fontSize: 13,
+    fontFamily: FONT_MEDIUM,
     color: '#64748B',
-    lineHeight: 19,
-    fontFamily: fonts.regular,
   },
-  sectionHeader: {
-    fontSize: 15,
-    fontFamily: 'Inter_700Bold',
-    color: '#0F172A',
+  urgencySegmentTextActive: {
+    fontFamily: FONT_BOLD,
+    color: TEXT_PRIMARY,
+  },
+  urgencySegmentTextActiveEmergency: {
+    fontFamily: FONT_BOLD,
+    color: '#FFFFFF',
+  },
+  urgencySegmentTextInactiveEmergency: {
+    color: BRAND_RED,
+    fontFamily: FONT_SEMIBOLD,
+  },
+
+  /* Card Surfaces */
+  card: {
+    backgroundColor: BG_SURFACE,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    padding: 16,
+    marginBottom: 16,
+  },
+  cardTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 14,
   },
-  urgencyRow: {
+  cardTitle: {
+    fontSize: 15,
+    fontFamily: FONT_BOLD,
+    color: TEXT_PRIMARY,
+    marginBottom: 14,
+  },
+
+  /* Inputs */
+  fieldBlock: {
+    marginBottom: 14,
+  },
+  inputGroup: {
+    marginBottom: 14,
+  },
+  inputLabel: {
+    fontSize: 12.5,
+    fontFamily: FONT_SEMIBOLD,
+    color: '#334155',
+    marginBottom: 6,
+  },
+  asterisk: {
+    color: BRAND_RED,
+  },
+  inputFieldWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 48,
+  },
+  inputFieldFocused: {
+    borderColor: BORDER_FOCUS,
+  },
+  inputFieldIcon: {
+    marginRight: 8,
+  },
+  inputFieldText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: FONT_MEDIUM,
+    color: TEXT_PRIMARY,
+    paddingVertical: 0,
+  },
+  textAreaWrapper: {
+    height: 68,
+    paddingVertical: 8,
+    alignItems: 'flex-start',
+  },
+  textAreaText: {
+    height: '100%',
+  },
+
+  /* Blood Group 4x2 Symmetrical Grid */
+  bloodGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  bloodChip: {
+    width: '23%',
+    height: 44,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  bloodChipUnselected: {
+    backgroundColor: '#F8FAFC',
+    borderColor: BORDER_COLOR,
+  },
+  bloodChipSelected: {
+    backgroundColor: BRAND_RED,
+    borderColor: BRAND_RED,
+  },
+  bloodChipText: {
+    fontSize: 14,
+  },
+  bloodChipTextUnselected: {
+    fontFamily: FONT_SEMIBOLD,
+    color: '#334155',
+  },
+  bloodChipTextSelected: {
+    fontFamily: FONT_BOLD,
+    color: '#FFFFFF',
+  },
+
+  /* Units Stepper */
+  unitsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 4,
+  },
+  unitsHelperText: {
+    fontSize: 11.5,
+    fontFamily: FONT_REGULAR,
+    color: TEXT_SECONDARY,
+    marginTop: 2,
+  },
+  stepperBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+  },
+  stepperActionBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepperActionBtnDisabled: {
+    backgroundColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
+  },
+  stepperValue: {
+    fontSize: 17,
+    fontFamily: FONT_BOLD,
+    color: BRAND_RED,
+    paddingHorizontal: 16,
+  },
+
+  /* Map Button */
+  mapActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: BRAND_RED_LIGHT,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    gap: 4,
+  },
+  mapActionText: {
+    fontSize: 12,
+    fontFamily: FONT_SEMIBOLD,
+    color: BRAND_RED,
+  },
+  twoColumnRow: {
     flexDirection: 'row',
     gap: 12,
   },
-  urgencyOption: {
-    flex: 1,
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1.5,
-    justifyContent: 'space-between',
-  },
-  urgencyOptionNormalSelected: {
-    borderColor: '#94A3B8',
-    backgroundColor: '#F8FAFC',
-  },
-  urgencyOptionEmergencySelected: {
-    borderColor: '#DC2626',
-    backgroundColor: '#DC2626',
-  },
-  urgencyOptionEmergencyUnselected: {
-    borderColor: '#FECACA',
-    backgroundColor: '#FFF5F5',
-  },
-  urgencyTitle: {
-    fontSize: 14,
-    fontFamily: 'Inter_800ExtraBold',
-    marginBottom: 6,
-    color: '#0F172A',
-  },
-  urgencyTitleNormalSelected: {
-    color: '#0F172A',
-  },
-  emergencyTitleRow: {
+
+  /* Timeframe Pills */
+  pillWrapRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-  },
-  urgencyTitleEmergencyText: {
-    color: '#FFFFFF',
-  },
-  urgencySub: {
-    fontSize: 11,
-    lineHeight: 16,
-    fontFamily: fonts.regular,
-    color: '#64748B',
-  },
-  urgencySubNormalSelected: {
-    color: '#475569',
-  },
-  urgencySubEmergencyText: {
-    color: '#FEE2E2',
-  },
-  fieldLabel: {
-    fontSize: 13,
-    fontFamily: 'Inter_700Bold',
-    color: '#0F172A',
-    marginBottom: 10,
-  },
-  bloodGrid: {
-    marginBottom: 16,
-  },
-  bloodRow: {
-    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
-  bloodPill: {
+  timeframePill: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  timeframePillUnselected: {
+    backgroundColor: '#F8FAFC',
+    borderColor: BORDER_COLOR,
+  },
+  timeframePillSelected: {
+    backgroundColor: '#0F172A',
+    borderColor: '#0F172A',
+  },
+  timeframePillText: {
+    fontSize: 12,
+    fontFamily: FONT_MEDIUM,
+    color: '#475569',
+  },
+  timeframePillTextSelected: {
+    fontFamily: FONT_SEMIBOLD,
+    color: '#FFFFFF',
+  },
+
+  /* Fee & Payment */
+  feeSubText: {
+    fontSize: 11.5,
+    fontFamily: FONT_REGULAR,
+    color: TEXT_SECONDARY,
+    marginTop: -8,
+  },
+  feeBadge: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  feeBadgeText: {
+    fontSize: 12,
+    fontFamily: FONT_BOLD,
+    color: '#2563EB',
+  },
+  walletToggleRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
+  walletOptionBtn: {
     flex: 1,
     height: 42,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: BORDER_COLOR,
     backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  bloodPillSelected: {
-    backgroundColor: '#DC2626',
-    borderColor: '#DC2626',
-  },
-  bloodPillText: {
-    fontSize: 13,
-    fontFamily: 'Inter_700Bold',
-    color: '#0F172A',
-  },
-  bloodPillTextSelected: {
-    color: '#FFFFFF',
-  },
-  unitsSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 4,
-  },
-  unitsTitle: {
-    fontSize: 13,
-    fontFamily: 'Inter_700Bold',
-    color: '#0F172A',
-  },
-  unitsSub: {
-    fontSize: 11,
-    color: '#94A3B8',
-    fontFamily: fonts.regular,
-    marginTop: 2,
-  },
-  stepperContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  stepperBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    backgroundColor: '#F1F5F9',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  unitsCount: {
-    fontSize: 18,
-    fontFamily: 'Inter_800ExtraBold',
-    color: '#DC2626',
-    minWidth: 18,
-    textAlign: 'center',
-  },
-  twoColRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  redCrossIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    backgroundColor: '#DC2626',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  feeHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  feeHeaderTitle: {
-    fontSize: 15,
-    fontFamily: 'Inter_800ExtraBold',
-    color: '#0F172A',
-  },
-  feeBadge: {
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-  },
-  feeBadgeText: {
-    fontSize: 12,
-    fontFamily: 'Inter_800ExtraBold',
-    color: '#1D4ED8',
-  },
-  feeSubtitle: {
-    fontSize: 12,
-    color: '#64748B',
-    fontFamily: fonts.regular,
-    marginBottom: 14,
-  },
-  walletLabel: {
-    fontSize: 13,
-    fontFamily: 'Inter_700Bold',
-    color: '#0F172A',
-    marginBottom: 10,
-  },
-  walletRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 14,
-  },
-  walletBtn: {
-    flex: 1,
-    height: 46,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  walletBtnUnselected: {
-    backgroundColor: '#F8FAFC',
-    borderColor: '#E2E8F0',
-  },
-  walletBtnEsewaSelected: {
+  walletOptionEsewaSelected: {
     backgroundColor: '#16A34A',
     borderColor: '#16A34A',
   },
-  walletBtnKhaltiSelected: {
-    backgroundColor: '#7C3AED',
-    borderColor: '#7C3AED',
+  walletOptionKhaltiSelected: {
+    backgroundColor: '#5C2D91',
+    borderColor: '#5C2D91',
   },
-  walletBtnText: {
+  walletOptionText: {
     fontSize: 14,
-    fontFamily: 'Inter_800ExtraBold',
-    color: '#0F172A',
+    fontFamily: FONT_BOLD,
   },
-  walletBtnTextSelected: {
+  walletOptionTextEsewa: {
+    color: '#16A34A',
+  },
+  walletOptionTextKhalti: {
+    color: '#5C2D91',
+  },
+  walletOptionTextSelected: {
     color: '#FFFFFF',
-  },
-  walletBtnTextKhalti: {
-    color: '#5B21B6',
   },
   walletInfoBox: {
     backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 10,
+    padding: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 16,
+    borderColor: BORDER_COLOR,
+    marginBottom: 14,
   },
   walletIdText: {
-    fontSize: 12,
-    fontFamily: 'Inter_700Bold',
-    color: '#0F172A',
-    marginBottom: 4,
+    fontSize: 12.5,
+    fontFamily: FONT_MEDIUM,
+    color: TEXT_SECONDARY,
+    marginBottom: 2,
   },
-  walletInstructionText: {
-    fontSize: 11,
+  walletInfoSub: {
+    fontSize: 11.5,
+    fontFamily: FONT_REGULAR,
     color: '#64748B',
-    lineHeight: 16,
-    fontFamily: fonts.regular,
+  },
+
+  /* Submit Action Button */
+  submitContainer: {
+    marginTop: 4,
   },
   submitBtn: {
-    backgroundColor: '#DC2626',
-    borderRadius: 12,
-    height: 52,
+    width: '100%',
+    height: 50,
+    backgroundColor: BRAND_RED,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#DC2626',
+    shadowColor: BRAND_RED,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
     shadowRadius: 5,
     elevation: 3,
   },
+  submitBtnDisabled: {
+    opacity: 0.75,
+  },
   submitBtnContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-  },
-  submitCheckCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
-    alignItems: 'center',
   },
   submitBtnText: {
+    fontSize: 15,
+    fontFamily: FONT_BOLD,
     color: '#FFFFFF',
-    fontSize: 15,
-    fontFamily: 'Inter_800ExtraBold',
-  },
-
-  // Clean Input Styles
-  inputContainer: {
-    marginBottom: 16,
-  },
-  inputLabel: {
-    fontSize: 13,
-    color: '#334155',
-    fontFamily: fonts.medium,
-    marginBottom: 6,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    minHeight: 50,
-  },
-  inputWrapperFocused: {
-    borderColor: '#3B82F6',
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#3B82F6',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 15,
-    color: '#0F172A',
-    fontFamily: fonts.regular,
-    paddingVertical: 12,
-  },
-  mapPinpointBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEE2E2',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    gap: 4,
-    borderWidth: 1,
-    borderColor: '#FECACA',
-  },
-  mapPinpointText: {
-    fontSize: 11,
-    fontFamily: fonts.bold,
-    color: '#DC2626',
+    letterSpacing: 0.3,
   },
 });
