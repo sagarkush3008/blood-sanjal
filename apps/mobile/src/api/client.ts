@@ -2,7 +2,7 @@ import axios, { AxiosError } from 'axios';
 import { NativeModules, Platform } from 'react-native';
 import { storage } from '../utils/storage';
 
-const ACTIVE_TUNNEL_URL = 'https://federation-ordering-digit-perth.trycloudflare.com/api/v1';
+const ACTIVE_TUNNEL_URL = 'https://campaign-colorado-polyphonic-lending.trycloudflare.com/api/v1';
 
 // Dynamic Backend Host Detection
 export const getApiBaseUrl = (): string => {
@@ -11,7 +11,8 @@ export const getApiBaseUrl = (): string => {
     envUrl &&
     !envUrl.includes('realize-pdt-equity-bat') &&
     !envUrl.includes('cincinnati-williams') &&
-    !envUrl.includes('removing-travelling-survivors-letter')
+    !envUrl.includes('removing-travelling-survivors-letter') &&
+    !envUrl.includes('federation-ordering-digit-perth')
   ) {
     return envUrl;
   }
