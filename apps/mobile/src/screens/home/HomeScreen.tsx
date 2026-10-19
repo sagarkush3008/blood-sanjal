@@ -184,7 +184,8 @@ export const HomeScreen = () => {
     ? notificationsData.length
     : notificationsData?.total || 0;
 
-  const displayName = meProfile?.name || user?.name || 'Sam';
+  const rawDisplayName = meProfile?.name || user?.name || 'Sagar';
+  const displayName = rawDisplayName.replace(/\s*\((?:Donor|Recipient).*?\)/gi, '').trim() || rawDisplayName;
   const firstName = displayName.split(' ')[0];
   
   const locationText = cleanLocationName(meProfile?.cityId || user?.cityId, meProfile?.provinceId);
@@ -201,7 +202,7 @@ export const HomeScreen = () => {
   // Days left to save another life computation from backend
   const lastDonationRaw = donorProfile?.lastDonationDate;
   let daysLeft = 48;
-  let formattedLastDonation = '25 june 2026';
+  let formattedLastDonation = '25 Jun 2026';
 
   if (lastDonationRaw) {
     const lastDate = new Date(lastDonationRaw);
@@ -214,8 +215,8 @@ export const HomeScreen = () => {
       daysLeft = calculatedDaysLeft > 0 ? calculatedDaysLeft : 48;
 
       const monthNames = [
-        'january', 'february', 'march', 'april', 'may', 'june',
-        'july', 'august', 'september', 'october', 'november', 'december'
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
       ];
       formattedLastDonation = `${lastDate.getDate()} ${monthNames[lastDate.getMonth()]} ${lastDate.getFullYear()}`;
     }
@@ -332,7 +333,9 @@ export const HomeScreen = () => {
               <Text style={styles.bloodGroupText}>{bloodGroup}</Text>
             </View>
             <View style={styles.donorCardInfo}>
-              <Text style={styles.donorName}>{displayName}</Text>
+              <Text style={styles.donorName} numberOfLines={1} ellipsizeMode="tail">
+                {displayName}
+              </Text>
               <TouchableOpacity 
                 style={styles.donorLocationRow}
                 onPress={() => navigation.navigate('Profile', { screen: 'EditProfile' })}
@@ -359,13 +362,16 @@ export const HomeScreen = () => {
           {!isAvailable ? (
             <View style={[styles.inactivePremiumBox, { marginTop: 24 }]}>
                <View style={styles.inactivePremiumHeader}>
-                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                   <Feather name="moon" size={14} color="#FCA5A5" />
-                   <Text style={styles.inactivePremiumTitle}>
-                     {relativeText ? `Currently Inactive - ${relativeText} remaining` : 'Temporarily Unavailable'}
+                 <View style={styles.inactiveHeaderLeft}>
+                   <Feather name="moon" size={13} color="#FCA5A5" />
+                   <Text style={styles.inactivePremiumTitle} numberOfLines={1}>
+                     Temporarily Paused
                    </Text>
                  </View>
-                 <TouchableOpacity onPress={() => navigation.navigate('DonorAvailability')}>
+                 <TouchableOpacity 
+                   onPress={() => navigation.navigate('DonorAvailability')}
+                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                 >
                    <Text style={styles.inactivePremiumAction}>Change</Text>
                  </TouchableOpacity>
                </View>
@@ -405,18 +411,18 @@ export const HomeScreen = () => {
           activeOpacity={0.85}
         >
           <View style={styles.countdownIconBox}>
-            <Ionicons name="time-outline" size={26} color="#FFFFFF" />
+            <Ionicons name="time-outline" size={24} color="#FFFFFF" />
           </View>
           <View style={styles.countdownTextCol}>
             <Text style={styles.countdownTitle} numberOfLines={1}>
-              Days left to save another life
+              Donation Eligibility
             </Text>
             <Text style={styles.countdownSubtitle} numberOfLines={1}>
-              Your last recorded donation was on {formattedLastDonation}
+              Last recorded: {formattedLastDonation}
             </Text>
           </View>
           <View style={styles.countdownBadge}>
-            <Text style={styles.countdownBadgeText}>{badgeText}</Text>
+            <Text style={styles.countdownBadgeText}>{daysLeft} Days Left</Text>
           </View>
         </TouchableOpacity>
 
@@ -665,7 +671,7 @@ const styles = StyleSheet.create({
   bloodGroupSquare: { width: 68, height: 68, borderRadius: 20, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 5 },
   bloodGroupText: { fontSize: 32, fontFamily: 'Inter_900Black', color: '#DC2626' },
   donorCardInfo: { flex: 1, justifyContent: 'center' },
-  donorName: { fontSize: 20, fontFamily: 'Inter_800ExtraBold', color: '#FFFFFF', marginBottom: 4, letterSpacing: -0.5 },
+  donorName: { fontSize: 18, fontFamily: 'Inter_800ExtraBold', color: '#FFFFFF', marginBottom: 4, letterSpacing: -0.3 },
   donorLocationRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 },
   donorLocationText: { fontSize: 13, color: '#FECACA', fontFamily: 'Inter_500Medium' },
   statusPill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FFFFFF', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 3 },
@@ -673,10 +679,10 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 12, fontFamily: 'Inter_700Bold', color: '#0F172A' },
   
   inactivePremiumBox: { backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  inactivePremiumHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  inactivePremiumHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  inactiveHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, marginRight: 8 },
   inactivePremiumTitle: { fontSize: 12, fontFamily: 'Inter_800ExtraBold', color: '#FCA5A5', letterSpacing: 0.5 },
-  inactivePremiumAction: { fontSize: 11, fontFamily: 'Inter_700Bold', color: '#FFFFFF', textDecorationLine: 'underline' },
-  inactivePremiumReason: { fontSize: 13, color: '#FFFFFF', fontStyle: 'italic', marginBottom: 16, lineHeight: 18 },
+  inactivePremiumAction: { fontSize: 12, fontFamily: 'Inter_700Bold', color: '#FFFFFF', textDecorationLine: 'underline', paddingLeft: 8 },
   returnTimeWrapper: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 12, padding: 12, alignItems: 'center' },
   returnTimeItem: { flex: 1 },
   returnTimeLabel: { fontSize: 9, fontFamily: 'Inter_800ExtraBold', color: '#FCA5A5', marginBottom: 2, letterSpacing: 0.5 },
@@ -705,8 +711,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   countdownIconBox: {
-    width: 44,
-    height: 44,
+    width: 42,
+    height: 42,
     borderRadius: 12,
     backgroundColor: '#00A86B',
     alignItems: 'center',
@@ -714,32 +720,32 @@ const styles = StyleSheet.create({
   },
   countdownTextCol: {
     flex: 1,
-    marginHorizontal: 12,
+    marginHorizontal: 10,
     justifyContent: 'center',
   },
   countdownTitle: {
-    fontSize: 13.5,
+    fontSize: 13,
     fontFamily: 'Inter_700Bold',
     color: '#0F172A',
-    marginBottom: 3,
+    marginBottom: 2,
     letterSpacing: -0.2,
   },
   countdownSubtitle: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontFamily: 'Inter_400Regular',
-    color: '#64748B',
-    lineHeight: 15,
+    color: '#475569',
+    lineHeight: 14,
   },
   countdownBadge: {
     backgroundColor: '#00A86B',
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
   },
   countdownBadgeText: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: 'Inter_700Bold',
     color: '#FFFFFF',
     letterSpacing: -0.2,
