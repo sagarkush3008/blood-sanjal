@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest",
     "start": "ts-node src/server.ts -h 0.0.0.0",
-    "dev": "nodemon src/server.ts -- -h 0.0.0.0",
+    "dev": "npx --yes kill-port 5000 && nodemon src/server.ts -- -h 0.0.0.0",
     "build": "tsc",
     "lint": "eslint src/**/*.ts",
     "typecheck": "tsc --noEmit",
