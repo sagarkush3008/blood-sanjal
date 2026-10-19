@@ -168,9 +168,12 @@ export function cleanLocationName(rawLocation?: string | null, provinceId?: stri
 
   let text = rawLocation.trim();
 
-  // 1. If it's a 24-character hexadecimal ObjectId (e.g. cityId from MongoDB)
-  if (/^[0-9a-fA-F]{24}$/.test(text)) {
-    return provinceId ? `${provinceId}, Nepal` : 'Kathmandu';
+  // 1. If it's a raw database ID (e.g., 24-character hexadecimal ObjectId or UUID)
+  if (/^[0-9a-fA-F]{20,}(?:,\s*.*)?$/i.test(text) || /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i.test(text)) {
+    if (provinceId && !/^[0-9a-fA-F]{20,}$/.test(provinceId.trim())) {
+      return `${provinceId.trim()}, Nepal`;
+    }
+    return 'Kathmandu';
   }
 
   // 2. Check if the string contains decimal coordinates anywhere (e.g., "27.7172, 85.3240" or "Location (27.71, 85.32)")

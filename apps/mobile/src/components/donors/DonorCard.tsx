@@ -5,10 +5,75 @@ import { colors } from '../../theme';
 import { StatusBadge } from '../common/StatusBadge';
 import { cleanLocationName } from '../../utils/locationHelper';
 
+export interface LocationObject {
+  name?: string;
+  cityName?: string;
+  city?: string;
+  district?: string;
+  province?: string;
+  address?: string;
+  [key: string]: any;
+}
+
+export type LocationProp = string | LocationObject | null | undefined;
+
+/**
+ * Strict local helper function ("The Shield"):
+ * Guarantees that raw database IDs (MongoDB ObjectIds, UUIDs, alphanumeric hashes)
+ * and malformed objects are NEVER displayed on the UI.
+ *
+ * Fallback: Returns 'Location Not Set' (or extracts location.name if an object is passed).
+ */
+export const formatLocation = (loc?: LocationProp): string => {
+  if (!loc) {
+    return 'Location Not Set';
+  }
+
+  let textCandidate: string = '';
+
+  // 1. If location is an object, safely extract readable name property
+  if (typeof loc === 'object') {
+    textCandidate =
+      loc.name ||
+      loc.cityName ||
+      loc.city ||
+      loc.district ||
+      loc.province ||
+      loc.address ||
+      '';
+  } else if (typeof loc === 'string') {
+    textCandidate = loc;
+  }
+
+  const trimmed = textCandidate.trim();
+
+  // If empty after extraction
+  if (!trimmed) {
+    return 'Location Not Set';
+  }
+
+  // 2. Defensive Check: Is this a raw database ID or hash?
+  // - Length > 20 without spaces (clearly an ID like MongoDB ObjectId [24] or UUID [36])
+  // - 24-character hexadecimal ObjectId: /^[0-9a-fA-F]{24}$/
+  // - Standard UUID pattern: /^[0-9a-fA-F-]{36}$/
+  // - Hex string with trailing country suffix: e.g. "6ad3af55bd8804867daeda76, Nepal"
+  const isTooLongAlphaNumeric = trimmed.length > 20 && !trimmed.includes(' ');
+  const isMongoObjectId = /^[0-9a-fA-F]{24}$/.test(trimmed);
+  const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i.test(trimmed);
+  const isIdWithSuffix = /^[0-9a-fA-F]{20,}(?:,\s*.*)?$/i.test(trimmed);
+
+  if (isTooLongAlphaNumeric || isMongoObjectId || isUuid || isIdWithSuffix) {
+    return 'Location Not Set';
+  }
+
+  // 3. Return clean, sanitized human-readable place name
+  return cleanLocationName ? cleanLocationName(trimmed) : trimmed;
+};
+
 export interface DonorCardProps {
   name: string;
   bloodGroup: string;
-  location?: string;
+  location?: LocationProp;
   donorStatus?: string;
   totalDonations?: number;
   lastDonationDate?: string | Date | null;
@@ -108,7 +173,7 @@ export const DonorCard: React.FC<DonorCardProps> = ({
           <View style={styles.locationRow}>
             <Ionicons name="location-outline" size={14} color="#64748B" />
             <Text style={styles.locationText} numberOfLines={1}>
-              {cleanLocationName(location) || 'Nepal'}
+              {formatLocation(location)}
             </Text>
           </View>
         </View>
