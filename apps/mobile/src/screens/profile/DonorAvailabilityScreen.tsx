@@ -267,39 +267,24 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
           )}
         </TouchableOpacity>
 
-        {/* 2. Relocated & Highlighted "Custom Duration" Accordion (Placed Above Schedule a Pause) */}
+        {/* 2. Redesigned Minimal 'Custom Duration' List Item / Card */}
         <TouchableOpacity
-          style={[styles.customTrigger, showCustom && styles.customTriggerActive]}
+          style={[styles.customTrigger, showCustom && { marginBottom: 12 }]}
           onPress={() => setShowCustom(!showCustom)}
-          activeOpacity={0.78}
+          activeOpacity={0.75}
         >
-          <View style={styles.customTriggerLeft}>
-            <View style={[styles.customIconBox, showCustom && styles.customIconBoxActive]}>
-              <Ionicons
-                name="timer-outline"
-                size={18}
-                color="#8A0303"
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.customTriggerText, showCustom && styles.customTriggerTextActive]}>
-                Custom Duration
-              </Text>
-              <Text style={styles.customTriggerSub}>
-                Set your own custom hours or days
-              </Text>
-            </View>
+          <View style={styles.customIconBox}>
+            <Ionicons name="time-outline" size={20} color="#334155" />
           </View>
-          <View style={styles.customTriggerRight}>
-            <View style={styles.flexibleBadge}>
-              <Text style={styles.flexibleBadgeText}>Custom</Text>
-            </View>
-            <Ionicons
-              name={showCustom ? 'chevron-up' : 'chevron-down'}
-              size={18}
-              color="#8A0303"
-            />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.customTriggerTitle}>Custom Duration</Text>
+            <Text style={styles.customTriggerSub}>Set specific hours or days</Text>
           </View>
+          <Ionicons
+            name={showCustom ? 'chevron-down' : 'chevron-forward'}
+            size={18}
+            color="#94A3B8"
+          />
         </TouchableOpacity>
 
         {showCustom && (
@@ -464,25 +449,23 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 40,
+    paddingBottom: 110, // Substantial padding so user can scroll completely past bottom text above tab bar
   },
-  /* 1. Standalone Large "Become Active" Button (Blood Red) */
+  /* 1. Standalone Large "Become Active" Button (Blood Red, Full Width, Pill Shaped) */
   becomeActiveBtn: {
     backgroundColor: '#8A0303',
-    borderRadius: 18,
-    minHeight: 64,
+    borderRadius: 50, // Perfectly rounded pill-shaped corners
+    width: '100%',
     paddingVertical: 18,
     paddingHorizontal: 24,
-    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#8A0303',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    elevation: 6,
-    marginTop: 6,
-    marginBottom: 20, // Clean whitespace before highlighted Custom Duration
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.20,
+    shadowRadius: 8,
+    elevation: 3,
+    marginBottom: 24, // Consistent 24px margin
   },
   becomeActiveBtnDisabled: {
     opacity: 0.7,
@@ -493,10 +476,62 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   becomeActiveText: {
-    fontSize: 18,
-    fontFamily: FONT_EXTRABOLD,
+    fontSize: 17,
+    fontFamily: FONT_BOLD,
     color: '#FFFFFF',
     letterSpacing: 0.2,
+  },
+  /* 2. Sleek Minimal 'Custom Duration' List Item / Card */
+  customTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 24, // Consistent 24px margin
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  customIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  customTriggerTitle: {
+    fontSize: 15,
+    fontFamily: FONT_BOLD,
+    color: '#1E1E1E',
+    letterSpacing: -0.2,
+  },
+  customTriggerSub: {
+    fontSize: 12,
+    fontFamily: FONT_REGULAR,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  customFormBox: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: -12,
+    marginBottom: 24, // Consistent 24px margin
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
   },
   /* Section Header */
   sectionHeaderRow: {
@@ -520,7 +555,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 24, // Consistent 24px margin
   },
   presetCard: {
     width: '48.5%',
@@ -577,20 +612,20 @@ const styles = StyleSheet.create({
     color: '#64748B',
     lineHeight: 15,
   },
-  /* 2. Sleek Solid Charcoal Pill Pause Confirmation Button */
+  /* 3. Sleek Solid Charcoal Pill Pause Confirmation Button */
   charcoalPauseBtn: {
     backgroundColor: '#1E1E1E',
-    borderRadius: 100, // Perfectly rounded pill shape
-    paddingVertical: 16,
+    borderRadius: 50, // Perfectly rounded pill shape
+    paddingVertical: 17,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 24, // Generous whitespace below the button
+    marginBottom: 24, // Consistent 24px margin
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.16,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 2,
   },
   charcoalPauseBtnDisabled: {
     opacity: 0.65,
@@ -605,91 +640,6 @@ const styles = StyleSheet.create({
     fontFamily: FONT_BOLD,
     color: '#FFFFFF',
     letterSpacing: -0.2,
-  },
-  /* Highlighted Custom Duration Choice */
-  customTrigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFF1F2',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderWidth: 1.5,
-    borderColor: '#FECDD3',
-    marginBottom: 24,
-    shadowColor: '#8A0303',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  customTriggerActive: {
-    borderColor: '#8A0303',
-    backgroundColor: '#FEE2E2',
-    marginBottom: 10,
-  },
-  customTriggerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  customIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: '#FECDD3',
-  },
-  customIconBoxActive: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#8A0303',
-  },
-  customTriggerText: {
-    fontSize: 14.5,
-    fontFamily: FONT_BOLD,
-    color: '#8A0303',
-    letterSpacing: -0.2,
-  },
-  customTriggerTextActive: {
-    color: '#8A0303',
-    fontFamily: FONT_BOLD,
-  },
-  customTriggerSub: {
-    fontSize: 11.5,
-    fontFamily: FONT_REGULAR,
-    color: '#9F1239',
-    marginTop: 2,
-  },
-  customTriggerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  flexibleBadge: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#FECDD3',
-  },
-  flexibleBadgeText: {
-    fontSize: 10.5,
-    fontFamily: FONT_BOLD,
-    color: '#8A0303',
-  },
-  customFormBox: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#FECDD3',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
   },
   customFormHelp: {
     fontSize: 11.5,
