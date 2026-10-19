@@ -244,50 +244,30 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* 2. Hero Status Card with Big Red "Become Active" Button (No Switch) */}
-        <View style={[styles.heroCard, isActive ? styles.heroCardActive : styles.heroCardInactive]}>
-          <View style={styles.statusBadgeRow}>
-            <View style={[styles.statusDot, isActive ? styles.statusDotActive : styles.statusDotInactive]}>
-              <View style={[styles.statusDotCore, isActive ? styles.statusDotCoreActive : styles.statusDotCoreInactive]} />
+        {/* 1. Standalone Large CTA "Become Active" Button */}
+        <TouchableOpacity
+          style={[styles.becomeActiveBtn, isPendingAction && styles.becomeActiveBtnDisabled]}
+          onPress={() => {
+            if (!isActive) {
+              makeActiveMutation.mutate();
+            } else {
+              Alert.alert('Status Active 🩸', 'You are already active and visible to emergency patients.');
+            }
+          }}
+          disabled={isPendingAction}
+          activeOpacity={0.88}
+        >
+          {makeActiveMutation.isPending ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <View style={styles.becomeActiveContent}>
+              <Ionicons name="flash" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={styles.becomeActiveText}>Become Active</Text>
             </View>
-            <Text style={[styles.statusHeading, isActive ? styles.statusHeadingActive : styles.statusHeadingInactive]}>
-              {isActive ? 'Available to Donate' : 'Temporarily Paused'}
-            </Text>
-          </View>
+          )}
+        </TouchableOpacity>
 
-          <Text style={styles.statusDescription}>
-            {isActive
-              ? 'You are live and visible to emergency patients in need of blood.'
-              : returnInfo
-              ? `Reactivates ${returnInfo.relative} (Paused until ${returnInfo.timeOnly})`
-              : 'Emergency broadcast alerts are paused.'}
-          </Text>
-
-          {/* Big Vibrant Red Action Button (Replacing the old switch) */}
-          <TouchableOpacity
-            style={styles.becomeActiveBtn}
-            onPress={() => {
-              if (!isActive) {
-                makeActiveMutation.mutate();
-              } else {
-                Alert.alert('Status Active 🩸', 'You are already active and visible to emergency patients.');
-              }
-            }}
-            disabled={isPendingAction}
-            activeOpacity={0.88}
-          >
-            {makeActiveMutation.isPending ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <View style={styles.becomeActiveContent}>
-                <Ionicons name="flash" size={17} color="#FFFFFF" style={{ marginRight: 6 }} />
-                <Text style={styles.becomeActiveText}>Become Active</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* 3. Section Title */}
+        {/* 2. Section Title */}
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionTitle}>
             {isActive ? 'Schedule a Pause' : 'Adjust Pause Duration'}
@@ -297,7 +277,7 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
           </Text>
         </View>
 
-        {/* 4. Time Duration Cards (2x2 Presets Grid) */}
+        {/* 3. Time Duration Cards (2x2 Presets Grid) */}
         <View style={styles.presetsGrid}>
           {PRESETS.map((item) => {
             const isSelected = selectedPresetId === item.id && !showCustom;
@@ -316,11 +296,11 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
                     <Ionicons
                       name={item.icon}
                       size={18}
-                      color={isSelected ? '#DC2626' : '#475569'}
+                      color={isSelected ? '#E63946' : '#475569'}
                     />
                   </View>
                   {isSelected ? (
-                    <Ionicons name="checkmark-circle" size={18} color="#DC2626" />
+                    <Ionicons name="checkmark-circle" size={18} color="#E63946" />
                   ) : (
                     <View style={styles.emptyRadioCircle} />
                   )}
@@ -336,22 +316,22 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
           })}
         </View>
 
-        {/* 5. Minimal Confirmation Button (Directly below time duration cards) */}
+        {/* 4. Sleek Solid Charcoal Pill Pause Confirmation Button */}
         <TouchableOpacity
-          style={styles.minimalActionBtn}
+          style={[styles.charcoalPauseBtn, isPendingAction && styles.charcoalPauseBtnDisabled]}
           onPress={handleApplyBreak}
           disabled={isPendingAction}
-          activeOpacity={0.75}
+          activeOpacity={0.85}
         >
           {setAvailabilityMutation.isPending ? (
-            <ActivityIndicator size="small" color="#DC2626" />
+            <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <View style={styles.actionBtnRow}>
-              <Ionicons name="pause-circle-outline" size={18} color="#DC2626" style={{ marginRight: 8 }} />
-              <Text style={styles.minimalActionBtnText}>
+            <View style={styles.charcoalPauseContent}>
+              <Ionicons name="pause" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={styles.charcoalPauseText}>
                 {showCustom
-                  ? `Pause for ${customValue || '1'} ${customUnit.toLowerCase()}`
-                  : `Pause for ${selectedPreset?.label || 'Selected Break'}`}
+                  ? `Confirm Pause for ${customValue || '1'} ${customUnit === 'HOURS' ? (Number(customValue) === 1 ? 'Hour' : 'Hours') : (Number(customValue) === 1 ? 'Day' : 'Days')}`
+                  : `Confirm Pause for ${selectedPreset?.label || 'Duration'}`}
               </Text>
             </View>
           )}
@@ -472,129 +452,62 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   scrollContent: {
-    paddingHorizontal: 18,
-    paddingTop: 18,
+    paddingHorizontal: 20,
+    paddingTop: 16,
     paddingBottom: 40,
   },
-  /* Hero Status Card */
-  heroCard: {
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 24,
-    borderWidth: 1.5,
-  },
-  heroCardActive: {
-    backgroundColor: '#F0FDF4',
-    borderColor: '#BBF7D0',
-    shadowColor: '#059669',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  heroCardInactive: {
-    backgroundColor: '#FFFBEB',
-    borderColor: '#FDE68A',
-    shadowColor: '#D97706',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  statusBadgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  statusDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  statusDotActive: {
-    backgroundColor: '#DCFCE7',
-  },
-  statusDotInactive: {
-    backgroundColor: '#FEF3C7',
-  },
-  statusDotCore: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  statusDotCoreActive: {
-    backgroundColor: '#16A34A',
-  },
-  statusDotCoreInactive: {
-    backgroundColor: '#D97706',
-  },
-  statusHeading: {
-    fontSize: 16,
-    fontFamily: FONT_EXTRABOLD,
-    letterSpacing: -0.3,
-  },
-  statusHeadingActive: {
-    color: '#15803D',
-  },
-  statusHeadingInactive: {
-    color: '#B45309',
-  },
-  statusDescription: {
-    fontSize: 12,
-    fontFamily: FONT_REGULAR,
-    color: '#475569',
-    lineHeight: 17,
-    marginBottom: 4,
-  },
-  /* Big Red "Become Active" Button */
+  /* 1. Standalone Large "Become Active" Button */
   becomeActiveBtn: {
-    backgroundColor: '#DC2626',
-    borderRadius: 14,
-    paddingVertical: 13,
+    backgroundColor: '#E63946',
+    borderRadius: 16,
+    paddingVertical: 16,
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 14,
-    shadowColor: '#DC2626',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowColor: '#E63946',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
+    elevation: 4,
+    marginBottom: 32, // Generous whitespace separating top CTA from Schedule a Pause
+  },
+  becomeActiveBtnDisabled: {
+    opacity: 0.7,
   },
   becomeActiveContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   becomeActiveText: {
-    fontSize: 14.5,
+    fontSize: 16,
     fontFamily: FONT_BOLD,
     color: '#FFFFFF',
     letterSpacing: -0.2,
   },
   /* Section Header */
   sectionHeaderRow: {
-    marginBottom: 14,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: FONT_BOLD,
     color: '#0F172A',
-    marginBottom: 3,
-    letterSpacing: -0.2,
+    marginBottom: 4,
+    letterSpacing: -0.3,
   },
   sectionSubtitle: {
-    fontSize: 12,
+    fontSize: 12.5,
     fontFamily: FONT_REGULAR,
     color: '#64748B',
+    lineHeight: 18,
   },
   /* 2x2 Presets Grid */
   presetsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   presetCard: {
     width: '48.5%',
@@ -602,18 +515,18 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    padding: 12,
-    marginBottom: 10,
+    padding: 14,
+    marginBottom: 12,
   },
   presetCardSelected: {
     backgroundColor: '#FEF2F2',
-    borderColor: '#DC2626',
+    borderColor: '#E63946',
   },
   presetTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   presetIconBox: {
     width: 32,
@@ -630,20 +543,20 @@ const styles = StyleSheet.create({
     borderColor: '#FECACA',
   },
   emptyRadioCircle: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     borderWidth: 1.5,
     borderColor: '#CBD5E1',
   },
   presetLabel: {
-    fontSize: 13.5,
+    fontSize: 14,
     fontFamily: FONT_BOLD,
     color: '#0F172A',
-    marginBottom: 2,
+    marginBottom: 3,
   },
   presetLabelSelected: {
-    color: '#DC2626',
+    color: '#E63946',
   },
   presetSub: {
     fontSize: 11,
@@ -651,30 +564,33 @@ const styles = StyleSheet.create({
     color: '#64748B',
     lineHeight: 15,
   },
-  /* Minimal Confirmation Button (Directly below duration cards) */
-  minimalActionBtn: {
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1.5,
-    borderColor: '#DC2626',
-    borderRadius: 14,
-    paddingVertical: 13,
+  /* 2. Sleek Solid Charcoal Pill Pause Confirmation Button */
+  charcoalPauseBtn: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 100, // Perfectly rounded pill shape
+    paddingVertical: 16,
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
-    shadowColor: '#DC2626',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
+    marginBottom: 24, // Generous whitespace below the button
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.16,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  actionBtnRow: {
+  charcoalPauseBtnDisabled: {
+    opacity: 0.65,
+  },
+  charcoalPauseContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  minimalActionBtnText: {
-    fontSize: 14.5,
+  charcoalPauseText: {
+    fontSize: 15,
     fontFamily: FONT_BOLD,
-    color: '#DC2626',
+    color: '#FFFFFF',
     letterSpacing: -0.2,
   },
   /* Custom Duration Accordion */
