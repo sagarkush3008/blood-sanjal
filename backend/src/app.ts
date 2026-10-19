@@ -64,11 +64,9 @@ app.use(cors({
 // Request ID Middleware
 app.use(requestIdMiddleware);
 
-// Request logger
-app.use((req, res, next) => {
-  logger.info(`[${req.id}] ${req.method} ${req.url}`);
-  next();
-});
+// Comprehensive Request & Latency Logger
+import { requestLoggerMiddleware } from './core/middleware/requestLogger.middleware';
+app.use(requestLoggerMiddleware);
 
 // Body parsing with size limit
 app.use(express.json({ limit: '1mb' }));

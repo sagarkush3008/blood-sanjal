@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import { DonorService } from './donor.service';
 import { DonorProfile } from './donorProfile.model';
 import { PaymentService } from '../payments/payment.service';
@@ -61,8 +62,14 @@ export class DonorController {
   static async getById(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const id = req.params.id as string;
+
+      if (!id || typeof id !== 'string' || !mongoose.Types.ObjectId.isValid(id)) {
+        throw new AppError(404, 'NOT_FOUND', 'Donor profile not found');
+      }
+
       const donor = await DonorProfile.findOne({
-        $or: [{ _id: req.params.id }, { userId: req.params.id }]
+        $or: [{ _id: id }, { userId: id }]
       }).populate('userId');
       if (!donor) throw new AppError(404, 'NOT_FOUND', 'Donor profile not found');
       const { toPublicDonorDTO } = await import('./donor.dto');

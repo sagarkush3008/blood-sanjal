@@ -2,6 +2,19 @@ import mongoose from 'mongoose';
 import { env } from './env.config';
 import { logger } from './logger.config';
 
+// Attach runtime database connection event listeners to safeguard against unexpected dropouts
+mongoose.connection.on('error', (err) => {
+  logger.error(`❌ [Database Runtime Error]: ${err.message || err}`);
+});
+
+mongoose.connection.on('disconnected', () => {
+  logger.warn('⚠️ [Database] Disconnected from MongoDB. Mongoose is attempting reconnection...');
+});
+
+mongoose.connection.on('reconnected', () => {
+  logger.info('🔄 [Database] Reconnected to MongoDB successfully.');
+});
+
 export const connectDB = async (maxRetries = 5, retryDelayMs = 3000): Promise<typeof mongoose> => {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {

@@ -4,12 +4,19 @@ export const SuccessResponse = (data: any, requestId: string) => ({
   meta: { requestId }
 });
 
-export const ErrorResponse = (code: string, message: string, details: any[] | undefined, requestId: string) => ({
+export const ErrorResponse = (
+  code: string,
+  message: string,
+  details: any[] | undefined,
+  requestId: string,
+  fields?: Record<string, string>
+) => ({
   success: false,
   error: {
     code,
     message,
-    details: details || []
+    details: details || [],
+    ...(fields && Object.keys(fields).length > 0 ? { fields } : {})
   },
   meta: { requestId }
 });
