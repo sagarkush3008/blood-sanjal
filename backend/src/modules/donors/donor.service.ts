@@ -76,8 +76,11 @@ export class DonorService {
       profile.donorStatus = 'INACTIVE';
       profile.inactiveStartedAt = now;
 
-      if (data.reason) profile.inactiveReason = data.reason;
-      else profile.inactiveReason = null;
+      if (data.reason && typeof data.reason === 'string' && data.reason.trim() !== '') {
+        profile.inactiveReason = data.reason.trim();
+      } else {
+        profile.inactiveReason = null;
+      }
 
       let inactiveUntil = null;
       if (data.durationHours !== undefined || data.durationDays !== undefined) {

@@ -12,6 +12,13 @@ export interface DonorSearchParams {
   limit?: number;
 }
 
+export interface UpdateAvailabilityPayload {
+  status: 'ACTIVE' | 'INACTIVE';
+  durationHours?: number;
+  durationDays?: number;
+  reason?: string | null;
+}
+
 export const DonorsAPI = {
   search: (params?: DonorSearchParams) => apiClient.get('/donors/search', { params }),
   getProfile: (id: string) => apiClient.get(`/donors/${id}`),
@@ -19,5 +26,9 @@ export const DonorsAPI = {
   upsertMyProfile: (data: any) => apiClient.post('/donors/me/profile', data),
   getMyStatus: () => apiClient.get('/donors/me/status'),
   updateMyStatus: (status: 'ACTIVE' | 'INACTIVE') => apiClient.patch('/donors/me/status', { status }),
-  updateMyAvailability: (data: any) => apiClient.patch('/donors/me/availability', data),
+  updateMyAvailability: (data: UpdateAvailabilityPayload) =>
+    apiClient.patch('/donors/me/availability', {
+      ...data,
+      reason: data.reason ?? null,
+    }),
 };

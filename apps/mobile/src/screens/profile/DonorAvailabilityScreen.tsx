@@ -29,14 +29,14 @@ interface PresetItem {
   hours?: number;
   days?: number;
   icon: keyof typeof Ionicons.glyphMap;
-  reason: string;
+  reason?: string;
 }
 
 const PRESETS: PresetItem[] = [
-  { id: '2h', label: '2 Hours', sub: 'Short errand / class', hours: 2, icon: 'time-outline', reason: 'Quick 2-hour break' },
-  { id: '8h', label: '8 Hours', sub: 'Night sleep & rest', hours: 8, icon: 'moon-outline', reason: 'Sleep & uninterrupted rest' },
-  { id: '24h', label: '1 Day', sub: 'Busy with work / family', hours: 24, icon: 'calendar-outline', reason: 'Busy whole day' },
-  { id: '3d', label: '3 Days', sub: 'Trip / out of town', days: 3, icon: 'airplane-outline', reason: 'Out of town / short trip' },
+  { id: '2h', label: '2 Hours', sub: 'Short errand / class', hours: 2, icon: 'time-outline' },
+  { id: '8h', label: '8 Hours', sub: 'Night sleep & rest', hours: 8, icon: 'moon-outline' },
+  { id: '24h', label: '1 Day', sub: 'Busy with work / family', hours: 24, icon: 'calendar-outline' },
+  { id: '3d', label: '3 Days', sub: 'Trip / out of town', days: 3, icon: 'airplane-outline' },
 ];
 
 export const DonorAvailabilityScreen = ({ navigation }: any) => {
@@ -46,10 +46,10 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
   const [selectedPresetId, setSelectedPresetId] = useState<string>('2h');
   const [showCustom, setShowCustom] = useState<boolean>(false);
 
-  // Custom Form State
+  // Custom Form State (reason is completely optional)
   const [customValue, setCustomValue] = useState<string>('5');
   const [customUnit, setCustomUnit] = useState<'HOURS' | 'DAYS'>('HOURS');
-  const [customReason, setCustomReason] = useState<string>('');
+  const [customReason, setCustomReason] = useState<string | undefined>(undefined);
 
   // Fetch status & profile from backend
   const { data: statusData, isLoading: isStatusLoading, refetch: refetchStatus } = useQuery({
@@ -158,9 +158,9 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
       hours = hours % 12;
       hours = hours ? hours : 12;
       const mins = String(d.getMinutes()).padStart(2, '0');
-
-      const exact = `${dayName}, ${monthName} ${dateNum} · ${hours}:${mins} ${ampm}`;
-      return { relative, exact };
+      const timeOnly = `${hours}:${mins} ${ampm}`;
+      const exact = `${dayName}, ${monthName} ${dateNum} · ${timeOnly}`;
+      return { relative, exact, timeOnly };
     } catch {
       return null;
     }
@@ -184,7 +184,7 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
         setAvailabilityMutation.mutate({
           status: 'INACTIVE',
           durationHours: val,
-          reason: customReason.trim() || 'Custom break',
+          reason: customReason?.trim() || undefined,
         });
       } else {
         if (val > 90) {
@@ -194,7 +194,7 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
         setAvailabilityMutation.mutate({
           status: 'INACTIVE',
           durationDays: val,
-          reason: customReason.trim() || 'Custom break',
+          reason: customReason?.trim() || undefined,
         });
       }
     } else if (selectedPreset) {
@@ -202,7 +202,7 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
         status: 'INACTIVE',
         durationHours: selectedPreset.hours,
         durationDays: selectedPreset.days,
-        reason: selectedPreset.reason,
+        reason: undefined,
       });
     }
   };
@@ -259,7 +259,7 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
             {isActive
               ? 'You are live and visible to emergency patients in need of blood.'
               : returnInfo
-              ? `Reactivates ${returnInfo.relative} (${returnInfo.exact}).`
+              ? `Reactivates ${returnInfo.relative} (Paused until ${returnInfo.timeOnly})`
               : 'Emergency broadcast alerts are paused.'}
           </Text>
 
@@ -416,15 +416,6 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
                 </TouchableOpacity>
               </View>
             </View>
-
-            <TextInput
-              style={styles.customReasonInput}
-              placeholder="Optional reason (e.g. Traveling / Exams / Rest)"
-              placeholderTextColor="#94A3B8"
-              value={customReason}
-              onChangeText={setCustomReason}
-              maxLength={60}
-            />
           </View>
         )}
 

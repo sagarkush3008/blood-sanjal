@@ -361,16 +361,14 @@ export const HomeScreen = () => {
                <View style={styles.inactivePremiumHeader}>
                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                    <Feather name="moon" size={14} color="#FCA5A5" />
-                   <Text style={styles.inactivePremiumTitle}>Temporarily Unavailable</Text>
+                   <Text style={styles.inactivePremiumTitle}>
+                     {relativeText ? `Currently Inactive - ${relativeText} remaining` : 'Temporarily Unavailable'}
+                   </Text>
                  </View>
                  <TouchableOpacity onPress={() => navigation.navigate('DonorAvailability')}>
                    <Text style={styles.inactivePremiumAction}>Change</Text>
                  </TouchableOpacity>
                </View>
-               
-               {inactiveReason && (
-                 <Text style={styles.inactivePremiumReason}>"{inactiveReason}"</Text>
-               )}
 
                {relativeText && (
                  <View style={styles.returnTimeWrapper}>

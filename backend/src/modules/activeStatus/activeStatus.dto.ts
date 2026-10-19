@@ -22,8 +22,8 @@ export interface DonorActiveStatusRecord {
   isOnline: boolean;
   lastHeartbeat: string;
   visibility: boolean;
-  inactiveUntil?: string;
-  inactiveReason?: string;
+  inactiveUntil?: string | null;
+  inactiveReason?: string | null;
   totalDonations: number;
   lastDonationDate?: string;
   updatedAt: string;
@@ -85,8 +85,9 @@ export interface UpdateDonorStatusPayload {
   status: DonorStatus;
   inactiveHours?: number;
   inactiveDays?: number;
-  inactiveUntil?: string;
-  inactiveReason?: string;
+  inactiveUntil?: string | null;
+  inactiveReason?: string | null;
+  reason?: string | null;
   visibility?: boolean;
   changedBy?: string;
 }
