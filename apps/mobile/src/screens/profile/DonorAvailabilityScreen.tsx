@@ -244,7 +244,7 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* 1. Standalone Large CTA "Become Active" Button */}
+        {/* 1. Standalone Large CTA "Become Active" Button (Deep Blood Red #8A0303) */}
         <TouchableOpacity
           style={[styles.becomeActiveBtn, isPendingAction && styles.becomeActiveBtnDisabled]}
           onPress={() => {
@@ -267,99 +267,39 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
           )}
         </TouchableOpacity>
 
-        {/* 2. Section Title */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>
-            {isActive ? 'Schedule a Pause' : 'Adjust Pause Duration'}
-          </Text>
-          <Text style={styles.sectionSubtitle}>
-            Choose a quick duration to pause emergency alerts.
-          </Text>
-        </View>
-
-        {/* 3. Time Duration Cards (2x2 Presets Grid) */}
-        <View style={styles.presetsGrid}>
-          {PRESETS.map((item) => {
-            const isSelected = selectedPresetId === item.id && !showCustom;
-            return (
-              <TouchableOpacity
-                key={item.id}
-                style={[styles.presetCard, isSelected && styles.presetCardSelected]}
-                onPress={() => {
-                  setSelectedPresetId(item.id);
-                  setShowCustom(false);
-                }}
-                activeOpacity={0.75}
-              >
-                <View style={styles.presetTopRow}>
-                  <View style={[styles.presetIconBox, isSelected && styles.presetIconBoxSelected]}>
-                    <Ionicons
-                      name={item.icon}
-                      size={18}
-                      color={isSelected ? '#E63946' : '#475569'}
-                    />
-                  </View>
-                  {isSelected ? (
-                    <Ionicons name="checkmark-circle" size={18} color="#E63946" />
-                  ) : (
-                    <View style={styles.emptyRadioCircle} />
-                  )}
-                </View>
-                <Text style={[styles.presetLabel, isSelected && styles.presetLabelSelected]}>
-                  {item.label}
-                </Text>
-                <Text style={styles.presetSub} numberOfLines={1}>
-                  {item.sub}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* 4. Sleek Solid Charcoal Pill Pause Confirmation Button */}
-        <TouchableOpacity
-          style={[styles.charcoalPauseBtn, isPendingAction && styles.charcoalPauseBtnDisabled]}
-          onPress={handleApplyBreak}
-          disabled={isPendingAction}
-          activeOpacity={0.85}
-        >
-          {setAvailabilityMutation.isPending ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <View style={styles.charcoalPauseContent}>
-              <Ionicons name="pause" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.charcoalPauseText}>
-                {showCustom
-                  ? `Confirm Pause for ${customValue || '1'} ${customUnit === 'HOURS' ? (Number(customValue) === 1 ? 'Hour' : 'Hours') : (Number(customValue) === 1 ? 'Day' : 'Days')}`
-                  : `Confirm Pause for ${selectedPreset?.label || 'Duration'}`}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-
-        {/* 6. Custom Duration Accordion */}
+        {/* 2. Relocated & Highlighted "Custom Duration" Accordion (Placed Above Schedule a Pause) */}
         <TouchableOpacity
           style={[styles.customTrigger, showCustom && styles.customTriggerActive]}
           onPress={() => setShowCustom(!showCustom)}
-          activeOpacity={0.75}
+          activeOpacity={0.78}
         >
           <View style={styles.customTriggerLeft}>
             <View style={[styles.customIconBox, showCustom && styles.customIconBoxActive]}>
               <Ionicons
-                name="options-outline"
-                size={16}
-                color={showCustom ? '#DC2626' : '#64748B'}
+                name="timer-outline"
+                size={18}
+                color="#8A0303"
               />
             </View>
-            <Text style={[styles.customTriggerText, showCustom && styles.customTriggerTextActive]}>
-              Custom Duration
-            </Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.customTriggerText, showCustom && styles.customTriggerTextActive]}>
+                Custom Duration
+              </Text>
+              <Text style={styles.customTriggerSub}>
+                Set your own custom hours or days
+              </Text>
+            </View>
           </View>
-          <Ionicons
-            name={showCustom ? 'chevron-up' : 'chevron-down'}
-            size={18}
-            color={showCustom ? '#DC2626' : '#94A3B8'}
-          />
+          <View style={styles.customTriggerRight}>
+            <View style={styles.flexibleBadge}>
+              <Text style={styles.flexibleBadgeText}>Custom</Text>
+            </View>
+            <Ionicons
+              name={showCustom ? 'chevron-up' : 'chevron-down'}
+              size={18}
+              color="#8A0303"
+            />
+          </View>
         </TouchableOpacity>
 
         {showCustom && (
@@ -399,7 +339,77 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
           </View>
         )}
 
-        {/* 7. Minimal Privacy / Info Note */}
+        {/* 3. Section Title */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>
+            {isActive ? 'Schedule a Pause' : 'Adjust Pause Duration'}
+          </Text>
+          <Text style={styles.sectionSubtitle}>
+            Choose a quick duration to pause emergency alerts.
+          </Text>
+        </View>
+
+        {/* 4. Time Duration Cards (2x2 Presets Grid) */}
+        <View style={styles.presetsGrid}>
+          {PRESETS.map((item) => {
+            const isSelected = selectedPresetId === item.id && !showCustom;
+            return (
+              <TouchableOpacity
+                key={item.id}
+                style={[styles.presetCard, isSelected && styles.presetCardSelected]}
+                onPress={() => {
+                  setSelectedPresetId(item.id);
+                  setShowCustom(false);
+                }}
+                activeOpacity={0.75}
+              >
+                <View style={styles.presetTopRow}>
+                  <View style={[styles.presetIconBox, isSelected && styles.presetIconBoxSelected]}>
+                    <Ionicons
+                      name={item.icon}
+                      size={18}
+                      color={isSelected ? '#8A0303' : '#475569'}
+                    />
+                  </View>
+                  {isSelected ? (
+                    <Ionicons name="checkmark-circle" size={18} color="#8A0303" />
+                  ) : (
+                    <View style={styles.emptyRadioCircle} />
+                  )}
+                </View>
+                <Text style={[styles.presetLabel, isSelected && styles.presetLabelSelected]}>
+                  {item.label}
+                </Text>
+                <Text style={styles.presetSub} numberOfLines={1}>
+                  {item.sub}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* 5. Sleek Solid Charcoal Pill Pause Confirmation Button */}
+        <TouchableOpacity
+          style={[styles.charcoalPauseBtn, isPendingAction && styles.charcoalPauseBtnDisabled]}
+          onPress={handleApplyBreak}
+          disabled={isPendingAction}
+          activeOpacity={0.85}
+        >
+          {setAvailabilityMutation.isPending ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <View style={styles.charcoalPauseContent}>
+              <Ionicons name="pause" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={styles.charcoalPauseText}>
+                {showCustom
+                  ? `Confirm Pause for ${customValue || '1'} ${customUnit === 'HOURS' ? (Number(customValue) === 1 ? 'Hour' : 'Hours') : (Number(customValue) === 1 ? 'Day' : 'Days')}`
+                  : `Confirm Pause for ${selectedPreset?.label || 'Duration'}`}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {/* 6. Minimal Privacy / Info Note */}
         <View style={styles.infoFooter}>
           <Ionicons name="shield-checkmark-outline" size={15} color="#94A3B8" style={{ marginRight: 8, marginTop: 1 }} />
           <Text style={styles.infoFooterText}>
@@ -456,9 +466,9 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 40,
   },
-  /* 1. Standalone Large "Become Active" Button */
+  /* 1. Standalone Large "Become Active" Button (Blood Red) */
   becomeActiveBtn: {
-    backgroundColor: '#E63946',
+    backgroundColor: '#8A0303',
     borderRadius: 18,
     minHeight: 64,
     paddingVertical: 18,
@@ -466,13 +476,13 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#E63946',
+    shadowColor: '#8A0303',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.35,
     shadowRadius: 14,
     elevation: 6,
     marginTop: 6,
-    marginBottom: 36, // Generous whitespace separating top CTA from Schedule a Pause
+    marginBottom: 20, // Clean whitespace before highlighted Custom Duration
   },
   becomeActiveBtnDisabled: {
     opacity: 0.7,
@@ -523,7 +533,7 @@ const styles = StyleSheet.create({
   },
   presetCardSelected: {
     backgroundColor: '#FEF2F2',
-    borderColor: '#E63946',
+    borderColor: '#8A0303',
   },
   presetTopRow: {
     flexDirection: 'row',
@@ -559,7 +569,7 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   presetLabelSelected: {
-    color: '#E63946',
+    color: '#8A0303',
   },
   presetSub: {
     fontSize: 11,
@@ -596,55 +606,90 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     letterSpacing: -0.2,
   },
-  /* Custom Duration Accordion */
+  /* Highlighted Custom Duration Choice */
   customTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 14,
+    backgroundColor: '#FFF1F2',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1.5,
+    borderColor: '#FECDD3',
+    marginBottom: 24,
+    shadowColor: '#8A0303',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   customTriggerActive: {
-    borderColor: '#DC2626',
-    backgroundColor: '#FEF2F2',
+    borderColor: '#8A0303',
+    backgroundColor: '#FEE2E2',
+    marginBottom: 10,
   },
   customTriggerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   customIconBox: {
-    width: 26,
-    height: 26,
-    borderRadius: 6,
+    width: 38,
+    height: 38,
+    borderRadius: 10,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#FECDD3',
   },
   customIconBoxActive: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#8A0303',
   },
   customTriggerText: {
-    fontSize: 13,
-    fontFamily: FONT_SEMIBOLD,
-    color: '#475569',
+    fontSize: 14.5,
+    fontFamily: FONT_BOLD,
+    color: '#8A0303',
+    letterSpacing: -0.2,
   },
   customTriggerTextActive: {
-    color: '#DC2626',
+    color: '#8A0303',
     fontFamily: FONT_BOLD,
+  },
+  customTriggerSub: {
+    fontSize: 11.5,
+    fontFamily: FONT_REGULAR,
+    color: '#9F1239',
+    marginTop: 2,
+  },
+  customTriggerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  flexibleBadge: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#FECDD3',
+  },
+  flexibleBadgeText: {
+    fontSize: 10.5,
+    fontFamily: FONT_BOLD,
+    color: '#8A0303',
   },
   customFormBox: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: '#FECDD3',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
   },
   customFormHelp: {
     fontSize: 11.5,
