@@ -261,7 +261,7 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
             <View style={styles.becomeActiveContent}>
-              <Ionicons name="flash" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Ionicons name="flash" size={22} color="#FFFFFF" style={{ marginRight: 10 }} />
               <Text style={styles.becomeActiveText}>Become Active</Text>
             </View>
           )}
@@ -459,17 +459,20 @@ const styles = StyleSheet.create({
   /* 1. Standalone Large "Become Active" Button */
   becomeActiveBtn: {
     backgroundColor: '#E63946',
-    borderRadius: 16,
-    paddingVertical: 16,
+    borderRadius: 18,
+    minHeight: 64,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#E63946',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.28,
-    shadowRadius: 10,
-    elevation: 4,
-    marginBottom: 32, // Generous whitespace separating top CTA from Schedule a Pause
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 6,
+    marginTop: 6,
+    marginBottom: 36, // Generous whitespace separating top CTA from Schedule a Pause
   },
   becomeActiveBtnDisabled: {
     opacity: 0.7,
@@ -480,10 +483,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   becomeActiveText: {
-    fontSize: 16,
-    fontFamily: FONT_BOLD,
+    fontSize: 18,
+    fontFamily: FONT_EXTRABOLD,
     color: '#FFFFFF',
-    letterSpacing: -0.2,
+    letterSpacing: 0.2,
   },
   /* Section Header */
   sectionHeaderRow: {
