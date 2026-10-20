@@ -85,11 +85,27 @@ export default function App() {
         const style = document.createElement('style');
         style.id = styleId;
         style.innerHTML = `
-          * {
-            font-family: 'Inter', sans-serif !important;
+          @font-face {
+            font-family: 'Feather';
+            src: url('https://cdn.jsdelivr.net/npm/@expo/vector-icons@15.0.2/build/vendor/react-native-vector-icons/Fonts/Feather.ttf') format('truetype');
+          }
+          @font-face {
+            font-family: 'Ionicons';
+            src: url('https://cdn.jsdelivr.net/npm/@expo/vector-icons@15.0.2/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf') format('truetype');
+          }
+          @font-face {
+            font-family: 'MaterialCommunityIcons';
+            src: url('https://cdn.jsdelivr.net/npm/@expo/vector-icons@15.0.2/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf') format('truetype');
+          }
+          @font-face {
+            font-family: 'MaterialIcons';
+            src: url('https://cdn.jsdelivr.net/npm/@expo/vector-icons@15.0.2/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf') format('truetype');
+          }
+          html, body, #root {
+            font-family: 'Inter', sans-serif;
           }
           input, textarea, select, button {
-            font-family: 'Inter', sans-serif !important;
+            font-family: 'Inter', sans-serif;
           }
         `;
         document.head.appendChild(style);
