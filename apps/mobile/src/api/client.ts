@@ -2,8 +2,8 @@ import axios, { AxiosError } from 'axios';
 import { NativeModules, Platform } from 'react-native';
 import { storage } from '../utils/storage';
 
-// TODO: Replace 192.168.X.X with your laptop's current IPv4 address on the local network.
-const LOCAL_DEV_API_URL = 'http://192.168.X.X:5000/api/v1';
+// Laptop Wi-Fi IPv4 address on the local network
+const LOCAL_DEV_API_URL = 'http://192.168.1.71:5000/api/v1';
 
 const ACTIVE_TUNNEL_URL = 'https://finish-librarian-oct-converter.trycloudflare.com/api/v1';
 
@@ -41,8 +41,7 @@ export const getApiBaseUrl = (): string => {
   }
 
   // 4. Fallback for physical devices
-  // TODO: Replace 192.168.X.X with your laptop's current IPv4 address on the local network.
-  return LOCAL_DEV_API_URL || ACTIVE_TUNNEL_URL || 'http://192.168.X.X:5000/api/v1';
+  return LOCAL_DEV_API_URL || ACTIVE_TUNNEL_URL;
 };
 
 export const API_BASE_URL = getApiBaseUrl();
