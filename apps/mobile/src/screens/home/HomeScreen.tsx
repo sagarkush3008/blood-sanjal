@@ -27,24 +27,13 @@ import { cleanLocationName } from '../../utils/locationHelper';
 
 const { width } = Dimensions.get('window');
 
-// 1. Find Donors SVG (Crimson blood drop with magnifying glass)
+// 1. Find Donors Icon (User uploaded custom icon)
 const FindDonorsIcon = () => (
-  <Svg width={38} height={38} viewBox="0 0 36 36" fill="none">
-    <Path
-      d="M17 5C17 5 8 15.5 8 21.5C8 26.5 12 30.5 17 30.5C18.2 30.5 19.3 30.2 20.3 29.8"
-      stroke="#B91C1C"
-      strokeWidth={2.4}
-      strokeLinecap="round"
-    />
-    <Path
-      d="M20 7.5C21.8 10 24.5 14.5 25.5 18"
-      stroke="#B91C1C"
-      strokeWidth={2.4}
-      strokeLinecap="round"
-    />
-    <Circle cx={22.5} cy={22.5} r={6.5} stroke="#B91C1C" strokeWidth={2.4} />
-    <Path d="M27.5 27.5L32 32" stroke="#B91C1C" strokeWidth={2.6} strokeLinecap="round" />
-  </Svg>
+  <Image
+    source={require('../../../assets/icons/find_donors.png')}
+    style={{ width: 46, height: 46 }}
+    resizeMode="contain"
+  />
 );
 
 // 2. Donate SVG (Hand cradling red heart with radiance rays)
@@ -758,7 +747,7 @@ const styles = StyleSheet.create({
     width: 78,
     height: 78,
     borderRadius: 39,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
