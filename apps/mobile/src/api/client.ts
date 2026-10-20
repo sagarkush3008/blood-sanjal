@@ -2,6 +2,9 @@ import axios, { AxiosError } from 'axios';
 import { NativeModules, Platform } from 'react-native';
 import { storage } from '../utils/storage';
 
+// TODO: Replace 192.168.X.X with your laptop's current IPv4 address on the local network.
+const LOCAL_DEV_API_URL = 'http://192.168.X.X:5000/api/v1';
+
 const ACTIVE_TUNNEL_URL = 'https://finish-librarian-oct-converter.trycloudflare.com/api/v1';
 
 // Dynamic Backend Host Detection
@@ -37,8 +40,9 @@ export const getApiBaseUrl = (): string => {
     return envUrl;
   }
 
-  // 4. Fallback to active tunnel if defined, otherwise localhost
-  return ACTIVE_TUNNEL_URL || 'http://localhost:5000/api/v1';
+  // 4. Fallback for physical devices
+  // TODO: Replace 192.168.X.X with your laptop's current IPv4 address on the local network.
+  return LOCAL_DEV_API_URL || ACTIVE_TUNNEL_URL || 'http://192.168.X.X:5000/api/v1';
 };
 
 export const API_BASE_URL = getApiBaseUrl();

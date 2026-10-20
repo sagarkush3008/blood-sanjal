@@ -115,7 +115,6 @@ export const DonorCard: React.FC<DonorCardProps> = ({
   }
 
   let relativeText = null;
-  let exactTimeText = null;
   
   if (!isAvailable && inactiveUntil) {
     const untilDate = new Date(inactiveUntil);
@@ -133,13 +132,8 @@ export const DonorCard: React.FC<DonorCardProps> = ({
       } else {
         relativeText = `< 1 hr`;
       }
-      
-      const timeStr = untilDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-      const dateStr = untilDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      exactTimeText = `${dateStr}, ${timeStr}`;
     } else {
-       relativeText = 'Shortly';
-       exactTimeText = 'Any moment now';
+      relativeText = 'Shortly';
     }
   }
 
@@ -206,16 +200,9 @@ export const DonorCard: React.FC<DonorCardProps> = ({
            )}
 
            {relativeText && (
-             <View style={styles.returnTimeWrapper}>
-               <View style={styles.returnTimeItem}>
-                 <Text style={styles.returnTimeLabel}>RETURNING IN</Text>
-                 <Text style={styles.returnTimeValue}>{relativeText}</Text>
-               </View>
-               <View style={styles.returnTimeDivider} />
-               <View style={styles.returnTimeItem}>
-                 <Text style={styles.returnTimeLabel}>EXACT TIME</Text>
-                 <Text style={styles.returnTimeValue}>{exactTimeText}</Text>
-               </View>
+             <View style={styles.returnTimeCenteredBox}>
+               <Text style={styles.returnTimeLabel}>RETURNING IN</Text>
+               <Text style={styles.returnTimeValueLarge}>{relativeText}</Text>
              </View>
            )}
         </View>
