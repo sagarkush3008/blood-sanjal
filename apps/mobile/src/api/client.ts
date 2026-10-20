@@ -2,7 +2,7 @@ import axios, { AxiosError } from 'axios';
 import { NativeModules, Platform } from 'react-native';
 import { storage } from '../utils/storage';
 
-const ACTIVE_TUNNEL_URL = 'https://trustees-vote-harrison-fit.trycloudflare.com/api/v1';
+const ACTIVE_TUNNEL_URL = 'https://finish-librarian-oct-converter.trycloudflare.com/api/v1';
 
 // Dynamic Backend Host Detection
 export const getApiBaseUrl = (): string => {
