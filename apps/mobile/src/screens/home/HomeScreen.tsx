@@ -45,24 +45,13 @@ const DonateIcon = () => (
   />
 );
 
-// 3. Blood Bank SVG (Classical building with blood drop inside)
+// 3. Blood Bank Icon (User uploaded custom icon)
 const BloodBankIcon = () => (
-  <Svg width={38} height={38} viewBox="0 0 36 36" fill="none">
-    <Path d="M7 11L18 4L29 11H7Z" stroke="#B91C1C" strokeWidth={2.2} strokeLinejoin="round" />
-    <Path d="M6 13H30" stroke="#B91C1C" strokeWidth={2} strokeLinecap="round" />
-    <Path d="M8 15V26" stroke="#B91C1C" strokeWidth={2.2} strokeLinecap="round" />
-    <Path d="M12 15V26" stroke="#B91C1C" strokeWidth={2} strokeLinecap="round" />
-    <Path d="M24 15V26" stroke="#B91C1C" strokeWidth={2} strokeLinecap="round" />
-    <Path d="M28 15V26" stroke="#B91C1C" strokeWidth={2.2} strokeLinecap="round" />
-    <Path
-      d="M18 16C18 16 14.8 20 14.8 21.8C14.8 23.6 16.2 25 18 25C19.8 25 21.2 23.6 21.2 21.8C21.2 20 18 16 18 16Z"
-      stroke="#B91C1C"
-      strokeWidth={1.8}
-      strokeLinejoin="round"
-    />
-    <Path d="M6 28H30" stroke="#B91C1C" strokeWidth={2.2} strokeLinecap="round" />
-    <Path d="M4 31H32" stroke="#B91C1C" strokeWidth={2.2} strokeLinecap="round" />
-  </Svg>
+  <Image
+    source={require('../../../assets/icons/blood_bank.png')}
+    style={{ width: 46, height: 46 }}
+    resizeMode="contain"
+  />
 );
 
 // 4. Support SVG (Heart with white handshake clasp inside)
