@@ -36,24 +36,13 @@ const FindDonorsIcon = () => (
   />
 );
 
-// 2. Donate SVG (Hand cradling red heart with radiance rays)
+// 2. Donate Icon (User uploaded custom icon)
 const DonateIcon = () => (
-  <Svg width={38} height={38} viewBox="0 0 36 36" fill="none">
-    <Path d="M14 6L13 4" stroke="#B91C1C" strokeWidth={1.8} strokeLinecap="round" />
-    <Path d="M18 4.5V2.5" stroke="#B91C1C" strokeWidth={1.8} strokeLinecap="round" />
-    <Path d="M22 6L23 4" stroke="#B91C1C" strokeWidth={1.8} strokeLinecap="round" />
-    <Path
-      d="M18 17.5C18 17.5 12 13.5 12 10C12 7.8 13.8 6 16 6C17.2 6 18 6.8 18 6.8C18 6.8 18.8 6 20 6C22.2 6 24 7.8 24 10C24 13.5 18 17.5 18 17.5Z"
-      fill="#B91C1C"
-    />
-    <Path
-      d="M7 23.5L12 21.5C13.2 21 14.5 21.2 15.5 22L17.5 23.5C18.5 24.2 19.8 24.5 21 24.2L28 22.5C29 22.2 30 22.8 30.2 23.8C30.4 24.8 29.8 25.8 28.8 26L22.5 27.5C21 27.8 19.5 27.5 18.2 26.6L16.5 25.2L12 27L7 25"
-      stroke="#B91C1C"
-      strokeWidth={2.2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </Svg>
+  <Image
+    source={require('../../../assets/icons/donate.png')}
+    style={{ width: 46, height: 46 }}
+    resizeMode="contain"
+  />
 );
 
 // 3. Blood Bank SVG (Classical building with blood drop inside)
