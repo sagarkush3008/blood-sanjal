@@ -6,20 +6,16 @@ const ACTIVE_TUNNEL_URL = 'https://trustees-vote-harrison-fit.trycloudflare.com/
 
 // Dynamic Backend Host Detection
 export const getApiBaseUrl = (): string => {
-  // 1. If explicit env URL is provided and valid
-  const envUrl = process.env.EXPO_PUBLIC_API_URL;
-  if (
-    envUrl &&
-    !envUrl.includes('realize-pdt-equity-bat') &&
-    !envUrl.includes('cincinnati-williams') &&
-    !envUrl.includes('removing-travelling-survivors-letter') &&
-    !envUrl.includes('federation-ordering-digit-perth') &&
-    !envUrl.includes('campaign-colorado-polyphonic-lending')
-  ) {
-    return envUrl;
+  // 1. Web environment (Laptop browser preview) - ALWAYS talk directly to local backend!
+  if (Platform.OS === 'web') {
+    if (typeof window !== 'undefined' && window.location) {
+      const hostname = window.location.hostname;
+      return `http://${hostname || 'localhost'}:5000/api/v1`;
+    }
+    return 'http://localhost:5000/api/v1';
   }
 
-  // 2. Automatic Local Wi-Fi Detection (Extract live host IP from Metro Bundler)
+  // 2. Automatic Local Wi-Fi Detection for physical phones (Extract host IP from Metro Bundler)
   try {
     const scriptURL = NativeModules?.SourceCode?.scriptURL;
     if (scriptURL) {
@@ -32,8 +28,17 @@ export const getApiBaseUrl = (): string => {
     // fallback
   }
 
-  // 3. Fallback to active public Cloudflare tunnel
-  return ACTIVE_TUNNEL_URL;
+  // 3. If explicit env URL is provided and not an expired temporary tunnel
+  const envUrl = process.env.EXPO_PUBLIC_API_URL;
+  if (
+    envUrl &&
+    !envUrl.includes('.trycloudflare.com')
+  ) {
+    return envUrl;
+  }
+
+  // 4. Fallback to active tunnel if defined, otherwise localhost
+  return ACTIVE_TUNNEL_URL || 'http://localhost:5000/api/v1';
 };
 
 export const API_BASE_URL = getApiBaseUrl();
