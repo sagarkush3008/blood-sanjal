@@ -54,61 +54,31 @@ const BloodBankIcon = () => (
   />
 );
 
-// 4. Support SVG (Heart with white handshake clasp inside)
+// 4. Support Icon (User uploaded custom icon)
 const SupportIcon = () => (
-  <Svg width={38} height={38} viewBox="0 0 36 36" fill="none">
-    <Path
-      d="M18 31.5C18 31.5 5 22.5 5 13C5 8 9 4.5 13.5 4.5C16.2 4.5 18 6 18 6C18 6 19.8 4.5 22.5 4.5C27 4.5 31 8 31 13C31 22.5 18 31.5 18 31.5Z"
-      fill="#B91C1C"
-    />
-    <Path
-      d="M11 16.5L14.5 14L18 17.5L15 20.5L11 16.5Z"
-      stroke="#FFFFFF"
-      strokeWidth={1.8}
-      strokeLinejoin="round"
-    />
-    <Path
-      d="M25 16.5L21.5 14L18 17.5L21 20.5L25 16.5Z"
-      stroke="#FFFFFF"
-      strokeWidth={1.8}
-      strokeLinejoin="round"
-    />
-    <Path d="M15 17.5L17 19.5" stroke="#FFFFFF" strokeWidth={1.8} strokeLinecap="round" />
-    <Path d="M21 17.5L19 19.5" stroke="#FFFFFF" strokeWidth={1.8} strokeLinecap="round" />
-  </Svg>
+  <Image
+    source={require('../../../assets/icons/support.png')}
+    style={{ width: 46, height: 46 }}
+    resizeMode="contain"
+  />
 );
 
-// 5. Blood Request SVG (Document sheet with horizontal lines & pen signing)
+// 5. Blood Request Icon (User uploaded custom icon)
 const BloodRequestIcon = () => (
-  <Svg width={38} height={38} viewBox="0 0 36 36" fill="none">
-    <Path
-      d="M9 6C9 4.9 9.9 4 11 4H21L27 10V28C27 29.1 26.1 30 25 30H11C9.9 30 9 29.1 9 28V6Z"
-      stroke="#B91C1C"
-      strokeWidth={2.2}
-      strokeLinejoin="round"
-    />
-    <Path d="M21 4V10H27" stroke="#B91C1C" strokeWidth={2} strokeLinejoin="round" />
-    <Path d="M13 14H23" stroke="#B91C1C" strokeWidth={2} strokeLinecap="round" />
-    <Path d="M13 18H23" stroke="#B91C1C" strokeWidth={2} strokeLinecap="round" />
-    <Path
-      d="M24 20L26 22L19 29L16 29L16 26L23 19"
-      fill="#B91C1C"
-      stroke="#B91C1C"
-      strokeWidth={1.2}
-      strokeLinejoin="round"
-    />
-    <Path d="M13 25C14.5 25 15 24 16 25" stroke="#B91C1C" strokeWidth={1.8} strokeLinecap="round" />
-  </Svg>
+  <Image
+    source={require('../../../assets/icons/blood_request.png')}
+    style={{ width: 46, height: 46 }}
+    resizeMode="contain"
+  />
 );
 
-// 6. More SVG (2x2 grid of 4 rounded squares)
+// 6. More Icon (User uploaded custom icon)
 const MoreGridIcon = () => (
-  <Svg width={38} height={38} viewBox="0 0 36 36" fill="none">
-    <Rect x={7} y={7} width={9} height={9} rx={3} stroke="#B91C1C" strokeWidth={2.4} />
-    <Rect x={20} y={7} width={9} height={9} rx={3} stroke="#B91C1C" strokeWidth={2.4} />
-    <Rect x={7} y={20} width={9} height={9} rx={3} stroke="#B91C1C" strokeWidth={2.4} />
-    <Rect x={20} y={20} width={9} height={9} rx={3} stroke="#B91C1C" strokeWidth={2.4} />
-  </Svg>
+  <Image
+    source={require('../../../assets/icons/more.png')}
+    style={{ width: 46, height: 46 }}
+    resizeMode="contain"
+  />
 );
 
 export const HomeScreen = () => {
