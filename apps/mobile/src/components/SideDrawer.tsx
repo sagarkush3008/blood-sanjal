@@ -1,37 +1,54 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated, Dimensions, Pressable, ScrollView, Switch, Image } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  Animated,
+  Dimensions,
+  Pressable,
+  ScrollView,
+  Image,
+} from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../store/authStore';
-import { fonts, colors } from '../theme';
+import { fonts } from '../theme';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 interface SideDrawerProps {
   visible: boolean;
   onClose: () => void;
 }
 
+interface MenuItem {
+  title: string;
+  icon: keyof typeof Feather.glyphMap;
+  route: string;
+  active?: boolean;
+}
+
 export const SideDrawer: React.FC<SideDrawerProps> = ({ visible, onClose }) => {
   const slideAnim = useRef(new Animated.Value(-width)).current;
   const navigation = useNavigation<any>();
   const { user, logout } = useAuthStore();
-  const [isLight, setIsLight] = React.useState(true);
 
   useEffect(() => {
     if (visible) {
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 300,
+        duration: 280,
         useNativeDriver: true,
       }).start();
     }
-  }, [visible]);
+  }, [visible, slideAnim]);
 
   const handleClose = () => {
     Animated.timing(slideAnim, {
       toValue: -width,
-      duration: 300,
+      duration: 250,
       useNativeDriver: true,
     }).start(() => {
       onClose();
@@ -42,21 +59,19 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({ visible, onClose }) => {
     handleClose();
     setTimeout(() => {
       navigation.navigate(route);
-    }, 200); // Wait for drawer to close before navigating
+    }, 180);
   };
 
-  const userName = user?.name || 'David Chen';
-
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     { title: 'Home', icon: 'home', route: 'Home', active: true },
     { title: 'Find Blood Inventory', icon: 'search', route: 'FindBlood' },
     { title: 'Emergency Blood', icon: 'alert-circle', route: 'CreateEmergencyRequest' },
-    { title: 'Request Blood', icon: 'water', route: 'CreateRequest' },
-    { title: 'My Patient Account', icon: 'person-circle', route: 'Profile' },
-    { title: 'Donate Blood Guide', icon: 'heart', route: 'DonationGuide' }, // fallback route or real route
-    { title: 'Donor Dashboard', icon: 'hand-left', route: 'DonorDashboard' }, // fallback route
-    { title: 'Blood Bank Directory', icon: 'add-box', route: 'Banks', iconType: 'material' },
-    { title: 'Blood Bank Dashboard', icon: 'business', route: 'Banks' },
+    { title: 'Request Blood', icon: 'droplet', route: 'CreateRequest' },
+    { title: 'My Patient Account', icon: 'user', route: 'Profile' },
+    { title: 'Donate Blood Guide', icon: 'heart', route: 'DonationGuide' },
+    { title: 'Donor Dashboard', icon: 'activity', route: 'DonorDashboard' },
+    { title: 'Blood Bank Directory', icon: 'map-pin', route: 'Banks' },
+    { title: 'Settings', icon: 'settings', route: 'Settings' },
   ];
 
   if (!visible) return null;
@@ -64,82 +79,83 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({ visible, onClose }) => {
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={handleClose}>
       <View style={styles.overlayContainer}>
-        {/* Backdrop for closing */}
-        <Pressable 
-          style={styles.backdrop} 
-          onPress={handleClose} 
-        />
+        {/* Soft backdrop */}
+        <Pressable style={styles.backdrop} onPress={handleClose} />
 
-        {/* Sliding Drawer */}
+        {/* Sliding Drawer Container */}
         <Animated.View style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}>
-          {/* Header */}
+          {/* 1. HEADER SECTION */}
           <View style={styles.header}>
             <TouchableOpacity 
-              style={styles.headerTop}
-              activeOpacity={0.7}
+              style={styles.headerBrand}
+              activeOpacity={0.8}
               onPress={() => handleNavigate('Home')}
             >
-              <View style={styles.logoCircle}>
+              <View style={styles.logoBox}>
                 <Image 
                   source={require('../../assets/logo.png')} 
                   style={styles.logoImage} 
                   resizeMode="contain" 
                 />
               </View>
-              <Text style={styles.brandTitle}>Blood Sanjal</Text>
-            </TouchableOpacity>
-            <Text style={styles.headerSub}>National Blood Network</Text>
-            
-            <View style={styles.userRow}>
-              <View style={styles.patientBadge}>
-                <Text style={styles.patientBadgeText}>Patient: {userName}</Text>
+              <View style={styles.brandTextCol}>
+                <Text style={styles.brandTitle}>Blood Sanjal</Text>
+                <Text style={styles.brandTagline}>Nepal Blood Network</Text>
               </View>
-              <TouchableOpacity onPress={() => { handleClose(); logout(); }}>
-                <Text style={styles.signOutText}>Sign Out</Text>
-              </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
+
+            {user?.name && (
+              <View style={styles.welcomeBox}>
+                <Text style={styles.welcomeLabel}>Signed in as</Text>
+                <Text style={styles.welcomeName} numberOfLines={1}>{user.name}</Text>
+              </View>
+            )}
           </View>
 
-          {/* Menu Items */}
-          <ScrollView style={styles.scrollArea} showsVerticalScrollIndicator={false}>
-            {menuItems.map((item, index) => (
-              <TouchableOpacity 
-                key={index} 
-                style={[styles.menuItem, item.active && styles.menuItemActive]}
-                onPress={() => handleNavigate(item.route)}
-                activeOpacity={0.7}
-              >
-                {item.iconType === 'material' ? (
-                  <Ionicons name="add-circle" size={22} color={item.active ? '#DC2626' : '#475569'} style={styles.menuIcon} />
-                ) : (
-                  <Ionicons name={item.icon as any} size={22} color={item.active ? '#DC2626' : '#475569'} style={styles.menuIcon} />
-                )}
-                <Text style={[styles.menuText, item.active && styles.menuTextActive]}>
-                  {item.title}
-                </Text>
-              </TouchableOpacity>
-            ))}
-            <View style={{ height: 20 }} />
+          {/* 2. MENU ITEMS (LIST DESIGN) */}
+          <ScrollView 
+            style={styles.scrollArea} 
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {menuItems.map((item, index) => {
+              const isActive = !!item.active;
+              return (
+                <TouchableOpacity 
+                  key={index} 
+                  style={[styles.menuItem, isActive && styles.menuItemActive]}
+                  onPress={() => handleNavigate(item.route)}
+                  activeOpacity={0.7}
+                >
+                  <Feather 
+                    name={item.icon} 
+                    size={20} 
+                    color={isActive ? '#DC2626' : '#64748B'} 
+                    style={styles.menuIcon} 
+                  />
+                  <Text style={[styles.menuText, isActive && styles.menuTextActive]}>
+                    {item.title}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
 
-          {/* Footer (Theme Toggle) */}
+          {/* 3. FOOTER AREA (LOGOUT & APP VERSION) */}
           <View style={styles.footer}>
-            <View style={styles.themeToggleBox}>
-              <View style={styles.themeInfo}>
-                <Text style={styles.themeTitle}>Light Theme</Text>
-                <Text style={styles.themeDesc}>Crisp high-contrast display</Text>
-              </View>
-              <View style={styles.switchContainer}>
-                <Ionicons name="sunny" size={16} color="#D97706" style={{ position: 'absolute', left: 8, zIndex: 1 }} />
-                <Switch 
-                  value={isLight}
-                  onValueChange={setIsLight}
-                  trackColor={{ false: '#767577', true: '#FDE68A' }}
-                  thumbColor={isLight ? '#FFFFFF' : '#f4f3f4'}
-                  style={{ transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }] }}
-                />
-              </View>
-            </View>
+            <TouchableOpacity 
+              style={styles.logoutButton}
+              onPress={() => {
+                handleClose();
+                logout();
+              }}
+              activeOpacity={0.75}
+            >
+              <Feather name="log-out" size={18} color="#DC2626" style={styles.logoutIcon} />
+              <Text style={styles.logoutText}>Sign Out</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.versionText}>Blood Sanjal • v1.0.0 (Build 42)</Text>
           </View>
         </Animated.View>
       </View>
@@ -157,38 +173,35 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(15, 23, 42, 0.35)',
   },
   drawer: {
     position: 'absolute',
     left: 0,
     top: 0,
     bottom: 0,
-    width: width * 0.75,
-    maxWidth: 320,
+    width: Math.min(width * 0.78, 320),
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 5, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 5,
+    borderRightWidth: 1,
+    borderRightColor: '#F1F5F9',
+    flexDirection: 'column',
   },
   header: {
-    backgroundColor: '#DC2626',
-    paddingTop: 50,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    backgroundColor: '#FFFFFF',
+    paddingTop: 56,
+    paddingHorizontal: 22,
+    paddingBottom: 24,
+    marginBottom: 8,
   },
-  headerTop: {
+  headerBrand: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 10,
+    gap: 12,
   },
-  logoCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+  logoBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
@@ -198,94 +211,107 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  brandTextCol: {
+    flex: 1,
+    justifyContent: 'center',
+  },
   brandTitle: {
-    fontSize: 22,
-    color: '#FFFFFF',
+    fontSize: 18,
     fontFamily: fonts.bold,
+    color: '#0F172A',
+    letterSpacing: -0.3,
   },
-  headerSub: {
-    fontSize: 13,
-    color: '#FEE2E2',
+  brandTagline: {
+    fontSize: 11,
     fontFamily: fonts.medium,
-    marginBottom: 20,
+    color: '#64748B',
+    marginTop: 1,
   },
-  userRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  patientBadge: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
+  welcomeBox: {
+    marginTop: 18,
+    paddingVertical: 8,
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
-  patientBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontFamily: fonts.semiBold,
+  welcomeLabel: {
+    fontSize: 10,
+    fontFamily: fonts.medium,
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  signOutText: {
-    color: '#FFFFFF',
+  welcomeName: {
     fontSize: 13,
     fontFamily: fonts.semiBold,
+    color: '#0F172A',
+    marginTop: 1,
   },
   scrollArea: {
     flex: 1,
-    paddingTop: 10,
+  },
+  scrollContent: {
+    paddingHorizontal: 14,
+    paddingBottom: 16,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    marginHorizontal: 10,
-    borderRadius: 24,
-    marginBottom: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 6,
+    backgroundColor: 'transparent',
   },
   menuItemActive: {
     backgroundColor: '#FEF2F2',
   },
   menuIcon: {
-    marginRight: 16,
+    marginRight: 14,
   },
   menuText: {
-    fontSize: 14,
-    color: '#334155',
+    fontSize: 14.5,
+    color: '#1E1E1E',
     fontFamily: fonts.semiBold,
+    letterSpacing: -0.2,
   },
   menuTextActive: {
     color: '#DC2626',
-  },
-  footer: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-  },
-  themeToggleBox: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  themeInfo: {
-    flex: 1,
-  },
-  themeTitle: {
-    fontSize: 14,
-    color: '#0F172A',
     fontFamily: fonts.bold,
   },
-  themeDesc: {
-    fontSize: 11,
-    color: '#64748B',
-    fontFamily: fonts.medium,
-    marginTop: 2,
+  footer: {
+    paddingHorizontal: 20,
+    paddingBottom: 32,
+    paddingTop: 16,
+    backgroundColor: '#FFFFFF',
+    flexShrink: 0,
   },
-  switchContainer: {
-    position: 'relative',
-    justifyContent: 'center',
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  logoutIcon: {
+    marginRight: 12,
+  },
+  logoutText: {
+    fontSize: 14,
+    color: '#1E1E1E',
+    fontFamily: fonts.semiBold,
+  },
+  versionText: {
+    fontSize: 11,
+    color: '#94A3B8',
+    fontFamily: fonts.medium,
+    textAlign: 'center',
+    marginTop: 16,
+    letterSpacing: 0.2,
   },
 });
