@@ -140,7 +140,7 @@ export const EligibilityStatusScreen = () => {
             </View>
             <Text style={[styles.heroTitle, { fontSize: 20 }]}>You are ready to save a life!</Text>
             <Text style={[styles.heroSub, { marginBottom: 16 }]}>Your resting period is complete.</Text>
-            <TouchableOpacity style={styles.slimBtn} onPress={() => navigation.navigate('FindBlood')} activeOpacity={0.8}>
+            <TouchableOpacity style={styles.slimBtn} onPress={() => navigation.navigate('BloodCamps')} activeOpacity={0.8}>
               <Text style={styles.slimBtnText}>Find Blood Camps</Text>
             </TouchableOpacity>
           </LinearGradient>

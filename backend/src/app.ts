@@ -141,6 +141,10 @@ import activeStatusRoutes from './modules/activeStatus/activeStatus.routes';
 app.use('/api/active-status', activeStatusRoutes);
 app.use('/api/v1/active-status', activeStatusRoutes);
 
+import campRoutes from './modules/campaigns/camps.routes';
+app.use('/api/camps', campRoutes);
+app.use('/api/v1/camps', campRoutes);
+
 app.get('/api', (_req, res) => {
   res.json({
     name: 'Blood Sanjal API - Active Status Feature',
