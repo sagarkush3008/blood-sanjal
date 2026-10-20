@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -66,6 +66,7 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
   const makeActiveMutation = useMutation({
     mutationFn: async () => DonorsAPI.updateMyStatus('ACTIVE'),
     onSuccess: () => {
+      setIsActive(true);
       queryClient.invalidateQueries({ queryKey: ['donor-status'] });
       queryClient.invalidateQueries({ queryKey: ['my-profile'] });
       queryClient.invalidateQueries({ queryKey: ['me'] });
@@ -87,6 +88,7 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
       return DonorsAPI.updateMyAvailability(payload);
     },
     onSuccess: (_, variables) => {
+      setIsActive(false);
       queryClient.invalidateQueries({ queryKey: ['donor-status'] });
       queryClient.invalidateQueries({ queryKey: ['my-profile'] });
       queryClient.invalidateQueries({ queryKey: ['me'] });
@@ -113,10 +115,42 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
   const isLoading = isStatusLoading || isProfileLoading;
   const isPendingAction = makeActiveMutation.isPending || setAvailabilityMutation.isPending;
 
-  // Normalized active status
-  const isInactive = statusData?.status === 'INACTIVE' || profileData?.donorStatus === 'INACTIVE';
-  const isActive = !isInactive;
+  // Local active state variable that toggles between true and false
+  const [isActive, setIsActive] = useState<boolean>(() => {
+    return statusData?.status === 'ACTIVE' || profileData?.donorStatus === 'ACTIVE';
+  });
+
+  // Sync state when backend status query finishes or updates
+  useEffect(() => {
+    if (statusData?.status || profileData?.donorStatus) {
+      setIsActive(statusData?.status === 'ACTIVE' || profileData?.donorStatus === 'ACTIVE');
+    }
+  }, [statusData?.status, profileData?.donorStatus]);
+
+  const isInactive = !isActive;
   const inactiveUntil = profileData?.inactiveUntil;
+
+  const handleToggleMainStatus = () => {
+    const nextState = !isActive;
+    setIsActive(nextState);
+
+    if (nextState) {
+      makeActiveMutation.mutate(undefined, {
+        onError: () => setIsActive(false),
+      });
+    } else {
+      setAvailabilityMutation.mutate(
+        {
+          status: 'INACTIVE',
+          durationHours: selectedPreset?.hours || 2,
+          durationDays: selectedPreset?.days,
+        },
+        {
+          onError: () => setIsActive(true),
+        }
+      );
+    }
+  };
 
   const onRefresh = () => {
     refetchStatus();
@@ -250,25 +284,30 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
           </View>
         )}
 
-        {/* 2. Standalone Large CTA "Become Active" Button (Deep Blood Red #8A0303) */}
+        {/* 2. Standalone Large CTA Status Button (Blood Red #8A0303 when Inactive vs Vibrant Green #10B981 when Active) */}
         <TouchableOpacity
-          style={[styles.becomeActiveBtn, isPendingAction && styles.becomeActiveBtnDisabled]}
-          onPress={() => {
-            if (!isActive) {
-              makeActiveMutation.mutate();
-            } else {
-              Alert.alert('Status Active 🩸', 'You are already active and visible to emergency patients.');
-            }
-          }}
+          style={[
+            styles.becomeActiveBtn,
+            isActive && styles.becomeActiveBtnActive,
+            isPendingAction && styles.becomeActiveBtnDisabled,
+          ]}
+          onPress={handleToggleMainStatus}
           disabled={isPendingAction}
           activeOpacity={0.88}
         >
-          {makeActiveMutation.isPending ? (
+          {isPendingAction ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
             <View style={styles.becomeActiveContent}>
-              <Ionicons name="flash" size={22} color="#FFFFFF" style={{ marginRight: 10 }} />
-              <Text style={styles.becomeActiveText}>Become Active</Text>
+              <Ionicons 
+                name={isActive ? 'checkmark-circle' : 'flash'} 
+                size={22} 
+                color="#FFFFFF" 
+                style={{ marginRight: 10 }} 
+              />
+              <Text style={styles.becomeActiveText}>
+                {isActive ? 'Currently Active' : 'Become Active'}
+              </Text>
             </View>
           )}
         </TouchableOpacity>
@@ -531,6 +570,10 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
     marginBottom: 24, // Consistent 24px margin
+  },
+  becomeActiveBtnActive: {
+    backgroundColor: '#10B981', // Vibrant success green
+    shadowColor: '#10B981',
   },
   becomeActiveBtnDisabled: {
     opacity: 0.7,
