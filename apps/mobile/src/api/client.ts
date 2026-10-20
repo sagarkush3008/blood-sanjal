@@ -2,22 +2,37 @@ import axios, { AxiosError } from 'axios';
 import { NativeModules, Platform } from 'react-native';
 import { storage } from '../utils/storage';
 
-const ACTIVE_TUNNEL_URL = 'https://campaign-colorado-polyphonic-lending.trycloudflare.com/api/v1';
+const ACTIVE_TUNNEL_URL = 'https://trustees-vote-harrison-fit.trycloudflare.com/api/v1';
 
 // Dynamic Backend Host Detection
 export const getApiBaseUrl = (): string => {
+  // 1. If explicit env URL is provided and valid
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
   if (
     envUrl &&
     !envUrl.includes('realize-pdt-equity-bat') &&
     !envUrl.includes('cincinnati-williams') &&
     !envUrl.includes('removing-travelling-survivors-letter') &&
-    !envUrl.includes('federation-ordering-digit-perth')
+    !envUrl.includes('federation-ordering-digit-perth') &&
+    !envUrl.includes('campaign-colorado-polyphonic-lending')
   ) {
     return envUrl;
   }
 
-  // Active public Cloudflare tunnel (works everywhere: cellular mobile data, Wi-Fi, emulator)
+  // 2. Automatic Local Wi-Fi Detection (Extract live host IP from Metro Bundler)
+  try {
+    const scriptURL = NativeModules?.SourceCode?.scriptURL;
+    if (scriptURL) {
+      const match = scriptURL.match(/^https?:\/\/([^/:]+)(?::\d+)?/);
+      if (match && match[1] && match[1] !== 'localhost' && match[1] !== '127.0.0.1') {
+        return `http://${match[1]}:5000/api/v1`;
+      }
+    }
+  } catch (e) {
+    // fallback
+  }
+
+  // 3. Fallback to active public Cloudflare tunnel
   return ACTIVE_TUNNEL_URL;
 };
 

@@ -93,10 +93,21 @@ const gracefulShutdown = async (signal: string) => {
 
   try {
     if (server) {
-      await new Promise<void>((resolve, reject) => {
+      try {
+        if (typeof (server as any).closeAllConnections === 'function') {
+          (server as any).closeAllConnections();
+        }
+      } catch (connErr) {
+        // Safe fallback if closeAllConnections is unsupported
+      }
+
+      await new Promise<void>((resolve) => {
         server!.close((err) => {
-          if (err) return reject(err);
-          logger.info('✅ HTTP server closed. No longer accepting new connections.');
+          if (err) {
+            logger.warn('⚠️ HTTP server close warning:', err.message);
+          } else {
+            logger.info('✅ HTTP server closed. No longer accepting new connections.');
+          }
           resolve();
         });
       });
@@ -126,5 +137,11 @@ const gracefulShutdown = async (signal: string) => {
 
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGBREAK', () => gracefulShutdown('SIGBREAK'));
+process.once('SIGUSR2', async () => {
+  await gracefulShutdown('SIGUSR2');
+  process.kill(process.pid, 'SIGUSR2');
+});
 
 startServer();
+
