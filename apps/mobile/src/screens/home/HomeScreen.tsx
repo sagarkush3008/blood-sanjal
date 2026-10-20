@@ -277,7 +277,11 @@ export const HomeScreen = () => {
           </View>
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity onPress={() => navigation.navigate('Notifications')} style={styles.iconBtn}>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('Notifications')} 
+            style={styles.iconBtn}
+            activeOpacity={0.7}
+          >
             <Feather name="bell" size={20} color="#1E293B" />
             {unreadCount > 0 && (
               <View style={styles.notificationBadge}>
@@ -285,17 +289,11 @@ export const HomeScreen = () => {
               </View>
             )}
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.avatar}>
-            {(meProfile?.avatarAssetId || user?.avatarAssetId) ? (
-              <Image 
-                source={{ uri: (meProfile?.avatarAssetId || user?.avatarAssetId) }} 
-                style={{ width: '100%', height: '100%', borderRadius: 999 }} 
-              />
-            ) : (
-              <Text style={styles.avatarLetter}>{firstName.charAt(0).toUpperCase()}</Text>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => (navigation as any).toggleDrawer()} style={styles.iconBtn}>
+          <TouchableOpacity 
+            onPress={() => (navigation as any).toggleDrawer()} 
+            style={styles.iconBtn}
+            activeOpacity={0.7}
+          >
             <Feather name="menu" size={20} color="#1E293B" />
           </TouchableOpacity>
         </View>
@@ -629,28 +627,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     justifyContent: 'space-between', 
     alignItems: 'center', 
-    paddingLeft: 16,
-    paddingRight: 16, 
+    paddingHorizontal: 20, 
     paddingTop: 12, 
-    paddingBottom: 16,
+    paddingBottom: 14,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, paddingRight: 6 },
-  logoBox: { width: 38, height: 38, borderRadius: 10, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, paddingRight: 8 },
+  logoBox: { width: 44, height: 44, borderRadius: 12, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   logoImage: { width: '100%', height: '100%' },
-  brandTitle: { fontSize: 14, fontFamily: 'Inter_900Black', color: '#0F172A', letterSpacing: -0.5 },
-  nepalBadge: { backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
-  nepalBadgeText: { fontSize: 10, fontFamily: 'Inter_900Black', color: '#DC2626', letterSpacing: 0.5 },
-  brandTagline: { fontSize: 9, color: '#64748B', marginTop: 1, fontFamily: 'Inter_500Medium' },
+  brandTitle: { fontSize: 16, fontFamily: 'Inter_900Black', color: '#0F172A', letterSpacing: -0.4 },
+  brandTagline: { fontSize: 10, color: '#64748B', marginTop: 1.5, fontFamily: 'Inter_500Medium' },
   
-  headerActions: { flexDirection: 'row', gap: 10, alignItems: 'center', flexShrink: 0 },
-  iconBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', position: 'relative', borderWidth: 1, borderColor: '#E2E8F0' },
+  headerActions: { flexDirection: 'row', gap: 12, alignItems: 'center', flexShrink: 0 },
+  iconBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', position: 'relative', borderWidth: 1, borderColor: '#E2E8F0' },
   notificationBadge: { position: 'absolute', top: -2, right: -2, backgroundColor: '#EF4444', minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFFFFF' },
   notificationBadgeText: { fontSize: 10, fontFamily: 'Inter_700Bold', color: '#FFFFFF' },
-  avatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#DC2626', overflow: 'hidden' },
-  avatarLetter: { fontSize: 15, fontFamily: 'Inter_800ExtraBold', color: '#DC2626' },
 
   scrollContent: { paddingHorizontal: 20, paddingBottom: 100, paddingTop: 16 },
 
