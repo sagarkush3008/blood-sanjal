@@ -351,11 +351,9 @@ const styles = StyleSheet.create({
   inactivePremiumHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
   inactivePremiumTitle: { fontSize: 11, fontFamily: 'Inter_800ExtraBold', color: '#E11D48', letterSpacing: 0.5 },
   inactivePremiumReason: { fontSize: 12, color: '#BE123C', fontStyle: 'italic', marginBottom: 10 },
-  returnTimeWrapper: { flexDirection: 'row', backgroundColor: '#FFFFFF', borderRadius: 8, padding: 10, alignItems: 'center', borderWidth: 1, borderColor: '#FECACA' },
-  returnTimeItem: { flex: 1 },
-  returnTimeLabel: { fontSize: 9, fontFamily: 'Inter_800ExtraBold', color: '#F43F5E', marginBottom: 2, letterSpacing: 0.5 },
-  returnTimeValue: { fontSize: 13, fontFamily: 'Inter_800ExtraBold', color: '#881337' },
-  returnTimeDivider: { width: 1, height: '100%', backgroundColor: '#FECACA', marginHorizontal: 8 },
+  returnTimeCenteredBox: { backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#FECACA' },
+  returnTimeLabel: { fontSize: 9, fontFamily: 'Inter_800ExtraBold', color: '#F43F5E', marginBottom: 3, letterSpacing: 0.6 },
+  returnTimeValueLarge: { fontSize: 16, fontFamily: 'Inter_800ExtraBold', color: '#881337', textAlign: 'center' },
 
   actionRow: {
     flexDirection: 'row',

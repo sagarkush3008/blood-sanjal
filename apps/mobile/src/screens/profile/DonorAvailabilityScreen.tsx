@@ -136,31 +136,18 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
         const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
         const diffDays = Math.floor(diffHours / 24);
         if (diffDays > 0) {
-          relative = `in ${diffDays} day${diffDays > 1 ? 's' : ''}`;
+          relative = `${diffDays} day${diffDays > 1 ? 's' : ''}`;
         } else if (diffHours > 0) {
-          relative = `in ${diffHours} hr${diffHours > 1 ? 's' : ''}`;
+          relative = `${diffHours} hr${diffHours > 1 ? 's' : ''}`;
         } else {
           const diffMins = Math.max(1, Math.floor(diffMs / (1000 * 60)));
-          relative = `in ${diffMins} min${diffMins > 1 ? 's' : ''}`;
+          relative = `${diffMins} min${diffMins > 1 ? 's' : ''}`;
         }
       } else {
         relative = 'any moment';
       }
 
-      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const dayName = dayNames[d.getDay()];
-      const monthName = monthNames[d.getMonth()];
-      const dateNum = d.getDate();
-
-      let hours = d.getHours();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12;
-      hours = hours ? hours : 12;
-      const mins = String(d.getMinutes()).padStart(2, '0');
-      const timeOnly = `${hours}:${mins} ${ampm}`;
-      const exact = `${dayName}, ${monthName} ${dateNum} · ${timeOnly}`;
-      return { relative, exact, timeOnly };
+      return { relative };
     } catch {
       return null;
     }
@@ -244,7 +231,26 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* 1. Standalone Large CTA "Become Active" Button (Deep Blood Red #8A0303) */}
+        {/* 1. Temporarily Unavailable / Paused Status Card (Only when Paused) */}
+        {!isActive && (
+          <View style={styles.pausedStatusCard}>
+            <View style={styles.pausedStatusHeader}>
+              <View style={styles.pausedMoonCircle}>
+                <Ionicons name="moon" size={14} color="#8A0303" />
+              </View>
+              <Text style={styles.pausedCardTitle}>Temporarily Unavailable</Text>
+            </View>
+
+            <View style={styles.pausedReturnBox}>
+              <Text style={styles.pausedReturnLabel}>STATUS</Text>
+              <Text style={styles.pausedReturnTime}>
+                {returnInfo?.relative ? `Returning in ${returnInfo.relative}` : 'Currently Paused'}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* 2. Standalone Large CTA "Become Active" Button (Deep Blood Red #8A0303) */}
         <TouchableOpacity
           style={[styles.becomeActiveBtn, isPendingAction && styles.becomeActiveBtnDisabled]}
           onPress={() => {
@@ -450,6 +456,65 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 110, // Substantial padding so user can scroll completely past bottom text above tab bar
+  },
+  /* Temporarily Unavailable / Paused Status Card */
+  pausedStatusCard: {
+    backgroundColor: '#FEF2F2',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#8A0303',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  pausedStatusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  pausedMoonCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  pausedCardTitle: {
+    fontSize: 13.5,
+    fontFamily: FONT_BOLD,
+    color: '#8A0303',
+    letterSpacing: -0.2,
+  },
+  pausedReturnBox: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pausedReturnLabel: {
+    fontSize: 10,
+    fontFamily: FONT_BOLD,
+    color: '#991B1B',
+    marginBottom: 4,
+    letterSpacing: 0.8,
+  },
+  pausedReturnTime: {
+    fontSize: 18,
+    fontFamily: FONT_BOLD,
+    color: '#1E293B',
+    letterSpacing: -0.3,
+    textAlign: 'center',
   },
   /* 1. Standalone Large "Become Active" Button (Blood Red, Full Width, Pill Shaped) */
   becomeActiveBtn: {
