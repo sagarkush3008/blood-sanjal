@@ -189,18 +189,13 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['my-donations'] });
       queryClient.invalidateQueries({ queryKey: ['me'] });
 
+      // 6. Close the modal immediately so the UI transitions to the Countdown Timer
+      onClose();
+      if (onSuccess) onSuccess(resData);
+
       Alert.alert(
         'Donation Recorded Successfully! 🩸',
-        'Thank you for your generous contribution. Your 90-day recovery cooldown has begun. We will notify you when you are eligible to donate again.',
-        [
-          {
-            text: 'View Countdown',
-            onPress: () => {
-              if (onSuccess) onSuccess(resData);
-              onClose();
-            },
-          },
-        ]
+        'Thank you for your generous contribution. Your 90-day recovery cooldown has begun. We will notify you when you are eligible to donate again.'
       );
     } catch (err: any) {
       console.error('[RecordDonationModal] Submission error:', err);
