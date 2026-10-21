@@ -21,6 +21,7 @@ import { useDonationStore } from '../../store/donationStore';
 import { scheduleEligibilityNotification } from '../../services/notification.service';
 import { CalendarPickerModal } from '../common/CalendarPickerModal';
 import { DualCalendarDatePicker } from './DualCalendarDatePicker';
+import { fonts } from '../../theme';
 
 export interface RecordDonationModalProps {
   visible: boolean;
@@ -488,8 +489,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitleText: {
+    fontFamily: fonts.bold,
     fontSize: 17,
-    fontWeight: '700',
     color: SLATE_900,
   },
   headerCloseButton: {
@@ -522,11 +523,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   guidanceHeading: {
+    fontFamily: fonts.bold,
     fontSize: 13,
-    fontWeight: '700',
     color: '#166534',
   },
   guidanceCopy: {
+    fontFamily: fonts.regular,
     fontSize: 12,
     color: SLATE_700,
     lineHeight: 18,
@@ -549,8 +551,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   calendarChipText: {
+    fontFamily: fonts.bold,
     fontSize: 11,
-    fontWeight: '700',
     color: BRAND_RED,
   },
   calendarActionIconBtn: {
@@ -558,8 +560,8 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   fieldLabel: {
+    fontFamily: fonts.semiBold,
     fontSize: 13,
-    fontWeight: '600',
     color: SLATE_700,
     marginBottom: 6,
   },
@@ -578,6 +580,7 @@ const styles = StyleSheet.create({
   },
   textInputControl: {
     flex: 1,
+    fontFamily: fonts.medium,
     fontSize: 14,
     color: SLATE_900,
   },
@@ -589,6 +592,7 @@ const styles = StyleSheet.create({
     padding: 12,
     height: 80,
     textAlignVertical: 'top',
+    fontFamily: fonts.regular,
   },
   dropdownTrigger: {
     flexDirection: 'row',
@@ -603,6 +607,7 @@ const styles = StyleSheet.create({
   },
   dropdownTriggerValue: {
     flex: 1,
+    fontFamily: fonts.medium,
     fontSize: 14,
     color: SLATE_900,
   },
@@ -632,11 +637,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF1F2',
   },
   dropdownOptionLabel: {
+    fontFamily: fonts.regular,
     fontSize: 13,
     color: SLATE_700,
   },
   dropdownOptionLabelActive: {
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     color: BRAND_RED,
   },
   uploadSectionContainer: {
@@ -660,8 +666,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   uploadSectionTitle: {
+    fontFamily: fonts.bold,
     fontSize: 13,
-    fontWeight: '700',
     color: SLATE_900,
     flexShrink: 1,
   },
@@ -672,11 +678,12 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   socialSpotlightText: {
+    fontFamily: fonts.bold,
     fontSize: 10,
-    fontWeight: '700',
     color: BRAND_RED,
   },
   uploadSectionDescription: {
+    fontFamily: fonts.regular,
     fontSize: 12,
     color: SLATE_600,
     lineHeight: 17,
@@ -692,12 +699,13 @@ const styles = StyleSheet.create({
     backgroundColor: SLATE_50,
   },
   dropzoneTitleText: {
+    fontFamily: fonts.bold,
     fontSize: 13,
-    fontWeight: '700',
     color: SLATE_900,
     marginTop: 6,
   },
   dropzoneSubtitleText: {
+    fontFamily: fonts.regular,
     fontSize: 11,
     color: SLATE_600,
     marginTop: 2,
@@ -714,8 +722,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   outlinePickerButtonText: {
+    fontFamily: fonts.semiBold,
     fontSize: 12,
-    fontWeight: '600',
     color: SLATE_900,
   },
   thumbnailPreviewBox: {
@@ -748,8 +756,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEE2E2',
   },
   thumbnailActionText: {
+    fontFamily: fonts.semiBold,
     fontSize: 12,
-    fontWeight: '600',
     color: SLATE_900,
   },
   consentCard: {
@@ -767,12 +775,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   consentTitleText: {
+    fontFamily: fonts.bold,
     fontSize: 12,
-    fontWeight: '700',
     color: '#9F1239',
     marginBottom: 2,
   },
   consentDescriptionText: {
+    fontFamily: fonts.regular,
     fontSize: 11,
     color: '#4C0519',
     lineHeight: 16,
@@ -798,9 +807,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   primarySubmitBtnText: {
+    fontFamily: fonts.bold,
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '700',
     letterSpacing: 0.2,
   },
 });

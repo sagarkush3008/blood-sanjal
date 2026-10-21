@@ -90,11 +90,11 @@ export const formatADDisplay = (date: Date, style: 'MM/DD/YYYY' | 'YYYY-MM-DD' =
 
 /**
  * Format a standard Gregorian Date as Bikram Sambat (BS) display string
- * e.g., '2083/07/04 BS' or 'Kartik 04, 2083 BS'
+ * e.g., '2083-07-04' (numeric) or '2083/07/04'
  */
 export const formatBSDisplay = (
   date: Date,
-  mode: 'short' | 'verbose' | 'bilingual' = 'verbose'
+  mode: 'numeric' | 'short' | 'verbose' | 'bilingual' = 'numeric'
 ): string => {
   if (!date || isNaN(date.getTime())) return '';
   try {
@@ -107,8 +107,11 @@ export const formatBSDisplay = (
     const monthEn = NEPALI_MONTH_NAMES_EN[bsMonthIndex] || '';
     const monthNp = NEPALI_MONTH_NAMES_NP[bsMonthIndex] || '';
 
+    if (mode === 'numeric') {
+      return `${bsYear}-${paddedMonth}-${paddedDate}`;
+    }
     if (mode === 'short') {
-      return `${bsYear}/${paddedMonth}/${paddedDate} BS`;
+      return `${bsYear}/${paddedMonth}/${paddedDate}`;
     }
     if (mode === 'bilingual') {
       return `${monthEn} (${monthNp}) ${paddedDate}, ${bsYear} BS`;

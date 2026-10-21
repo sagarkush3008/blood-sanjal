@@ -15,6 +15,7 @@ import {
   parseBSStringToDate,
 } from '../../utils/nepaliDate.utils';
 import { CalendarPickerModal, CalendarSystem } from '../common/CalendarPickerModal';
+import { fonts } from '../../theme';
 
 export interface DualCalendarDatePickerProps {
   /**
@@ -80,7 +81,6 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
   const getAuthoritativeDate = (val: Date | string): Date => {
     if (!val) return new Date();
     if (val instanceof Date) return isNaN(val.getTime()) ? new Date() : val;
-    // Check if ISO or slash formatted
     const parsedAd = parseADStringToDate(val);
     if (parsedAd) return parsedAd;
     const d = new Date(val);
@@ -89,12 +89,12 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
 
   const [currentAdDate, setCurrentAdDate] = useState<Date>(getAuthoritativeDate(value));
 
-  // 3. Visual Text State (Formatted according to current calendarMode)
+  // 3. Pure Numeric Format (e.g. 2026-10-21 for AD, 2083-07-04 for BS)
   const getDisplayValue = (date: Date, mode: CalendarSystem): string => {
     if (mode === 'BS') {
-      return formatBSDisplay(date, 'verbose');
+      return formatBSDisplay(date, 'numeric');
     }
-    return formatADDisplay(date, 'MM/DD/YYYY');
+    return formatADDisplay(date, 'YYYY-MM-DD');
   };
 
   const [displayInput, setDisplayInput] = useState<string>(
@@ -114,7 +114,7 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
   const handleToggleMode = (newMode: CalendarSystem) => {
     if (newMode === calendarMode) return;
     setCalendarMode(newMode);
-    // Smoothly reformat the visual text without altering the underlying Gregorian date
+    // Smoothly reformat the visual text to pure numeric without altering the underlying Gregorian date
     setDisplayInput(getDisplayValue(currentAdDate, newMode));
   };
 
@@ -146,34 +146,17 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
   };
 
   const handleBlur = () => {
-    // If input is invalid or incomplete on blur, restore clean formatted representation
+    // If input is invalid or incomplete on blur, restore clean numeric representation
     setDisplayInput(getDisplayValue(currentAdDate, calendarMode));
   };
 
   return (
     <View style={styles.container}>
-      {/* 1. Label and Dual Calendar Pill Toggle Header */}
+      {/* 1. Clean Label and Minimal Segmented Pill Toggle (No frivolous badges) */}
       <View style={styles.headerRow}>
-        <View style={styles.labelGroup}>
-          <Text style={styles.fieldLabel}>{label}</Text>
-          <View
-            style={[
-              styles.modeBadge,
-              calendarMode === 'BS' ? styles.modeBadgeBs : styles.modeBadgeAd,
-            ]}
-          >
-            <Text
-              style={[
-                styles.modeBadgeText,
-                calendarMode === 'BS' ? styles.modeBadgeTextBs : styles.modeBadgeTextAd,
-              ]}
-            >
-              {calendarMode === 'BS' ? 'Bikram Sambat' : 'Gregorian'}
-            </Text>
-          </View>
-        </View>
+        <Text style={styles.fieldLabel}>{label}</Text>
 
-        {/* Minimalist Segmented Pill Toggle Switch */}
+        {/* Minimalist Pill Segmented Toggle Switch */}
         <View style={styles.segmentedToggleContainer}>
           <TouchableOpacity
             style={[
@@ -217,7 +200,7 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
         </View>
       </View>
 
-      {/* 2. Interactive Input Field */}
+      {/* 2. Pure Numeric Input Field */}
       <View
         style={[
           styles.inputWrapper,
@@ -239,7 +222,7 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
           value={displayInput}
           onChangeText={handleTextChange}
           onBlur={handleBlur}
-          placeholder={calendarMode === 'AD' ? 'mm/dd/yyyy' : 'YYYY/MM/DD (e.g. 2083/07/04)'}
+          placeholder="YYYY-MM-DD"
           placeholderTextColor={SLATE_400}
           editable={!disabled}
           accessibilityLabel={`${label} ${calendarMode} input`}
@@ -256,24 +239,8 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
         </TouchableOpacity>
       </View>
 
-      {/* 3. Subtext Guidance & Validation Pill */}
-      {errorMessage ? (
-        <Text style={styles.errorText}>{errorMessage}</Text>
-      ) : (
-        <View style={styles.helperRow}>
-          <Ionicons
-            name="checkmark-circle-outline"
-            size={12}
-            color="#059669"
-            style={{ marginRight: 4 }}
-          />
-          <Text style={styles.helperText}>
-            {calendarMode === 'BS'
-              ? 'Nepali Bikram Sambat (नेपाली पात्रो) • Stored in standard AD'
-              : 'Gregorian Calendar (AD) • Standard ISO format'}
-          </Text>
-        </View>
-      )}
+      {/* 3. Error message only (all frivolous sub-text completely removed) */}
+      {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
       {/* 4. Unified AD/BS Interactive Calendar Picker Modal */}
       <CalendarPickerModal
@@ -297,38 +264,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 7,
-  },
-  labelGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginBottom: 8,
   },
   fieldLabel: {
+    fontFamily: fonts.semiBold,
     fontSize: 13,
-    fontWeight: '700',
     color: SLATE_900,
-    marginRight: 6,
-  },
-  modeBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  modeBadgeAd: {
-    backgroundColor: '#EFF6FF',
-  },
-  modeBadgeBs: {
-    backgroundColor: '#FEF2F2',
-  },
-  modeBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  modeBadgeTextAd: {
-    color: '#2563EB',
-  },
-  modeBadgeTextBs: {
-    color: BRAND_RED,
   },
   segmentedToggleContainer: {
     flexDirection: 'row',
@@ -347,12 +288,13 @@ const styles = StyleSheet.create({
     backgroundColor: BRAND_RED,
   },
   togglePillText: {
+    fontFamily: fonts.semiBold,
     fontSize: 12,
-    fontWeight: '700',
     color: SLATE_600,
   },
   togglePillTextActive: {
     color: '#FFFFFF',
+    fontFamily: fonts.bold,
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -376,8 +318,8 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
+    fontFamily: fonts.medium,
     fontSize: 14,
-    fontWeight: '600',
     color: SLATE_900,
     paddingVertical: Platform.OS === 'ios' ? 10 : 8,
   },
@@ -385,20 +327,9 @@ const styles = StyleSheet.create({
     padding: 4,
     marginLeft: 6,
   },
-  helperRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 5,
-    paddingHorizontal: 2,
-  },
-  helperText: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: SLATE_600,
-  },
   errorText: {
+    fontFamily: fonts.medium,
     fontSize: 11,
-    fontWeight: '600',
     color: '#EF4444',
     marginTop: 4,
     paddingHorizontal: 2,

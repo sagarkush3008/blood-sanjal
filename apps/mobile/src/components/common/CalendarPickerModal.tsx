@@ -5,7 +5,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -15,17 +14,16 @@ import {
   formatADDisplay,
   formatBSDisplay,
   NEPALI_MONTH_NAMES_EN,
-  NEPALI_MONTH_NAMES_NP,
-  NEPALI_WEEKDAYS_SHORT,
   parseADStringToDate,
   parseBSStringToDate,
 } from '../../utils/nepaliDate.utils';
+import { fonts } from '../../theme';
 
 export type CalendarSystem = 'AD' | 'BS';
 
 export interface CalendarPickerModalProps {
   visible: boolean;
-  selectedDate?: string | Date; // e.g., '10/21/2026' or '2083/07/04' or Date
+  selectedDate?: string | Date; // e.g., '2026-10-21' or '2083-07-04' or Date
   calendarSystem?: CalendarSystem; // Default 'AD'
   onToggleCalendarSystem?: (system: CalendarSystem) => void;
   onClose: () => void;
@@ -39,7 +37,7 @@ const GREGORIAN_MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
-const GREGORIAN_WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const WEEKDAY_NAMES_EN = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 const BRAND_RED = '#E63946';
 
@@ -50,7 +48,7 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
   onToggleCalendarSystem,
   onClose,
   onSelectDate,
-  format = 'MM/DD/YYYY',
+  format = 'YYYY-MM-DD',
   maxDate = new Date(),
 }) => {
   const [activeSystem, setActiveSystem] = useState<CalendarSystem>(calendarSystem);
@@ -176,17 +174,17 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
       return;
     }
     setCurrentJsDate(jsCandidate);
-    const formatted = formatBSDisplay(jsCandidate, 'verbose');
+    const formatted = formatBSDisplay(jsCandidate, 'numeric');
     onSelectDate(formatted, jsCandidate);
     onClose();
   };
 
-  // Handle Pick Today
+  // Handle Pick Today (Strictly English Localization)
   const handleSelectToday = () => {
     const today = new Date();
     setCurrentJsDate(today);
     if (activeSystem === 'BS') {
-      const formatted = formatBSDisplay(today, 'verbose');
+      const formatted = formatBSDisplay(today, 'numeric');
       onSelectDate(formatted, today);
     } else {
       const formatted = formatADDisplay(today, format);
@@ -403,9 +401,7 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
                   <Text style={styles.monthTitle}>
                     {NEPALI_MONTH_NAMES_EN[bsMonth]} {bsYear} BS
                   </Text>
-                  <Text style={styles.monthSubTitle}>
-                    {NEPALI_MONTH_NAMES_NP[bsMonth]} • बिक्रम संवत्
-                  </Text>
+                  <Text style={styles.monthSubTitle}>Bikram Sambat (BS)</Text>
                 </>
               )}
             </View>
@@ -420,19 +416,13 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          {/* Weekday Labels */}
+          {/* Weekday Labels (Always strictly in English) */}
           <View style={styles.weekdaysRow}>
-            {activeSystem === 'AD'
-              ? GREGORIAN_WEEKDAYS.map((w, idx) => (
-                  <Text key={idx} style={[styles.weekdayLabel, idx === 0 && { color: BRAND_RED }]}>
-                    {w}
-                  </Text>
-                ))
-              : NEPALI_WEEKDAYS_SHORT.map((w, idx) => (
-                  <Text key={idx} style={[styles.weekdayLabel, idx === 0 && { color: BRAND_RED }]}>
-                    {w}
-                  </Text>
-                ))}
+            {WEEKDAY_NAMES_EN.map((w, idx) => (
+              <Text key={idx} style={[styles.weekdayLabel, idx === 0 && { color: BRAND_RED }]}>
+                {w}
+              </Text>
+            ))}
           </View>
 
           {/* Days Grid */}
@@ -440,13 +430,11 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
             {activeSystem === 'AD' ? renderAdGrid() : renderBsGrid()}
           </View>
 
-          {/* Footer Quick Actions */}
+          {/* Footer Quick Actions - Strictly "Today" in English */}
           <View style={styles.footer}>
             <TouchableOpacity style={styles.todayButton} onPress={handleSelectToday} activeOpacity={0.75}>
               <Ionicons name="today-outline" size={15} color={BRAND_RED} style={{ marginRight: 5 }} />
-              <Text style={styles.todayButtonText}>
-                {activeSystem === 'BS' ? 'आज (Today BS)' : 'Today (AD)'}
-              </Text>
+              <Text style={styles.todayButtonText}>Today</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={onClose} activeOpacity={0.7}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -491,8 +479,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
+    fontFamily: fonts.bold,
     fontSize: 15,
-    fontWeight: '700',
     color: '#0F172A',
   },
   segmentedToggleContainer: {
@@ -512,12 +500,13 @@ const styles = StyleSheet.create({
     backgroundColor: BRAND_RED,
   },
   toggleSegmentText: {
+    fontFamily: fonts.semiBold,
     fontSize: 11,
-    fontWeight: '700',
     color: '#64748B',
   },
   toggleSegmentTextActive: {
     color: '#FFFFFF',
+    fontFamily: fonts.bold,
   },
   closeBtn: {
     width: 28,
@@ -537,13 +526,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   monthTitle: {
+    fontFamily: fonts.bold,
     fontSize: 15,
-    fontWeight: '700',
     color: '#0F172A',
   },
   monthSubTitle: {
+    fontFamily: fonts.medium,
     fontSize: 11,
-    fontWeight: '500',
     color: '#64748B',
     marginTop: 1,
   },
@@ -568,8 +557,8 @@ const styles = StyleSheet.create({
   weekdayLabel: {
     width: 38,
     textAlign: 'center',
+    fontFamily: fonts.semiBold,
     fontSize: 11,
-    fontWeight: '700',
     color: '#64748B',
   },
   daysGrid: {
@@ -593,17 +582,17 @@ const styles = StyleSheet.create({
     borderColor: BRAND_RED,
   },
   dayText: {
+    fontFamily: fonts.medium,
     fontSize: 13,
-    fontWeight: '600',
     color: '#1E293B',
   },
   dayTextActive: {
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   dayTextToday: {
     color: BRAND_RED,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   dayTextDisabled: {
     color: '#CBD5E1',
@@ -626,8 +615,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF1F2',
   },
   todayButtonText: {
+    fontFamily: fonts.bold,
     fontSize: 12,
-    fontWeight: '700',
     color: BRAND_RED,
   },
   cancelButton: {
@@ -635,8 +624,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   cancelButtonText: {
+    fontFamily: fonts.medium,
     fontSize: 12,
-    fontWeight: '600',
     color: '#64748B',
   },
 });
