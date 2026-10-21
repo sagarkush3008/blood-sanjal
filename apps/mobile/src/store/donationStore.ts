@@ -11,8 +11,19 @@ export interface DonationCooldownState {
 }
 
 /**
- * Enterprise-grade global state store for donation cooldown & eligibility lifecycle.
- * Manages the authoritative 90-day resting duration across the application.
+ * ISOLATED GLOBAL STATE STORE: 90-Day Donation Cooldown & Medical Recovery.
+ * 
+ * ARCHITECTURAL DIRECTIVE:
+ * This store strictly manages medical donation cooldown variables:
+ * - lastDonationDate: Timestamp of blood donation event
+ * - nextEligibleDate: 90-day medical resting expiration timestamp
+ * - isResting: Boolean flag indicating if donor is within the 90-day medical window
+ * 
+ * STRICT DECOUPLING RULE:
+ * This store is 100% DECOUPLED from manual donor availability status:
+ * - Does NOT touch or alter `isActive`, `donorStatus` ('ACTIVE'/'INACTIVE')
+ * - Does NOT touch or alter `pause_duration`, `inactive_until`, or snooze timers
+ * Manual availability is ONLY mutated when the user explicitly interacts with the DonorAvailability section.
  */
 export const useDonationStore = create<DonationCooldownState>((set) => ({
   lastDonationDate: null,

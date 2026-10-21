@@ -87,12 +87,10 @@ export class DonationController {
           $inc: { totalDonations: 1 },
           $set: {
             lastDonationDate: new Date(healthData.lastDonationDate),
-            inactiveUntil: nextDate, // Marks them as temporarily inactive
+            next_eligible_date: nextDate,
             reminderDate: nextDate, // Used by cron job to send push notification
-            donorStatus: 'UNAVAILABLE',
-            inactiveReason: 'Recent donation recovery period',
-            inactiveStartedAt: new Date(),
             lastRecoveryTips: aiResult.aiTips
+            // CRITICAL: Do NOT touch manual availability flags (donorStatus, inactiveUntil, etc.)
           }
         },
         { new: true }
@@ -104,7 +102,7 @@ export class DonationController {
 
       res.status(200).json(SuccessResponse({
         totalDonations: updatedProfile.totalDonations,
-        nextEligibleDate: updatedProfile.inactiveUntil,
+        nextEligibleDate: updatedProfile.next_eligible_date || updatedProfile.reminderDate,
         recoveryTips: aiResult.aiTips
       }, req.id));
 
@@ -146,17 +144,11 @@ export class DonationController {
       };
 
       if (!aiResult.isEligible && nextDate) {
-        updatePayload.$set.inactiveUntil = nextDate;
+        updatePayload.$set.next_eligible_date = nextDate;
         updatePayload.$set.reminderDate = nextDate;
-        updatePayload.$set.donorStatus = 'UNAVAILABLE';
-        updatePayload.$set.inactiveReason = 'Medical assessment criteria';
-        updatePayload.$set.inactiveStartedAt = new Date();
       } else {
-        updatePayload.$set.inactiveUntil = null;
+        updatePayload.$set.next_eligible_date = null;
         updatePayload.$set.reminderDate = null;
-        updatePayload.$set.donorStatus = 'ACTIVE';
-        updatePayload.$set.inactiveReason = null;
-        updatePayload.$set.inactiveStartedAt = null;
       }
       
       // We only update lastDonationDate if it's explicitly provided and they are assessing a past donation
@@ -176,7 +168,7 @@ export class DonationController {
 
       res.status(200).json(SuccessResponse({
         isEligible: aiResult.isEligible,
-        nextEligibleDate: updatedProfile.inactiveUntil,
+        nextEligibleDate: updatedProfile.next_eligible_date || updatedProfile.reminderDate,
         aiTips: aiResult.aiTips
       }, req.id));
 

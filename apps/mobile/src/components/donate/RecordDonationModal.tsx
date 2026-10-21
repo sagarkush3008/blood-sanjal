@@ -148,15 +148,16 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
       const res = await DonationsAPI.recordWithProof(formData);
       const resData = res?.data || res;
 
-      // 2. Global State Mutation (Zustand 90-day Cooldown)
+      // 2. Global State Mutation (Zustand 90-day Cooldown: Decoupled & Isolated)
       const { nextEligibleDate } = await setCooldown(isoDate);
 
       // 3. Automated Local Notification Scheduling (Exact 90 Days)
       await scheduleEligibilityNotification(nextEligibleDate);
 
-      // 4. Invalidate React Query caches for immediate UI reactivity
+      // 4. Invalidate React Query caches for donation-related datasets
+      // CRITICAL: NEVER invalidate ['donor-status']! Manual availability status (isActive, snooze timer)
+      // must remain 100% untouched and isolated during donation recording.
       queryClient.invalidateQueries({ queryKey: ['my-profile'] });
-      queryClient.invalidateQueries({ queryKey: ['donor-status'] });
       queryClient.invalidateQueries({ queryKey: ['my-donations'] });
       queryClient.invalidateQueries({ queryKey: ['me'] });
 

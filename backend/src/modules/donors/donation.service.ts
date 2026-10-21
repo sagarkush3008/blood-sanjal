@@ -56,19 +56,17 @@ export class DonationService {
     // 90-Day Cooldown Calculation (90 days * 24 * 60 * 60 * 1000 ms)
     const nextEligibleDate = new Date(donationDate.getTime() + 90 * 24 * 60 * 60 * 1000);
 
-    // Update donor profile to 'RESTING' / 'resting' and store next_eligible_date
+    // CRITICAL: Decouple 90-Day Donation Cooldown from Manual Availability Status!
+    // Update ONLY medical cooldown and eligibility timestamps.
+    // Do NOT alter manual availability flags (donorStatus, inactiveUntil, availabilityMode, inactiveReason, inactiveStartedAt).
     profile.lastDonationDate = donationDate;
-    profile.inactiveUntil = nextEligibleDate;
     profile.next_eligible_date = nextEligibleDate;
     profile.reminderDate = nextEligibleDate;
-    profile.donorStatus = 'RESTING';
-    profile.availabilityMode = 'TEMPORARY_INACTIVE';
-    profile.inactiveReason = '90-day recovery cooldown post blood donation';
-    profile.inactiveStartedAt = new Date();
     await profile.save();
 
     return {
       ...record.toObject(),
+      lastDonationDate: donationDate.toISOString(),
       next_eligible_date: nextEligibleDate.toISOString(),
       nextEligibleDate: nextEligibleDate.toISOString(),
       status: 'resting'

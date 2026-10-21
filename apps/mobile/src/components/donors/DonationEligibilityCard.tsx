@@ -21,7 +21,7 @@ export const DonationEligibilityCard = ({ donorProfile }: { donorProfile: any })
   const [insightsVisible, setInsightsVisible] = useState(false);
   const [aiTips, setAiTips] = useState<string[]>([]);
 
-  const nextDateStr = donorProfile?.inactiveUntil;
+  const nextDateStr = donorProfile?.next_eligible_date || donorProfile?.reminderDate;
   const nextDate = nextDateStr ? new Date(nextDateStr) : null;
   const now = new Date();
   
@@ -57,9 +57,10 @@ export const DonationEligibilityCard = ({ donorProfile }: { donorProfile: any })
         if (!oldData) return oldData;
         return {
           ...oldData,
-          inactiveUntil: data.nextEligibleDate,
+          next_eligible_date: data.nextEligibleDate,
+          reminderDate: data.nextEligibleDate,
           totalDonations: data.totalDonations,
-          donorStatus: 'UNAVAILABLE'
+          // CRITICAL: Preserve oldData.donorStatus and oldData.inactiveUntil untouched!
         };
       });
 

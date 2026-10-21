@@ -22,6 +22,7 @@ import { scheduleEligibilityNotification } from '../../services/notification.ser
 import { CalendarPickerModal } from '../../components/common/CalendarPickerModal';
 import { DualCalendarDatePicker } from '../../components/donate/DualCalendarDatePicker';
 import { fonts, colors } from '../../theme';
+import { useDonationStore } from '../../store/donationStore';
 
 interface SelectedImage {
   uri: string;
@@ -40,6 +41,7 @@ const CAMPAIGN_OPTIONS = [
 export const RecordDonationScreen = () => {
   const navigation = useNavigation<any>();
   const queryClient = useQueryClient();
+  const { setCooldown } = useDonationStore();
 
   // Form State: Authoritative Gregorian AD Date
   const [selectedAdDate, setSelectedAdDate] = useState<Date>(new Date());
@@ -146,14 +148,20 @@ export const RecordDonationScreen = () => {
       return DonationsAPI.recordWithProof(formData);
     },
     onSuccess: async (response: any) => {
+      // 1. Isolated Global State Mutation (Zustand 90-day Cooldown)
+      const { nextEligibleDate } = await setCooldown(selectedAdDate);
+
+      // 2. Automated Local Notification Scheduling (Exact 90 Days)
+      const resData = response?.data?.data || response?.data || response;
+      const targetNextDate = resData?.next_eligible_date || resData?.nextEligibleDate || nextEligibleDate;
+      await scheduleEligibilityNotification(targetNextDate);
+
+      // 3. Invalidate React Query caches for donation-related datasets ONLY
+      // CRITICAL: NEVER invalidate ['donor-status']! Manual availability status (isActive, snooze timer)
+      // must remain 100% untouched and isolated during donation recording.
       queryClient.invalidateQueries({ queryKey: ['my-donations'] });
       queryClient.invalidateQueries({ queryKey: ['my-profile'] });
-      queryClient.invalidateQueries({ queryKey: ['donor-status'] });
-
-      // Calculate 90 days or extract from response
-      const resData = response?.data?.data || response?.data || response;
-      const nextDate = resData?.next_eligible_date || resData?.nextEligibleDate || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
-      await scheduleEligibilityNotification(nextDate);
+      queryClient.invalidateQueries({ queryKey: ['me'] });
 
       Alert.alert(
         'Donation Submitted! 🩸',

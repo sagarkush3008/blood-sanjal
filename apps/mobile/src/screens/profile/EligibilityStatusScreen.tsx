@@ -63,7 +63,8 @@ export const EligibilityStatusScreen = () => {
     queryFn: () => DonorsAPI.getMyProfile().then((res) => res.data?.data || res.data).catch(() => null),
   });
 
-  const nextEligibleDate = donorProfile?.inactiveUntil;
+  // Authoritative medical donation cooldown date (decoupled from manual snooze inactiveUntil)
+  const nextEligibleDate = donorProfile?.next_eligible_date || donorProfile?.reminderDate;
   const { days, hours, minutes, seconds, isComplete } = useCountdown(nextEligibleDate);
   const aiTips = donorProfile?.lastRecoveryTips || [];
 

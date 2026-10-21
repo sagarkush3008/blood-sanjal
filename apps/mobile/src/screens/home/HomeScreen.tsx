@@ -136,21 +136,34 @@ export const HomeScreen = () => {
     lastDonatedDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  // Days left to save another life computation from backend
+  // Days left to save another life computation from backend (90-Day Medical Cooldown)
   const lastDonationRaw = donorProfile?.lastDonationDate;
+  const nextEligibleRaw = donorProfile?.next_eligible_date || donorProfile?.reminderDate;
   let daysLeft = 48;
   let formattedLastDonation = '25 Jun 2026';
 
-  if (lastDonationRaw) {
+  if (nextEligibleRaw) {
+    const nextDate = new Date(nextEligibleRaw);
+    if (!isNaN(nextDate.getTime())) {
+      const now = new Date();
+      const diffMs = nextDate.getTime() - now.getTime();
+      const calculatedDaysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      daysLeft = calculatedDaysLeft > 0 ? calculatedDaysLeft : 0;
+    }
+  } else if (lastDonationRaw) {
     const lastDate = new Date(lastDonationRaw);
     if (!isNaN(lastDate.getTime())) {
       const now = new Date();
       const diffMs = now.getTime() - lastDate.getTime();
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      // Standard 90 days whole-blood donation cycle
       const calculatedDaysLeft = 90 - diffDays;
-      daysLeft = calculatedDaysLeft > 0 ? calculatedDaysLeft : 48;
+      daysLeft = calculatedDaysLeft > 0 ? calculatedDaysLeft : 0;
+    }
+  }
 
+  if (lastDonationRaw) {
+    const lastDate = new Date(lastDonationRaw);
+    if (!isNaN(lastDate.getTime())) {
       const monthNames = [
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'

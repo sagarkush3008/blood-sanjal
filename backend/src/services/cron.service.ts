@@ -19,18 +19,17 @@ export const startCronJobs = () => {
       const todayEnd = new Date();
       todayEnd.setUTCHours(23, 59, 59, 999);
 
-      // Find donors whose reminderDate is exactly today
+      // Find donors whose reminderDate has arrived
       const newlyEligibleDonors = await DonorProfile.find({
-        reminderDate: { $gte: todayStart, $lte: todayEnd },
-        donorStatus: 'UNAVAILABLE'
+        reminderDate: { $lte: todayEnd, $ne: null }
       });
 
       for (const donor of newlyEligibleDonors) {
-        // 1. Update status back to ACTIVE in MongoDB
-        donor.donorStatus = 'ACTIVE';
-        donor.inactiveUntil = null;
-        donor.inactiveReason = null;
+        // Clear medical cooldown reminder, but preserve manual availability untouched
         donor.reminderDate = undefined;
+        if (donor.next_eligible_date && donor.next_eligible_date <= todayEnd) {
+          donor.next_eligible_date = null;
+        }
         await donor.save();
 
         // 2. Trigger Push Notification
@@ -40,7 +39,7 @@ export const startCronJobs = () => {
         );
       }
 
-      console.log(`[CRON] Activated and notified ${newlyEligibleDonors.length} donors today.`);
+      console.log(`[CRON] Notified ${newlyEligibleDonors.length} donors of eligibility today.`);
     } catch (error) {
       console.error('[CRON] Error checking donation eligibility:', error);
     }
