@@ -53,7 +53,26 @@ export class DonationService {
       verificationStatus: 'PENDING'
     });
 
-    return record;
+    // 90-Day Cooldown Calculation (90 days * 24 * 60 * 60 * 1000 ms)
+    const nextEligibleDate = new Date(donationDate.getTime() + 90 * 24 * 60 * 60 * 1000);
+
+    // Update donor profile to 'RESTING' / 'resting' and store next_eligible_date
+    profile.lastDonationDate = donationDate;
+    profile.inactiveUntil = nextEligibleDate;
+    profile.next_eligible_date = nextEligibleDate;
+    profile.reminderDate = nextEligibleDate;
+    profile.donorStatus = 'RESTING';
+    profile.availabilityMode = 'TEMPORARY_INACTIVE';
+    profile.inactiveReason = '90-day recovery cooldown post blood donation';
+    profile.inactiveStartedAt = new Date();
+    await profile.save();
+
+    return {
+      ...record.toObject(),
+      next_eligible_date: nextEligibleDate.toISOString(),
+      nextEligibleDate: nextEligibleDate.toISOString(),
+      status: 'resting'
+    };
   }
 
   static async verifyDonation(recordId: string, verifierId: string, action: 'VERIFIED' | 'REJECTED', reason?: string) {

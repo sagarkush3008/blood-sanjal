@@ -6,8 +6,9 @@ export interface IDonorProfile extends Document {
   lastDonationDate?: Date;
   reminderDate?: Date;
   totalDonations: number;
-  donorStatus: 'ACTIVE' | 'UNAVAILABLE' | 'HIDDEN' | 'INACTIVE';
+  donorStatus: 'ACTIVE' | 'UNAVAILABLE' | 'RESTING' | 'HIDDEN' | 'INACTIVE';
   inactiveUntil?: Date | null;
+  next_eligible_date?: Date | null;
   inactiveReason?: string | null;
   contactPreference: 'PHONE' | 'EMAIL' | 'WHATSAPP' | 'SYSTEM_ONLY';
   notificationPreference: 'ALL' | 'EMERGENCY_ONLY' | 'NONE';
@@ -28,8 +29,9 @@ const donorProfileSchema = new Schema<IDonorProfile>(
     lastDonationDate: { type: Date },
     reminderDate: { type: Date },
     totalDonations: { type: Number, default: 0 },
-    donorStatus: { type: String, enum: ['ACTIVE', 'UNAVAILABLE', 'HIDDEN', 'INACTIVE'], default: 'UNAVAILABLE' },
+    donorStatus: { type: String, enum: ['ACTIVE', 'UNAVAILABLE', 'RESTING', 'HIDDEN', 'INACTIVE'], default: 'UNAVAILABLE' },
     inactiveUntil: { type: Date, default: null },
+    next_eligible_date: { type: Date, default: null },
     inactiveReason: { type: String, maxlength: 300, default: null },
     contactPreference: { type: String, enum: ['PHONE', 'EMAIL', 'WHATSAPP', 'SYSTEM_ONLY'], default: 'SYSTEM_ONLY' },
     notificationPreference: { type: String, enum: ['ALL', 'EMERGENCY_ONLY', 'NONE'], default: 'ALL' },

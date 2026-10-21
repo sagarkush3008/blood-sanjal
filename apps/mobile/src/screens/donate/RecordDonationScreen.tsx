@@ -18,6 +18,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { DonationsAPI } from '../../api/donations.api';
+import { scheduleEligibilityNotification } from '../../services/notification.service';
 import { fonts, colors } from '../../theme';
 
 interface SelectedImage {
@@ -144,12 +145,19 @@ export const RecordDonationScreen = () => {
 
       return DonationsAPI.recordWithProof(formData);
     },
-    onSuccess: () => {
+    onSuccess: async (response: any) => {
       queryClient.invalidateQueries({ queryKey: ['my-donations'] });
       queryClient.invalidateQueries({ queryKey: ['my-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['donor-status'] });
+
+      // Calculate 90 days or extract from response
+      const resData = response?.data?.data || response?.data || response;
+      const nextDate = resData?.next_eligible_date || resData?.nextEligibleDate || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
+      await scheduleEligibilityNotification(nextDate);
+
       Alert.alert(
         'Donation Submitted! 🩸',
-        'Your donation record and photo proof have been uploaded. Verification status is set to Pending for admin review.',
+        'Your donation record has been saved and your 90-day recovery cooldown is active. We will notify you when you are eligible to donate again.',
         [
           {
             text: 'View My Impact',
