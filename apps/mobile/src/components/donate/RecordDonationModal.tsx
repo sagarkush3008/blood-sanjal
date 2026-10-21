@@ -49,6 +49,7 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
 
   // Media & Interaction State
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [showActionSheet, setShowActionSheet] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const campaignOptions = [
@@ -58,53 +59,50 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
     'Rotary Club Birgunj Mega Donation Camp',
   ];
 
-  // Image Selection Handler (Camera / Gallery)
-  const handlePickImage = () => {
-    Alert.alert(
-      'Attach Donation Proof',
-      'Select a photo of you donating blood or holding your donation slip.',
-      [
-        {
-          text: 'Take Selfie / Camera',
-          onPress: async () => {
-            const { status } = await ImagePicker.requestCameraPermissionsAsync();
-            if (status !== 'granted') {
-              Alert.alert('Permission Denied', 'Camera permission is required to take a selfie.');
-              return;
-            }
-            const result = await ImagePicker.launchCameraAsync({
-              mediaTypes: ImagePicker.MediaTypeOptions.Images,
-              allowsEditing: true,
-              aspect: [4, 3],
-              quality: 0.8,
-            });
-            if (!result.canceled && result.assets[0]?.uri) {
-              setPhotoUri(result.assets[0].uri);
-            }
-          },
-        },
-        {
-          text: 'Choose from Gallery',
-          onPress: async () => {
-            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (status !== 'granted') {
-              Alert.alert('Permission Denied', 'Photo library permission is required to choose an image.');
-              return;
-            }
-            const result = await ImagePicker.launchImageLibraryAsync({
-              mediaTypes: ImagePicker.MediaTypeOptions.Images,
-              allowsEditing: true,
-              aspect: [4, 3],
-              quality: 0.8,
-            });
-            if (!result.canceled && result.assets[0]?.uri) {
-              setPhotoUri(result.assets[0].uri);
-            }
-          },
-        },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
+  // Modern Action Sheet Camera Handler
+  const handleLaunchCamera = async () => {
+    setShowActionSheet(false);
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Camera permission is required to take a selfie.');
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.85,
+      });
+      if (!result.canceled && result.assets[0]?.uri) {
+        setPhotoUri(result.assets[0].uri);
+      }
+    } catch (err) {
+      console.error('[RecordDonationModal] Camera error:', err);
+    }
+  };
+
+  // Modern Action Sheet Gallery Handler
+  const handleLaunchGallery = async () => {
+    setShowActionSheet(false);
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Photo library permission is required to choose an image.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.85,
+      });
+      if (!result.canceled && result.assets[0]?.uri) {
+        setPhotoUri(result.assets[0].uri);
+      }
+    } catch (err) {
+      console.error('[RecordDonationModal] Gallery error:', err);
+    }
   };
 
   // Form Submission
@@ -306,56 +304,54 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
               )}
             </View>
 
-            {/* 5. Minimal Media Upload Zone */}
-            <View style={styles.uploadSectionContainer}>
-              <View style={styles.uploadSectionHeader}>
-                <View style={styles.uploadTitleRow}>
-                  <Feather name="camera" size={15} color="#4B5563" />
-                  <Text style={styles.uploadSectionTitle}>Upload Donor Photo</Text>
-                </View>
-                <Text style={styles.socialSpotlightTag}>Community Spotlight</Text>
+            {/* 5. Redesigned Upload Donor Photo Zone */}
+            <View style={styles.formFieldGroup}>
+              <View style={styles.uploadHeaderRow}>
+                <Text style={styles.fieldLabel}>Donation Proof Photo</Text>
+                <Text style={styles.optionalTag}>Optional</Text>
               </View>
 
-              <Text style={styles.uploadSectionDescription}>
-                Attach a photo of you donating blood or holding your donor slip to inspire the community.
-              </Text>
-
               {photoUri ? (
-                <View style={styles.thumbnailPreviewBox}>
-                  <Image source={{ uri: photoUri }} style={styles.thumbnailImg} resizeMode="cover" />
-                  <View style={styles.thumbnailFooterBar}>
+                /* Filled State: Full-bleed thumbnail with floating Edit & Remove button */
+                <View style={styles.filledImageWrapper}>
+                  <Image source={{ uri: photoUri }} style={styles.filledImage} resizeMode="cover" />
+
+                  {/* Floating Action Controls on Top-Right */}
+                  <View style={styles.floatingControlsRow}>
                     <TouchableOpacity
-                      style={styles.thumbnailActionBtn}
-                      onPress={handlePickImage}
+                      style={styles.floatingEditBtn}
+                      onPress={() => setShowActionSheet(true)}
                       activeOpacity={0.8}
+                      accessibilityLabel="Change photo"
                     >
-                      <Ionicons name="swap-horizontal" size={15} color="#374151" />
-                      <Text style={styles.thumbnailActionText}>Change</Text>
+                      <Feather name="edit-2" size={12} color="#FFFFFF" style={{ marginRight: 4 }} />
+                      <Text style={styles.floatingEditBtnText}>Change</Text>
                     </TouchableOpacity>
+
                     <TouchableOpacity
-                      style={[styles.thumbnailActionBtn, styles.thumbnailDeleteBtn]}
+                      style={styles.floatingCloseBtn}
                       onPress={() => setPhotoUri(null)}
                       activeOpacity={0.8}
+                      accessibilityLabel="Remove photo"
                     >
-                      <Ionicons name="trash-outline" size={15} color="#DC2626" />
-                      <Text style={[styles.thumbnailActionText, { color: '#DC2626' }]}>Remove</Text>
+                      <Ionicons name="close" size={15} color="#FFFFFF" />
                     </TouchableOpacity>
                   </View>
                 </View>
               ) : (
-                <View style={styles.flatDropzone}>
-                  <Ionicons name="cloud-upload-outline" size={26} color="#9CA3AF" />
-                  <Text style={styles.dropzoneTitleText}>Upload photo proof</Text>
-                  <Text style={styles.dropzoneSubtitleText}>Take a selfie or select from gallery</Text>
-                  <TouchableOpacity
-                    style={styles.outlinePickerButton}
-                    onPress={handlePickImage}
-                    activeOpacity={0.8}
-                  >
-                    <Feather name="image" size={14} color="#374151" style={{ marginRight: 6 }} />
-                    <Text style={styles.outlinePickerButtonText}>Choose Photo</Text>
-                  </TouchableOpacity>
-                </View>
+                /* Empty State: Spacious, soft-rounded box with subtle thin dashed border */
+                <TouchableOpacity
+                  style={styles.emptyUploadBox}
+                  onPress={() => setShowActionSheet(true)}
+                  activeOpacity={0.7}
+                  accessibilityLabel="Tap to upload photo"
+                >
+                  <View style={styles.emptyUploadIconWrap}>
+                    <Feather name="camera" size={22} color="#9CA3AF" />
+                  </View>
+                  <Text style={styles.emptyUploadTitle}>Tap to upload photo</Text>
+                  <Text style={styles.emptyUploadSubtitle}>Take a selfie or choose from gallery</Text>
+                </TouchableOpacity>
               )}
 
               {/* 6. Soft Minimal Consent Checkbox */}
@@ -413,6 +409,69 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
+
+      {/* 9. Modern Native-feeling Action Sheet Modal for Photo Selection */}
+      <Modal
+        visible={showActionSheet}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowActionSheet(false)}
+      >
+        <TouchableOpacity
+          style={styles.actionSheetBackdrop}
+          activeOpacity={1}
+          onPress={() => setShowActionSheet(false)}
+        >
+          <View style={styles.actionSheetContainer}>
+            <View style={styles.actionSheetHandle} />
+            <Text style={styles.actionSheetTitle}>Upload Photo Proof</Text>
+            <Text style={styles.actionSheetSubtitle}>
+              Select an option to attach your blood donation verification photo
+            </Text>
+
+            {/* Option 1: Take Photo */}
+            <TouchableOpacity
+              style={styles.actionSheetOption}
+              onPress={handleLaunchCamera}
+              activeOpacity={0.7}
+            >
+              <View style={styles.actionOptionIconWrap}>
+                <Feather name="camera" size={18} color="#111827" />
+              </View>
+              <View style={styles.actionOptionTextGroup}>
+                <Text style={styles.actionOptionLabel}>Take a Photo</Text>
+                <Text style={styles.actionOptionHint}>Open camera to take a selfie or picture</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+            </TouchableOpacity>
+
+            {/* Option 2: Choose from Gallery */}
+            <TouchableOpacity
+              style={styles.actionSheetOption}
+              onPress={handleLaunchGallery}
+              activeOpacity={0.7}
+            >
+              <View style={styles.actionOptionIconWrap}>
+                <Feather name="image" size={18} color="#111827" />
+              </View>
+              <View style={styles.actionOptionTextGroup}>
+                <Text style={styles.actionOptionLabel}>Choose from Gallery</Text>
+                <Text style={styles.actionOptionHint}>Select an existing image from photo library</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+            </TouchableOpacity>
+
+            {/* Cancel Button */}
+            <TouchableOpacity
+              style={styles.actionSheetCancelBtn}
+              onPress={() => setShowActionSheet(false)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.actionSheetCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </Modal>
   );
 };
@@ -450,7 +509,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 12,
     paddingBottom: 14,
-    // Zero divider line for a clean flat look
   },
   headerTitleGroup: {
     flexDirection: 'row',
@@ -486,12 +544,12 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   guidanceBanner: {
-    backgroundColor: '#F9FAFB', // Flat soft light neutral
+    backgroundColor: '#F9FAFB',
     borderWidth: 1,
     borderColor: '#F3F4F6',
     borderRadius: 12,
     padding: 12,
-    marginBottom: 28, // Airy vertical spacing
+    marginBottom: 28,
   },
   guidanceHeaderRow: {
     flexDirection: 'row',
@@ -522,12 +580,12 @@ const styles = StyleSheet.create({
   fieldInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB', // Flat subtle gray
+    backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderColor: '#E5E7EB', // Faint 1px border
+    borderColor: '#E5E7EB',
     borderRadius: 12,
     paddingHorizontal: 14,
-    height: 52, // Taller input for breathing room
+    height: 52,
   },
   fieldLeadIcon: {
     marginRight: 10,
@@ -601,113 +659,93 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semiBold,
     color: BRAND_RED,
   },
-  uploadSectionContainer: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 28,
-  },
-  uploadSectionHeader: {
+  uploadHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
-  uploadTitleRow: {
+  optionalTag: {
+    fontFamily: fonts.regular,
+    fontSize: 11.5,
+    color: '#9CA3AF',
+  },
+  // Redesigned Empty State
+  emptyUploadBox: {
+    borderRadius: 16,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    borderStyle: 'dashed',
+    paddingVertical: 26,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyUploadIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  emptyUploadTitle: {
+    fontFamily: fonts.medium,
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  emptyUploadSubtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 11.5,
+    color: '#9CA3AF',
+    marginTop: 2,
+  },
+  // Redesigned Filled State
+  filledImageWrapper: {
+    height: 190,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    position: 'relative',
+  },
+  filledImage: {
+    width: '100%',
+    height: '100%',
+  },
+  floatingControlsRow: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    flex: 1,
   },
-  uploadSectionTitle: {
-    fontFamily: fonts.semiBold,
-    fontSize: 13.5,
-    color: '#111827',
-    flexShrink: 1,
+  floatingEditBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(15, 23, 42, 0.72)',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 16,
   },
-  socialSpotlightTag: {
-    fontFamily: fonts.regular,
-    fontSize: 11,
-    color: '#9CA3AF',
-  },
-  uploadSectionDescription: {
-    fontFamily: fonts.regular,
+  floatingEditBtnText: {
+    fontFamily: fonts.medium,
     fontSize: 11.5,
-    color: '#6B7280',
-    lineHeight: 16,
-    marginBottom: 14,
+    color: '#FFFFFF',
   },
-  flatDropzone: {
-    borderWidth: 1,
-    borderColor: '#E5E7EB', // Clean solid border (no aggressive dashes)
-    borderRadius: 12,
-    paddingVertical: 20,
+  floatingCloseBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(15, 23, 42, 0.72)',
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
-  },
-  dropzoneTitleText: {
-    fontFamily: fonts.medium,
-    fontSize: 12.5,
-    color: '#374151',
-    marginTop: 6,
-  },
-  dropzoneSubtitleText: {
-    fontFamily: fonts.regular,
-    fontSize: 11,
-    color: '#9CA3AF',
-    marginTop: 2,
-    marginBottom: 10,
-  },
-  outlinePickerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    backgroundColor: '#FFFFFF',
-  },
-  outlinePickerButtonText: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    color: '#374151',
-  },
-  thumbnailPreviewBox: {
-    borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#F3F4F6',
-  },
-  thumbnailImg: {
-    width: '100%',
-    height: 160,
-  },
-  thumbnailFooterBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 10,
-    backgroundColor: '#FFFFFF',
-  },
-  thumbnailActionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: '#F3F4F6',
-  },
-  thumbnailDeleteBtn: {
-    backgroundColor: '#FEE2E2',
-  },
-  thumbnailActionText: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    color: '#374151',
   },
   consentCard: {
     flexDirection: 'row',
@@ -761,5 +799,92 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 15,
     letterSpacing: 0.2,
+  },
+  // Modern Native-feeling Action Sheet Styles
+  actionSheetBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    justifyContent: 'flex-end',
+  },
+  actionSheetContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 38 : 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 18,
+    elevation: 12,
+  },
+  actionSheetHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E5E7EB',
+    alignSelf: 'center',
+    marginBottom: 14,
+  },
+  actionSheetTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 16,
+    color: '#111827',
+    marginBottom: 2,
+  },
+  actionSheetSubtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 16,
+  },
+  actionSheetOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 14,
+    padding: 13,
+    marginBottom: 10,
+  },
+  actionOptionIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  actionOptionTextGroup: {
+    flex: 1,
+  },
+  actionOptionLabel: {
+    fontFamily: fonts.semiBold,
+    fontSize: 13.5,
+    color: '#111827',
+  },
+  actionOptionHint: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: '#9CA3AF',
+    marginTop: 1,
+  },
+  actionSheetCancelBtn: {
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  actionSheetCancelText: {
+    fontFamily: fonts.semiBold,
+    fontSize: 14,
+    color: '#4B5563',
   },
 });
