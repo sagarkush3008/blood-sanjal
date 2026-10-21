@@ -29,8 +29,7 @@ export class AIService {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Using gemini-3.8-flash as the latest standard model
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' });
+    const model = genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-1.5-flash' });
 
     const prompt = `
       Evaluate blood donation eligibility. 
@@ -60,37 +59,16 @@ export class AIService {
       // Extract JSON using regex in case the AI adds conversational text
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        throw new Error('AI response did not contain valid JSON');
+        throw new Error('AI response did not contain valid JSON format');
       }
       const parsedData: AIEligibilityResult = JSON.parse(jsonMatch[0]);
 
       return parsedData;
     } catch (error: any) {
-      // 1. Verbose Backend Logging
       console.error('\n--- [AIService] GEMINI API ERROR ---');
-      console.error('Error Object:', error);
-      console.error('Message:', error.message);
-      console.error('Status:', error.status || error.code || 'UNKNOWN_STATUS');
-      if (error.response) {
-         console.error('Response details:', error.response);
-      }
+      console.error('Error message:', error?.message || error);
       console.error('------------------------------------\n');
-      
-      // Temporary Mock Fallback for Frontend Testing
-      console.warn('[AIService] Using mock data because Google API is overloaded or failing.');
-      
-      const mockNextDate = new Date();
-      mockNextDate.setDate(mockNextDate.getDate() + 90);
-      
-      return {
-        isEligible: false,
-        nextEligibleDate: mockNextDate.toISOString().split('T')[0],
-        aiTips: [
-          "Drink plenty of water over the next 24 hours.",
-          "Eat iron-rich foods like spinach and red meat.",
-          "Avoid strenuous physical activity for the rest of the day."
-        ]
-      };
+      throw error;
     }
   }
 }

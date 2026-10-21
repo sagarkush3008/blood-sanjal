@@ -83,7 +83,13 @@ export const EligibilityStatusScreen = () => {
       Alert.alert('Assessment Complete', 'Your eligibility status has been updated based on the medical assessment.');
     },
     onError: (error: any) => {
-      Alert.alert('Assessment Failed', error.response?.data?.error?.message || 'Something went wrong.');
+      console.log('AI Assessment API Error:', error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error?.message ||
+        error.message ||
+        'Something went wrong.';
+      Alert.alert('Assessment Failed', errorMessage);
     }
   });
 

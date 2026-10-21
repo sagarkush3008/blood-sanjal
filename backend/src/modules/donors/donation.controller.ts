@@ -64,11 +64,20 @@ export class DonationController {
       const healthData: HealthData = req.body; // Map directly
 
       if (!userId || !healthData) {
-        throw new AppError(400, 'VALIDATION_ERROR', 'Missing required health data or user ID');
+        return res.status(400).json({ success: false, message: 'Missing required health data or user ID' });
       }
 
-      // Call Google Gemini AI Service
-      const aiResult = await AIService.analyzeDonationEligibility(healthData);
+      // Call Google Gemini AI Service in strict try/catch
+      let aiResult;
+      try {
+        aiResult = await AIService.analyzeDonationEligibility(healthData);
+      } catch (error: any) {
+        console.error('[assessEligibility] Gemini AI API Error:', error?.message || error);
+        return res.status(500).json({
+          success: false,
+          message: error?.message || 'Gemini AI assessment service failed'
+        });
+      }
       
       let nextDate: Date | null = null;
       if (aiResult.nextEligibleDate && aiResult.nextEligibleDate !== '9999-12-31') {
@@ -105,11 +114,11 @@ export class DonationController {
       const updatedProfile = await DonorProfile.findOneAndUpdate(
         { userId: userId },
         updatePayload,
-        { new: true }
+        { new: true, upsert: true }
       );
 
       if (!updatedProfile) {
-        throw new AppError(404, 'NOT_FOUND', 'Donor profile not found');
+        return res.status(404).json({ success: false, message: 'Donor profile not found' });
       }
 
       res.status(200).json(SuccessResponse({
@@ -118,7 +127,13 @@ export class DonationController {
         aiTips: aiResult.aiTips
       }, req.id));
 
-    } catch (error) { next(error); }
+    } catch (error: any) {
+      console.error('[assessEligibility] Controller Error:', error?.message || error);
+      return res.status(500).json({
+        success: false,
+        message: error?.message || 'Failed to complete medical assessment'
+      });
+    }
   }
 
   static async verify(req: Request, res: Response, next: NextFunction) {
