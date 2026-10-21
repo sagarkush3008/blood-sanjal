@@ -10,5 +10,8 @@
     "skipLibCheck": true,
     "types": ["jest", "node"]
   },
-  "include": ["src/**/*", "tests/**/*"]
+  "include": ["src/**/*", "tests/**/*"],
+  "ts-node": {
+    "transpileOnly": true
+  }
 }
