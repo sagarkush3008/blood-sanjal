@@ -49,9 +49,9 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
-    "dev": "expo start --lan",
-    "start": "expo start --lan",
-    "tunnel": "expo start --tunnel",
+    "dev": "expo start --go --lan",
+    "start": "expo start --go --lan",
+    "tunnel": "expo start --go --tunnel",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web"
