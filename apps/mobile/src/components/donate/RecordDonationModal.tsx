@@ -19,7 +19,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { DonationsAPI } from '../../api/donations.api';
 import { useDonationStore } from '../../store/donationStore';
 import { scheduleEligibilityNotification } from '../../services/notification.service';
-import { CalendarPickerModal } from '../common/CalendarPickerModal';
 import { DualCalendarDatePicker } from './DualCalendarDatePicker';
 import { fonts } from '../../theme';
 
@@ -29,15 +28,8 @@ export interface RecordDonationModalProps {
   onSuccess?: (data: any) => void;
 }
 
-// Brand & Semantic Design Tokens
+// Brand Red strictly for CTA and active toggles; neutrals for flat, airy canvas
 const BRAND_RED = '#E63946';
-const SLATE_900 = '#0F172A';
-const SLATE_700 = '#334155';
-const SLATE_600 = '#475569';
-const SLATE_400 = '#94A3B8';
-const SLATE_100 = '#F1F5F9';
-const SLATE_50 = '#F8FAFC';
-const BORDER_COLOR = '#E2E8F0';
 
 export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
   visible,
@@ -46,15 +38,6 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
 }) => {
   const queryClient = useQueryClient();
   const setCooldown = useDonationStore((state) => state.setCooldown);
-
-  // Helper for mm/dd/yyyy format
-  const getTodayFormatted = () => {
-    const today = new Date();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    const yyyy = today.getFullYear();
-    return `${mm}/${dd}/${yyyy}`;
-  };
 
   // Form State: Authoritative Gregorian AD Date
   const [selectedAdDate, setSelectedAdDate] = useState<Date>(new Date());
@@ -124,21 +107,6 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
     );
   };
 
-  // Convert mm/dd/yyyy to ISO String
-  const parseDateToISO = (dateStr: string): string => {
-    try {
-      const parts = dateStr.trim().split('/');
-      if (parts.length === 3) {
-        const mm = parseInt(parts[0], 10) - 1;
-        const dd = parseInt(parts[1], 10);
-        const yyyy = parseInt(parts[2], 10);
-        const d = new Date(Date.UTC(yyyy, mm, dd));
-        if (!isNaN(d.getTime())) return d.toISOString();
-      }
-    } catch {}
-    return new Date().toISOString();
-  };
-
   // Form Submission
   const handleSubmit = async () => {
     if (!selectedAdDate || isNaN(selectedAdDate.getTime())) {
@@ -182,10 +150,10 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
       const res = await DonationsAPI.recordWithProof(formData);
       const resData = res?.data || res;
 
-      // 2. PART 2: Global State Mutation (Zustand 90-day Cooldown)
+      // 2. Global State Mutation (Zustand 90-day Cooldown)
       const { nextEligibleDate } = await setCooldown(isoDate);
 
-      // 3. PART 3: Automated Local Notification Scheduling (Exact 90 Days)
+      // 3. Automated Local Notification Scheduling (Exact 90 Days)
       await scheduleEligibilityNotification(nextEligibleDate);
 
       // 4. Invalidate React Query caches for immediate UI reactivity
@@ -227,11 +195,14 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.sheetContainer}>
-          {/* Header Bar */}
+          {/* Apple-style top drag handle */}
+          <View style={styles.sheetDragHandle} />
+
+          {/* Minimal Header Bar (No divider line) */}
           <View style={styles.headerBar}>
             <View style={styles.headerTitleGroup}>
               <View style={styles.headerIconCircle}>
-                <Ionicons name="water" size={17} color={BRAND_RED} />
+                <Ionicons name="water" size={16} color={BRAND_RED} />
               </View>
               <Text style={styles.headerTitleText}>Record Blood Donation</Text>
             </View>
@@ -241,7 +212,7 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               accessibilityLabel="Close donation modal"
             >
-              <Ionicons name="close" size={20} color={SLATE_600} />
+              <Ionicons name="close" size={18} color="#6B7280" />
             </TouchableOpacity>
           </View>
 
@@ -250,18 +221,18 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            {/* 1. Guidance Banner */}
+            {/* 1. De-cluttered, Soft Guidance Box */}
             <View style={styles.guidanceBanner}>
               <View style={styles.guidanceHeaderRow}>
-                <Ionicons name="shield-checkmark" size={16} color="#059669" />
+                <Ionicons name="information-circle-outline" size={15} color="#6B7280" />
                 <Text style={styles.guidanceHeading}>Medical & Health Guidance</Text>
               </View>
               <Text style={styles.guidanceCopy}>
-                Blood donation eligibility depends on your personal health status, hemoglobin level, and medical guidelines prescribed by Narayani Hospital or Red Cross blood donation services.
+                Blood donation eligibility depends on your health status, hemoglobin level, and medical guidelines prescribed by Narayani Hospital or Red Cross blood donation services.
               </Text>
             </View>
 
-            {/* 2. Date Selection Module: AD / BS Dual Calendar Toggle */}
+            {/* 2. Date Selection Module: AD / BS Dual Calendar Toggle (Airy 28px vertical gap) */}
             <DualCalendarDatePicker
               value={selectedAdDate}
               onChange={(adDate) => setSelectedAdDate(adDate)}
@@ -273,13 +244,13 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
             <View style={styles.formFieldGroup}>
               <Text style={styles.fieldLabel}>Donation Location / Hospital *</Text>
               <View style={styles.fieldInputWrapper}>
-                <Ionicons name="location-outline" size={18} color={SLATE_400} style={styles.fieldLeadIcon} />
+                <Ionicons name="location-outline" size={18} color="#9CA3AF" style={styles.fieldLeadIcon} />
                 <TextInput
                   style={styles.textInputControl}
                   value={location}
                   onChangeText={setLocation}
                   placeholder="Narayani Hospital, Birgunj"
-                  placeholderTextColor={SLATE_400}
+                  placeholderTextColor="#9CA3AF"
                   accessibilityLabel="Donation Location input"
                 />
               </View>
@@ -300,7 +271,7 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
                 <Ionicons
                   name={showCampaignPicker ? 'chevron-up' : 'chevron-down'}
                   size={18}
-                  color={SLATE_600}
+                  color="#9CA3AF"
                 />
               </TouchableOpacity>
 
@@ -335,20 +306,18 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
               )}
             </View>
 
-            {/* 5. Media Upload Zone */}
+            {/* 5. Minimal Media Upload Zone */}
             <View style={styles.uploadSectionContainer}>
               <View style={styles.uploadSectionHeader}>
                 <View style={styles.uploadTitleRow}>
-                  <Feather name="camera" size={16} color={BRAND_RED} />
-                  <Text style={styles.uploadSectionTitle}>Upload Donor Photo (You Donating Blood)</Text>
+                  <Feather name="camera" size={15} color="#4B5563" />
+                  <Text style={styles.uploadSectionTitle}>Upload Donor Photo</Text>
                 </View>
-                <View style={styles.socialSpotlightBadge}>
-                  <Text style={styles.socialSpotlightText}>Social Spotlight</Text>
-                </View>
+                <Text style={styles.socialSpotlightTag}>Community Spotlight</Text>
               </View>
 
               <Text style={styles.uploadSectionDescription}>
-                Upload a picture of you donating blood or holding your donor certificate. We feature verified donors on our social media to inspire the community.
+                Attach a photo of you donating blood or holding your donor slip to inspire the community.
               </Text>
 
               {photoUri ? (
@@ -360,8 +329,8 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
                       onPress={handlePickImage}
                       activeOpacity={0.8}
                     >
-                      <Ionicons name="swap-horizontal" size={15} color={SLATE_900} />
-                      <Text style={styles.thumbnailActionText}>Change Photo</Text>
+                      <Ionicons name="swap-horizontal" size={15} color="#374151" />
+                      <Text style={styles.thumbnailActionText}>Change</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.thumbnailActionBtn, styles.thumbnailDeleteBtn]}
@@ -374,22 +343,22 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
                   </View>
                 </View>
               ) : (
-                <View style={styles.dashedDropzone}>
-                  <Ionicons name="cloud-upload-outline" size={32} color={SLATE_400} />
-                  <Text style={styles.dropzoneTitleText}>Upload Your Donation Photo</Text>
-                  <Text style={styles.dropzoneSubtitleText}>Take a selfie or choose image from gallery</Text>
+                <View style={styles.flatDropzone}>
+                  <Ionicons name="cloud-upload-outline" size={26} color="#9CA3AF" />
+                  <Text style={styles.dropzoneTitleText}>Upload photo proof</Text>
+                  <Text style={styles.dropzoneSubtitleText}>Take a selfie or select from gallery</Text>
                   <TouchableOpacity
                     style={styles.outlinePickerButton}
                     onPress={handlePickImage}
                     activeOpacity={0.8}
                   >
-                    <Feather name="image" size={15} color={SLATE_900} style={{ marginRight: 6 }} />
-                    <Text style={styles.outlinePickerButtonText}>Choose Image</Text>
+                    <Feather name="image" size={14} color="#374151" style={{ marginRight: 6 }} />
+                    <Text style={styles.outlinePickerButtonText}>Choose Photo</Text>
                   </TouchableOpacity>
                 </View>
               )}
 
-              {/* 6. Consent Checkbox */}
+              {/* 6. Soft Minimal Consent Checkbox */}
               <TouchableOpacity
                 style={styles.consentCard}
                 onPress={() => setPermissionToPostSocial(!permissionToPostSocial)}
@@ -397,13 +366,13 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
               >
                 <Ionicons
                   name={permissionToPostSocial ? 'checkbox' : 'square-outline'}
-                  size={20}
-                  color={permissionToPostSocial ? BRAND_RED : SLATE_400}
+                  size={19}
+                  color={permissionToPostSocial ? BRAND_RED : '#9CA3AF'}
                 />
                 <View style={styles.consentTextColumn}>
-                  <Text style={styles.consentTitleText}>Permission to Post on Social Media</Text>
+                  <Text style={styles.consentTitleText}>Permission to share recognition</Text>
                   <Text style={styles.consentDescriptionText}>
-                    I agree and authorize Blood Sanjal Nepal to share my photo, name, and blood donation recognition on official social media channels to inspire other citizens to donate blood.
+                    I authorize Blood Sanjal Nepal to share my photo and donation milestone on official social channels.
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -411,20 +380,20 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
 
             {/* 7. Remarks Input */}
             <View style={styles.formFieldGroup}>
-              <Text style={styles.fieldLabel}>Additional Notes / Experience</Text>
+              <Text style={styles.fieldLabel}>Additional Notes (Optional)</Text>
               <TextInput
-                style={[styles.textInputControl, styles.multilineAreaControl]}
+                style={styles.multilineAreaControl}
                 value={notes}
                 onChangeText={setNotes}
                 placeholder="e.g. Smooth donation experience with Red Cross team in Birgunj."
-                placeholderTextColor={SLATE_400}
+                placeholderTextColor="#9CA3AF"
                 multiline
                 numberOfLines={3}
                 accessibilityLabel="Additional notes input"
               />
             </View>
 
-            {/* 8. Primary Action Button */}
+            {/* 8. Primary Action Focus Button */}
             <TouchableOpacity
               style={[styles.primarySubmitBtn, isSubmitting && styles.primarySubmitBtnDisabled]}
               onPress={handleSubmit}
@@ -451,29 +420,37 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
 const styles = StyleSheet.create({
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    backgroundColor: 'rgba(15, 23, 42, 0.4)',
     justifyContent: 'flex-end',
   },
   sheetContainer: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     maxHeight: '92%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
+    shadowOffset: { width: 0, height: -6 },
     shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  sheetDragHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E5E7EB',
+    alignSelf: 'center',
+    marginTop: 10,
+    marginBottom: 4,
   },
   headerBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 18,
+    paddingHorizontal: 22,
+    paddingTop: 12,
     paddingBottom: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: SLATE_100,
+    // Zero divider line for a clean flat look
   },
   headerTitleGroup: {
     flexDirection: 'row',
@@ -484,37 +461,37 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#FFE4E6',
+    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitleText: {
     fontFamily: fonts.bold,
     fontSize: 17,
-    color: SLATE_900,
+    color: '#111827',
   },
   headerCloseButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: SLATE_100,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
   scrollArea: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 22,
   },
   scrollContent: {
-    paddingTop: 16,
-    paddingBottom: 36,
+    paddingTop: 12,
+    paddingBottom: 40,
   },
   guidanceBanner: {
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#F9FAFB', // Flat soft light neutral
     borderWidth: 1,
-    borderColor: '#DCFCE7',
+    borderColor: '#F3F4F6',
     borderRadius: 12,
-    padding: 13,
-    marginBottom: 16,
+    padding: 12,
+    marginBottom: 28, // Airy vertical spacing
   },
   guidanceHeaderRow: {
     flexDirection: 'row',
@@ -523,106 +500,85 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   guidanceHeading: {
-    fontFamily: fonts.bold,
-    fontSize: 13,
-    color: '#166534',
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    color: '#4B5563',
   },
   guidanceCopy: {
     fontFamily: fonts.regular,
-    fontSize: 12,
-    color: SLATE_700,
-    lineHeight: 18,
+    fontSize: 11.5,
+    color: '#6B7280',
+    lineHeight: 17,
   },
   formFieldGroup: {
-    marginBottom: 16,
-  },
-  dateLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  calendarChipBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFE4E6',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  calendarChipText: {
-    fontFamily: fonts.bold,
-    fontSize: 11,
-    color: BRAND_RED,
-  },
-  calendarActionIconBtn: {
-    padding: 6,
-    marginLeft: 4,
+    marginBottom: 28, // Massive whitespace between form sections
   },
   fieldLabel: {
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.medium,
     fontSize: 13,
-    color: SLATE_700,
-    marginBottom: 6,
+    color: '#374151',
+    marginBottom: 8,
   },
   fieldInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SLATE_50,
+    backgroundColor: '#F9FAFB', // Flat subtle gray
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    height: 48,
+    borderColor: '#E5E7EB', // Faint 1px border
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 52, // Taller input for breathing room
   },
   fieldLeadIcon: {
-    marginRight: 8,
+    marginRight: 10,
   },
   textInputControl: {
     flex: 1,
     fontFamily: fonts.medium,
     fontSize: 14,
-    color: SLATE_900,
+    color: '#111827',
   },
   multilineAreaControl: {
-    backgroundColor: SLATE_50,
+    backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
-    borderRadius: 10,
-    padding: 12,
-    height: 80,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    padding: 14,
+    height: 84,
     textAlignVertical: 'top',
     fontFamily: fonts.regular,
+    fontSize: 13.5,
+    color: '#111827',
   },
   dropdownTrigger: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: SLATE_50,
+    backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
-    borderRadius: 10,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
     paddingHorizontal: 14,
-    height: 48,
+    height: 52,
   },
   dropdownTriggerValue: {
     flex: 1,
     fontFamily: fonts.medium,
     fontSize: 14,
-    color: SLATE_900,
+    color: '#111827',
   },
   dropdownPopover: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
-    borderRadius: 10,
-    marginTop: 4,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    marginTop: 6,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 4,
   },
   dropdownOptionRow: {
     flexDirection: 'row',
@@ -631,27 +587,27 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
     borderBottomWidth: 1,
-    borderBottomColor: SLATE_50,
+    borderBottomColor: '#F9FAFB',
   },
   dropdownOptionRowActive: {
-    backgroundColor: '#FFF1F2',
+    backgroundColor: '#FEF2F2',
   },
   dropdownOptionLabel: {
     fontFamily: fonts.regular,
     fontSize: 13,
-    color: SLATE_700,
+    color: '#374151',
   },
   dropdownOptionLabelActive: {
-    fontFamily: fonts.bold,
+    fontFamily: fonts.semiBold,
     color: BRAND_RED,
   },
   uploadSectionContainer: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: '#E5E7EB',
     borderRadius: 14,
-    padding: 14,
-    marginBottom: 16,
+    padding: 16,
+    marginBottom: 28,
   },
   uploadSectionHeader: {
     flexDirection: 'row',
@@ -666,72 +622,65 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   uploadSectionTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 13,
-    color: SLATE_900,
+    fontFamily: fonts.semiBold,
+    fontSize: 13.5,
+    color: '#111827',
     flexShrink: 1,
   },
-  socialSpotlightBadge: {
-    backgroundColor: '#FFE4E6',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  socialSpotlightText: {
-    fontFamily: fonts.bold,
-    fontSize: 10,
-    color: BRAND_RED,
+  socialSpotlightTag: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: '#9CA3AF',
   },
   uploadSectionDescription: {
     fontFamily: fonts.regular,
-    fontSize: 12,
-    color: SLATE_600,
-    lineHeight: 17,
-    marginBottom: 12,
+    fontSize: 11.5,
+    color: '#6B7280',
+    lineHeight: 16,
+    marginBottom: 14,
   },
-  dashedDropzone: {
-    borderWidth: 1.5,
-    borderColor: '#CBD5E1',
-    borderStyle: 'dashed',
+  flatDropzone: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB', // Clean solid border (no aggressive dashes)
     borderRadius: 12,
     paddingVertical: 20,
     alignItems: 'center',
-    backgroundColor: SLATE_50,
+    backgroundColor: '#F9FAFB',
   },
   dropzoneTitleText: {
-    fontFamily: fonts.bold,
-    fontSize: 13,
-    color: SLATE_900,
+    fontFamily: fonts.medium,
+    fontSize: 12.5,
+    color: '#374151',
     marginTop: 6,
   },
   dropzoneSubtitleText: {
     fontFamily: fonts.regular,
     fontSize: 11,
-    color: SLATE_600,
+    color: '#9CA3AF',
     marginTop: 2,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   outlinePickerButton: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: '#D1D5DB',
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 7,
     backgroundColor: '#FFFFFF',
   },
   outlinePickerButtonText: {
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.medium,
     fontSize: 12,
-    color: SLATE_900,
+    color: '#374151',
   },
   thumbnailPreviewBox: {
-    borderRadius: 10,
+    borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
-    backgroundColor: SLATE_100,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#F3F4F6',
   },
   thumbnailImg: {
     width: '100%',
@@ -740,7 +689,7 @@ const styles = StyleSheet.create({
   thumbnailFooterBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 8,
+    padding: 10,
     backgroundColor: '#FFFFFF',
   },
   thumbnailActionBtn: {
@@ -750,64 +699,65 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
-    backgroundColor: SLATE_100,
+    backgroundColor: '#F3F4F6',
   },
   thumbnailDeleteBtn: {
     backgroundColor: '#FEE2E2',
   },
   thumbnailActionText: {
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.medium,
     fontSize: 12,
-    color: SLATE_900,
+    color: '#374151',
   },
   consentCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
-    backgroundColor: '#FFF1F2',
+    backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderColor: '#FECDD3',
+    borderColor: '#F3F4F6',
     borderRadius: 10,
-    padding: 11,
-    marginTop: 12,
+    padding: 12,
+    marginTop: 14,
   },
   consentTextColumn: {
     flex: 1,
   },
   consentTitleText: {
-    fontFamily: fonts.bold,
+    fontFamily: fonts.medium,
     fontSize: 12,
-    color: '#9F1239',
+    color: '#374151',
     marginBottom: 2,
   },
   consentDescriptionText: {
     fontFamily: fonts.regular,
     fontSize: 11,
-    color: '#4C0519',
+    color: '#6B7280',
     lineHeight: 16,
   },
   primarySubmitBtn: {
     backgroundColor: BRAND_RED,
-    borderRadius: 12,
-    height: 50,
+    borderRadius: 14,
+    height: 52,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 8,
+    marginBottom: 24,
     shadowColor: BRAND_RED,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.18,
-    shadowRadius: 6,
+    shadowRadius: 8,
     elevation: 3,
   },
   primarySubmitBtnDisabled: {
-    opacity: 0.65,
+    opacity: 0.6,
   },
   primaryBtnInnerRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   primarySubmitBtnText: {
-    fontFamily: fonts.bold,
+    fontFamily: fonts.semiBold,
     color: '#FFFFFF',
     fontSize: 15,
     letterSpacing: 0.2,

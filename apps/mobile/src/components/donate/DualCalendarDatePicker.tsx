@@ -56,14 +56,8 @@ export interface DualCalendarDatePickerProps {
   disabled?: boolean;
 }
 
-// Brand & Minimal Semantic Palette
+// Brand Red strictly for focus / active states; neutrals for flat, airy canvas
 const BRAND_RED = '#E63946';
-const SLATE_900 = '#0F172A';
-const SLATE_600 = '#475569';
-const SLATE_400 = '#94A3B8';
-const SLATE_100 = '#F1F5F9';
-const SLATE_50 = '#F8FAFC';
-const BORDER_COLOR = '#E2E8F0';
 
 export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
   value,
@@ -152,11 +146,11 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* 1. Clean Label and Minimal Segmented Pill Toggle (No frivolous badges) */}
+      {/* 1. Clean Label and Minimal Segmented Pill Toggle */}
       <View style={styles.headerRow}>
         <Text style={styles.fieldLabel}>{label}</Text>
 
-        {/* Minimalist Pill Segmented Toggle Switch */}
+        {/* Minimalist Segmented Pill Toggle Switch */}
         <View style={styles.segmentedToggleContainer}>
           <TouchableOpacity
             style={[
@@ -200,7 +194,7 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
         </View>
       </View>
 
-      {/* 2. Pure Numeric Input Field */}
+      {/* 2. Flat & Airy Numeric Input Field */}
       <View
         style={[
           styles.inputWrapper,
@@ -214,7 +208,7 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
           style={styles.leadIconBtn}
           accessibilityLabel="Open calendar"
         >
-          <Ionicons name="calendar-outline" size={18} color={BRAND_RED} />
+          <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
         </TouchableOpacity>
 
         <TextInput
@@ -223,7 +217,7 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
           onChangeText={handleTextChange}
           onBlur={handleBlur}
           placeholder="YYYY-MM-DD"
-          placeholderTextColor={SLATE_400}
+          placeholderTextColor="#9CA3AF"
           editable={!disabled}
           accessibilityLabel={`${label} ${calendarMode} input`}
         />
@@ -235,11 +229,11 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           accessibilityLabel="Choose date from calendar modal"
         >
-          <Ionicons name="calendar" size={18} color={BRAND_RED} />
+          <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
         </TouchableOpacity>
       </View>
 
-      {/* 3. Error message only (all frivolous sub-text completely removed) */}
+      {/* 3. Error message if validation fails */}
       {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
       {/* 4. Unified AD/BS Interactive Calendar Picker Modal */}
@@ -258,7 +252,7 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 28, // Massive whitespace between form sections
   },
   headerRow: {
     flexDirection: 'row',
@@ -267,61 +261,61 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   fieldLabel: {
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.medium,
     fontSize: 13,
-    color: SLATE_900,
+    color: '#374151',
   },
   segmentedToggleContainer: {
     flexDirection: 'row',
-    backgroundColor: SLATE_100,
+    backgroundColor: '#F3F4F6',
     borderRadius: 14,
-    padding: 2,
+    padding: 2.5,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: '#E5E7EB',
   },
   togglePill: {
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    borderRadius: 12,
+    paddingVertical: 3.5,
+    paddingHorizontal: 11,
+    borderRadius: 11,
   },
   togglePillActive: {
     backgroundColor: BRAND_RED,
   },
   togglePillText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 12,
-    color: SLATE_600,
+    fontFamily: fonts.medium,
+    fontSize: 11.5,
+    color: '#6B7280',
   },
   togglePillTextActive: {
     color: '#FFFFFF',
-    fontFamily: fonts.bold,
+    fontFamily: fonts.semiBold,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SLATE_50,
-    borderWidth: 1.5,
-    borderColor: BORDER_COLOR,
+    backgroundColor: '#F9FAFB', // Flat, subtle light gray
+    borderWidth: 1,
+    borderColor: '#E5E7EB', // Faint 1px border
     borderRadius: 12,
-    paddingHorizontal: 12,
-    minHeight: 46,
+    paddingHorizontal: 14,
+    height: 52, // Slightly taller for modern breathing room
   },
   inputWrapperError: {
     borderColor: '#EF4444',
   },
   inputWrapperDisabled: {
-    backgroundColor: '#F1F5F9',
-    opacity: 0.7,
+    backgroundColor: '#F3F4F6',
+    opacity: 0.6,
   },
   leadIconBtn: {
-    marginRight: 8,
+    marginRight: 10,
   },
   textInput: {
     flex: 1,
     fontFamily: fonts.medium,
     fontSize: 14,
-    color: SLATE_900,
-    paddingVertical: Platform.OS === 'ios' ? 10 : 8,
+    color: '#111827',
+    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
   },
   calendarActionBtn: {
     padding: 4,
@@ -331,7 +325,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     fontSize: 11,
     color: '#EF4444',
-    marginTop: 4,
+    marginTop: 6,
     paddingHorizontal: 2,
   },
 });
