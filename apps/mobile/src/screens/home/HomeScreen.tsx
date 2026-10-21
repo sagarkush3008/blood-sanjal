@@ -335,7 +335,7 @@ export const HomeScreen = () => {
         {/* DAYS LEFT TO SAVE ANOTHER LIFE BANNER */}
         <TouchableOpacity 
           style={styles.countdownBanner} 
-          onPress={() => navigation.navigate('Profile', { screen: 'EligibilityStatus' })}
+          onPress={() => navigation.navigate('RecordDonation')}
           activeOpacity={0.85}
         >
           <View style={styles.countdownIconBox}>

@@ -20,6 +20,7 @@ import { PaymentHistoryScreen } from '../screens/payments/PaymentHistoryScreen';
 import { LocationPickerScreen } from '../screens/profile/LocationPickerScreen';
 import { DonorAvailabilityScreen } from '../screens/profile/DonorAvailabilityScreen';
 import { BloodCampsScreen } from '../screens/campaigns/BloodCampsScreen';
+import { RecordDonationScreen } from '../screens/donate/RecordDonationScreen';
 import { colors } from '../theme';
 
 const Stack = createNativeStackNavigator();
@@ -51,6 +52,7 @@ const AppNavigator = ({ role }: { role?: string }) => {
       <Stack.Screen name="DonorAvailability" component={DonorAvailabilityScreen} options={{ headerShown: false, presentation: 'modal' }} />
       <Stack.Screen name="LocationPicker" component={LocationPickerScreen} options={{ headerShown: false }} />
       <Stack.Screen name="BloodCamps" component={BloodCampsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="RecordDonation" component={RecordDonationScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 };

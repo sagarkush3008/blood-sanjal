@@ -15,6 +15,7 @@ import { SettingsNavigator } from '../settings/SettingsNavigator';
 import { PaymentsNavigator } from '../payments/PaymentsNavigator';
 import { EligibilityStatusScreen } from './EligibilityStatusScreen';
 import { LocationPickerScreen } from './LocationPickerScreen';
+import { RecordDonationScreen } from '../donate/RecordDonationScreen';
 import { colors } from '../../theme';
 
 const Stack = createNativeStackNavigator();
@@ -43,6 +44,7 @@ export const ProfileNavigator = () => {
       <Stack.Screen name="EligibilityStatus" component={EligibilityStatusScreen} options={{ headerShown: false }} />
       <Stack.Screen name="LocationPicker" component={LocationPickerScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Admin" component={AdminNavigator} options={{ headerShown: false }} />
+      <Stack.Screen name="RecordDonation" component={RecordDonationScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 };

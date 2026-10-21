@@ -163,7 +163,11 @@ export const EligibilityStatusScreen = () => {
             <Text style={[styles.heroTitle, { fontSize: 18, marginBottom: 4 }]}>Rest & Recover, Hero.</Text>
             <Text style={[styles.heroSub, { marginBottom: 16, fontSize: 12 }]}>Eligible: {new Date(nextEligibleDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</Text>
             
-            <View style={styles.timerContainer}>
+            <TouchableOpacity 
+              style={styles.timerContainer}
+              onPress={() => navigation.navigate('RecordDonation')}
+              activeOpacity={0.88}
+            >
               <View style={styles.timeBlock}>
                 <Text style={styles.timeVal}>{String(days).padStart(2, '0')}</Text>
                 <Text style={styles.timeLabel}>DAYS</Text>
@@ -178,11 +182,15 @@ export const EligibilityStatusScreen = () => {
                 <Text style={styles.timeVal}>{String(minutes).padStart(2, '0')}</Text>
                 <Text style={styles.timeLabel}>MIN</Text>
               </View>
-            </View>
+            </TouchableOpacity>
 
-            <TouchableOpacity style={styles.slimBtn} onPress={() => {}} activeOpacity={0.8}>
-              <Feather name="bell" size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
-              <Text style={styles.slimBtnText}>Remind Me</Text>
+            <TouchableOpacity 
+              style={[styles.slimBtn, { backgroundColor: '#FFFFFF', marginTop: 14, paddingHorizontal: 16 }]} 
+              onPress={() => navigation.navigate('RecordDonation')} 
+              activeOpacity={0.85}
+            >
+              <Feather name="plus-circle" size={15} color="#DC2626" style={{ marginRight: 6 }} />
+              <Text style={[styles.slimBtnText, { color: '#DC2626', fontWeight: '700' }]}>Record Blood Donation</Text>
             </TouchableOpacity>
           </LinearGradient>
         )}
