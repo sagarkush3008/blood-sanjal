@@ -16,6 +16,7 @@ export interface UserProfile {
   districtId?: string;
   cityId?: string;
   avatarAssetId?: string;
+  totalDonations?: number;
   privacySettings?: {
     donorSearchVisibility?: boolean;
     contactRevealPolicy?: string;

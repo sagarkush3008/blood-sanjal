@@ -147,14 +147,42 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
       // 1. Submit to Backend
       const res = await DonationsAPI.recordWithProof(formData);
       const resData = res?.data || res;
+      const newTotal = resData?.totalDonations ?? resData?.total_donations;
 
-      // 2. Global State Mutation (Zustand 90-day Cooldown: Decoupled & Isolated)
+      // 2. Global State Mutation (Zustand: totalDonations & 90-day Cooldown)
       const { nextEligibleDate } = await setCooldown(isoDate);
+      if (typeof newTotal === 'number') {
+        useDonationStore.getState().setTotalDonations(newTotal);
+      } else {
+        useDonationStore.getState().incrementTotalDonations();
+      }
 
       // 3. Automated Local Notification Scheduling (Exact 90 Days)
       await scheduleEligibilityNotification(nextEligibleDate);
 
-      // 4. Invalidate React Query caches for donation-related datasets
+      // 4. Synchronously update in-memory React Query cache for instant 0ms Home UI update
+      queryClient.setQueryData(['my-profile'], (old: any) => {
+        if (!old) return old;
+        const currentCount = typeof old.totalDonations === 'number' ? old.totalDonations : 0;
+        return {
+          ...old,
+          totalDonations: typeof newTotal === 'number' ? newTotal : currentCount + 1,
+          lastDonationDate: isoDate,
+          next_eligible_date: nextEligibleDate,
+          reminderDate: nextEligibleDate,
+        };
+      });
+
+      queryClient.setQueryData(['me'], (old: any) => {
+        if (!old) return old;
+        const currentCount = typeof old.totalDonations === 'number' ? old.totalDonations : 0;
+        return {
+          ...old,
+          totalDonations: typeof newTotal === 'number' ? newTotal : currentCount + 1,
+        };
+      });
+
+      // 5. Invalidate & refetch React Query caches for donation-related datasets
       // CRITICAL: NEVER invalidate ['donor-status']! Manual availability status (isActive, snooze timer)
       // must remain 100% untouched and isolated during donation recording.
       queryClient.invalidateQueries({ queryKey: ['my-profile'] });

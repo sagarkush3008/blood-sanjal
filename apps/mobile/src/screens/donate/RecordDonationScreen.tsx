@@ -148,15 +148,44 @@ export const RecordDonationScreen = () => {
       return DonationsAPI.recordWithProof(formData);
     },
     onSuccess: async (response: any) => {
-      // 1. Isolated Global State Mutation (Zustand 90-day Cooldown)
+      const resData = response?.data?.data || response?.data || response;
+      const newTotal = resData?.totalDonations ?? resData?.total_donations;
+
+      // 1. Isolated Global State Mutation (Zustand: totalDonations & 90-day Cooldown)
       const { nextEligibleDate } = await setCooldown(selectedAdDate);
+      if (typeof newTotal === 'number') {
+        useDonationStore.getState().setTotalDonations(newTotal);
+      } else {
+        useDonationStore.getState().incrementTotalDonations();
+      }
 
       // 2. Automated Local Notification Scheduling (Exact 90 Days)
-      const resData = response?.data?.data || response?.data || response;
       const targetNextDate = resData?.next_eligible_date || resData?.nextEligibleDate || nextEligibleDate;
       await scheduleEligibilityNotification(targetNextDate);
 
-      // 3. Invalidate React Query caches for donation-related datasets ONLY
+      // 3. Synchronously update in-memory React Query cache for instant 0ms UI update
+      queryClient.setQueryData(['my-profile'], (old: any) => {
+        if (!old) return old;
+        const currentCount = typeof old.totalDonations === 'number' ? old.totalDonations : 0;
+        return {
+          ...old,
+          totalDonations: typeof newTotal === 'number' ? newTotal : currentCount + 1,
+          lastDonationDate: selectedAdDate,
+          next_eligible_date: targetNextDate,
+          reminderDate: targetNextDate,
+        };
+      });
+
+      queryClient.setQueryData(['me'], (old: any) => {
+        if (!old) return old;
+        const currentCount = typeof old.totalDonations === 'number' ? old.totalDonations : 0;
+        return {
+          ...old,
+          totalDonations: typeof newTotal === 'number' ? newTotal : currentCount + 1,
+        };
+      });
+
+      // 4. Invalidate React Query caches for donation-related datasets ONLY
       // CRITICAL: NEVER invalidate ['donor-status']! Manual availability status (isActive, snooze timer)
       // must remain 100% untouched and isolated during donation recording.
       queryClient.invalidateQueries({ queryKey: ['my-donations'] });

@@ -17,6 +17,7 @@ import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { useAuthStore } from '../../store/authStore';
+import { useDonationStore } from '../../store/donationStore';
 import { AuthAPI } from '../../api/auth.api';
 import { NotificationsAPI } from '../../api/notifications.api';
 import { DonorsAPI } from '../../api/donors.api';
@@ -128,7 +129,8 @@ export const HomeScreen = () => {
   const locationText = cleanLocationName(meProfile?.cityId || user?.cityId, meProfile?.provinceId);
   
   const bloodGroup = meProfile?.bloodGroup || donorProfile?.bloodGroup || 'O+';
-  const totalDonations = donorProfile?.totalDonations || 0;
+  const liveStoreDonations = useDonationStore((s) => s.totalDonations);
+  const totalDonations = liveStoreDonations !== null ? liveStoreDonations : (donorProfile?.totalDonations ?? meProfile?.totalDonations ?? user?.totalDonations ?? 0);
   
   let lastDonatedDate = 'N/A';
   if (donorProfile?.lastDonationDate) {

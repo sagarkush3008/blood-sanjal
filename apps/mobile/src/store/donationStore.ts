@@ -5,6 +5,9 @@ export interface DonationCooldownState {
   lastDonationDate: string | null;
   nextEligibleDate: string | null;
   isResting: boolean;
+  totalDonations: number | null;
+  setTotalDonations: (count: number) => void;
+  incrementTotalDonations: () => void;
   setCooldown: (donationDate: string | Date, userId?: string) => Promise<{ nextEligibleDate: string }>;
   clearCooldown: (userId?: string) => Promise<void>;
   syncCooldown: (userId?: string) => Promise<void>;
@@ -14,6 +17,10 @@ export const useDonationStore = create<DonationCooldownState>((set) => ({
   lastDonationDate: null,
   nextEligibleDate: null,
   isResting: false,
+  totalDonations: null,
+
+  setTotalDonations: (count: number) => set({ totalDonations: count }),
+  incrementTotalDonations: () => set((state) => ({ totalDonations: (state.totalDonations ?? 0) + 1 })),
 
   setCooldown: async (donationDate: string | Date, userId?: string) => {
     const d = new Date(donationDate);
@@ -58,6 +65,7 @@ export const useDonationStore = create<DonationCooldownState>((set) => ({
       lastDonationDate: null,
       nextEligibleDate: null,
       isResting: false,
+      totalDonations: null,
     });
   },
 

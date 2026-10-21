@@ -59,6 +59,8 @@ export class DonationService {
     // CRITICAL: Decouple 90-Day Donation Cooldown from Manual Availability Status!
     // Update ONLY medical cooldown and eligibility timestamps.
     // Do NOT alter manual availability flags (donorStatus, inactiveUntil, availabilityMode, inactiveReason, inactiveStartedAt).
+    // Increment total donations counter for the donor profile
+    profile.totalDonations = (profile.totalDonations || 0) + 1;
     profile.lastDonationDate = donationDate;
     profile.next_eligible_date = nextEligibleDate;
     profile.reminderDate = nextEligibleDate;
@@ -77,8 +79,15 @@ export class DonationService {
 
     await profile.save();
 
+    // Increment on User document as well
+    await User.findByIdAndUpdate(userId, {
+      $inc: { totalDonations: 1 }
+    }).catch(() => {});
+
     return {
       ...record.toObject(),
+      totalDonations: profile.totalDonations,
+      total_donations: profile.totalDonations,
       lastDonationDate: donationDate.toISOString(),
       next_eligible_date: nextEligibleDate.toISOString(),
       nextEligibleDate: nextEligibleDate.toISOString(),

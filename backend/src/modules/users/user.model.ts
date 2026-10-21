@@ -31,6 +31,7 @@ export interface IUser extends Document {
   deletedAt?: Date;
   lastHeartbeat?: Date;
   onlinePlatform?: string;
+  totalDonations?: number;
 }
 
 const privacySettingsSchema = new Schema<IPrivacySettings>({
@@ -65,6 +66,7 @@ const userSchema = new Schema<IUser>(
     deletedAt: { type: Date },
     lastHeartbeat: { type: Date },
     onlinePlatform: { type: String },
+    totalDonations: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
