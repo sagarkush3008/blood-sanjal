@@ -5,13 +5,66 @@ import { AppError } from '../../core/errors/appError';
 import { AIService, HealthData } from '../ai/ai.service';
 import { DonorProfile } from './donorProfile.model';
 
+import { MediaService } from '../media/media.service';
+
 export class DonationController {
-  static async submit(req: Request, res: Response, next: NextFunction) {
+  static async recordDonation(req: Request, res: Response, next: NextFunction) {
     try {
-      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
-      const result = await DonationService.submitDonation(req.user.userId, req.body);
-      res.status(201).json(SuccessResponse(result, req.id));
-    } catch (error) { next(error); }
+      const userId = req.user?.userId || req.body.userId;
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'User not authenticated' });
+      }
+
+      let imageUrl: string | undefined = req.body.imageUrl || req.body.image_url;
+
+      // Handle Multer uploaded file
+      if (req.file) {
+        try {
+          const uploadResult: any = await MediaService.uploadFile(
+            userId,
+            req.file,
+            'donation',
+            userId
+          );
+          imageUrl = uploadResult?.url || uploadResult?.secureUrl;
+        } catch (uploadErr) {
+          console.warn('[recordDonation] Cloudinary fallback to data URI');
+          const b64 = req.file.buffer.toString('base64');
+          imageUrl = `data:${req.file.mimetype};base64,${b64}`;
+        }
+      }
+
+      const payload = {
+        hospitalName: req.body.hospitalName || req.body.hospital_name || req.body.location || 'Donation Center',
+        donationDate: req.body.donationDate || req.body.donation_date || new Date().toISOString(),
+        location: req.body.location || 'Birgunj, Nepal',
+        campaignId: req.body.campaignId || req.body.campaign_id,
+        donationType: req.body.donationType || req.body.donation_type || 'WHOLE_BLOOD',
+        notes: req.body.notes,
+        permissionToPostSocial: req.body.permissionToPostSocial === 'true' || req.body.permissionToPostSocial === true,
+        imageUrl,
+        photoProofUrl: imageUrl,
+        verificationStatus: 'PENDING',
+      };
+
+      const result = await DonationService.submitDonation(userId, payload);
+
+      res.status(201).json({
+        success: true,
+        data: result,
+        message: 'Donation recorded successfully. Verification is pending admin review.'
+      });
+    } catch (error: any) {
+      console.error('[recordDonation] Error:', error);
+      res.status(500).json({
+        success: false,
+        error: error?.message || 'Failed to record donation'
+      });
+    }
+  }
+
+  static async submit(req: Request, res: Response, next: NextFunction) {
+    return DonationController.recordDonation(req, res, next);
   }
 
   static async logDonationWithAI(req: Request, res: Response, next: NextFunction) {

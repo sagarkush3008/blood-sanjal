@@ -3,10 +3,18 @@ import { DonationController } from './donation.controller';
 import { requireAuth } from '../../core/middleware/auth.middleware';
 import { requireRoles } from '../../core/middleware/role.middleware';
 
+import multer from 'multer';
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+});
+
 const router = Router();
 
-router.post('/', requireAuth, DonationController.submit);
-router.post('/me', requireAuth, DonationController.submit);
+router.post('/record', requireAuth, upload.single('photo'), DonationController.recordDonation);
+router.post('/', requireAuth, upload.single('photo'), DonationController.recordDonation);
+router.post('/me', requireAuth, upload.single('photo'), DonationController.recordDonation);
 router.post('/log', requireAuth, DonationController.logDonationWithAI);
 router.post('/assess', requireAuth, DonationController.assessEligibility);
 

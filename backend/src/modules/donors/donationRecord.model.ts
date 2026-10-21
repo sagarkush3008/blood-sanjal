@@ -9,6 +9,9 @@ export interface IDonationRecord extends Document {
   campaignId?: string;
   notes?: string;
   evidenceAssetId?: string;
+  imageUrl?: string;
+  photoProofUrl?: string;
+  permissionToPostSocial?: boolean;
   verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED';
   verifiedBy?: mongoose.Types.ObjectId;
   rejectionReason?: string;
@@ -25,6 +28,9 @@ const donationRecordSchema = new Schema<IDonationRecord>(
     campaignId: { type: String },
     notes: { type: String },
     evidenceAssetId: { type: String },
+    imageUrl: { type: String },
+    photoProofUrl: { type: String },
+    permissionToPostSocial: { type: Boolean, default: false },
     verificationStatus: { type: String, enum: ['PENDING', 'VERIFIED', 'REJECTED'], default: 'PENDING' },
     verifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     rejectionReason: { type: String },

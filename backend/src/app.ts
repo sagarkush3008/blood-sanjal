@@ -124,6 +124,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/me', userRoutes);
 app.use('/api/v1/donors', donorRoutes);
 app.use('/api/v1/donations', donationRoutes);
+app.use('/api/donations', donationRoutes);
 app.use('/api/v1/requests', requestRoutes);
 app.use('/api/v1/contact-requests', contactRequestRoutes);
 app.use('/api/v1/payments', paymentRoutes);

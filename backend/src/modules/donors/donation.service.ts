@@ -47,6 +47,9 @@ export class DonationService {
       campaignId: data.campaignId,
       notes: data.notes,
       evidenceAssetId: data.evidenceAssetId,
+      imageUrl: data.imageUrl || data.photoProofUrl,
+      photoProofUrl: data.photoProofUrl || data.imageUrl,
+      permissionToPostSocial: data.permissionToPostSocial === true || data.permissionToPostSocial === 'true',
       verificationStatus: 'PENDING'
     });
 
