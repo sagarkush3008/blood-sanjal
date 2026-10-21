@@ -19,6 +19,7 @@ import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { DonationsAPI } from '../../api/donations.api';
 import { scheduleEligibilityNotification } from '../../services/notification.service';
+import { CalendarPickerModal } from '../../components/common/CalendarPickerModal';
 import { fonts, colors } from '../../theme';
 
 interface SelectedImage {
@@ -43,6 +44,7 @@ export const RecordDonationScreen = () => {
   const [donationDate, setDonationDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
+  const [showCalendarModal, setShowCalendarModal] = useState<boolean>(false);
   const [hospitalName, setHospitalName] = useState<string>('Narayani Hospital, Birgunj');
   const [selectedCampaign, setSelectedCampaign] = useState<string>('');
   const [showCampaignDropdown, setShowCampaignDropdown] = useState<boolean>(false);
@@ -231,9 +233,22 @@ export const RecordDonationScreen = () => {
 
         {/* 2. Donation Date */}
         <View style={styles.fieldGroup}>
-          <Text style={styles.fieldLabel}>Donation Date *</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <Text style={styles.fieldLabel}>Donation Date *</Text>
+            <TouchableOpacity
+              onPress={() => setShowCalendarModal(true)}
+              style={styles.openCalendarBadge}
+              activeOpacity={0.75}
+            >
+              <Ionicons name="calendar" size={13} color="#DC2626" style={{ marginRight: 4 }} />
+              <Text style={styles.openCalendarBadgeText}>Open Calendar</Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.inputWrapper}>
-            <Ionicons name="calendar-outline" size={19} color="#64748B" style={styles.inputIcon} />
+            <TouchableOpacity onPress={() => setShowCalendarModal(true)} activeOpacity={0.7}>
+              <Ionicons name="calendar-outline" size={19} color="#DC2626" style={styles.inputIcon} />
+            </TouchableOpacity>
             <TextInput
               style={styles.textInput}
               value={donationDate}
@@ -241,6 +256,14 @@ export const RecordDonationScreen = () => {
               placeholder="YYYY-MM-DD"
               placeholderTextColor="#94A3B8"
             />
+            <TouchableOpacity
+              onPress={() => setShowCalendarModal(true)}
+              style={{ padding: 6 }}
+              activeOpacity={0.7}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="calendar" size={20} color="#DC2626" />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -432,6 +455,15 @@ export const RecordDonationScreen = () => {
           )}
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Visual Calendar Picker Modal */}
+      <CalendarPickerModal
+        visible={showCalendarModal}
+        selectedDate={donationDate}
+        format="YYYY-MM-DD"
+        onClose={() => setShowCalendarModal(false)}
+        onSelectDate={(formatted) => setDonationDate(formatted)}
+      />
     </SafeAreaView>
   );
 };
@@ -526,6 +558,19 @@ const styles = StyleSheet.create({
   },
   fieldGroup: {
     marginBottom: 18,
+  },
+  openCalendarBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  openCalendarBadgeText: {
+    fontSize: 11,
+    fontFamily: fonts.bold,
+    color: '#DC2626',
   },
   fieldLabel: {
     fontSize: 13,

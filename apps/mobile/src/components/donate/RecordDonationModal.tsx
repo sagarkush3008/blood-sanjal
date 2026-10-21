@@ -19,6 +19,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { DonationsAPI } from '../../api/donations.api';
 import { useDonationStore } from '../../store/donationStore';
 import { scheduleEligibilityNotification } from '../../services/notification.service';
+import { CalendarPickerModal } from '../common/CalendarPickerModal';
 
 export interface RecordDonationModalProps {
   visible: boolean;
@@ -55,6 +56,7 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
 
   // Form State
   const [donationDate, setDonationDate] = useState<string>(getTodayFormatted());
+  const [showCalendarModal, setShowCalendarModal] = useState<boolean>(false);
   const [location, setLocation] = useState<string>('Narayani Hospital, Birgunj');
   const [campaign, setCampaign] = useState<string>('-- Independent Voluntary Donation --');
   const [showCampaignPicker, setShowCampaignPicker] = useState<boolean>(false);
@@ -259,9 +261,22 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
 
             {/* 2. Date Selection Module */}
             <View style={styles.formFieldGroup}>
-              <Text style={styles.fieldLabel}>Donation Date *</Text>
+              <View style={styles.dateLabelRow}>
+                <Text style={styles.fieldLabel}>Donation Date *</Text>
+                <TouchableOpacity
+                  onPress={() => setShowCalendarModal(true)}
+                  style={styles.calendarChipBtn}
+                  activeOpacity={0.75}
+                >
+                  <Ionicons name="calendar" size={13} color={BRAND_RED} style={{ marginRight: 4 }} />
+                  <Text style={styles.calendarChipText}>Open Calendar</Text>
+                </TouchableOpacity>
+              </View>
+
               <View style={styles.fieldInputWrapper}>
-                <Ionicons name="calendar-outline" size={18} color={SLATE_400} style={styles.fieldLeadIcon} />
+                <TouchableOpacity onPress={() => setShowCalendarModal(true)} activeOpacity={0.7}>
+                  <Ionicons name="calendar-outline" size={18} color={BRAND_RED} style={styles.fieldLeadIcon} />
+                </TouchableOpacity>
                 <TextInput
                   style={styles.textInputControl}
                   value={donationDate}
@@ -270,6 +285,14 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
                   placeholderTextColor={SLATE_400}
                   accessibilityLabel="Donation Date input"
                 />
+                <TouchableOpacity
+                  onPress={() => setShowCalendarModal(true)}
+                  style={styles.calendarActionIconBtn}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="calendar" size={19} color={BRAND_RED} />
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -448,6 +471,15 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Visual Calendar Picker Modal */}
+      <CalendarPickerModal
+        visible={showCalendarModal}
+        selectedDate={donationDate}
+        format="MM/DD/YYYY"
+        onClose={() => setShowCalendarModal(false)}
+        onSelectDate={(formatted) => setDonationDate(formatted)}
+      />
     </Modal>
   );
 };
@@ -538,6 +570,29 @@ const styles = StyleSheet.create({
   },
   formFieldGroup: {
     marginBottom: 16,
+  },
+  dateLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  calendarChipBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFE4E6',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  calendarChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: BRAND_RED,
+  },
+  calendarActionIconBtn: {
+    padding: 6,
+    marginLeft: 4,
   },
   fieldLabel: {
     fontSize: 13,
