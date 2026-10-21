@@ -389,21 +389,11 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
             </TouchableOpacity>
 
             <View style={styles.monthTitleWrapper}>
-              {activeSystem === 'AD' ? (
-                <>
-                  <Text style={styles.monthTitle}>
-                    {GREGORIAN_MONTH_NAMES[adMonth]} {adYear}
-                  </Text>
-                  <Text style={styles.monthSubTitle}>Gregorian (AD)</Text>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.monthTitle}>
-                    {NEPALI_MONTH_NAMES_EN[bsMonth]} {bsYear} BS
-                  </Text>
-                  <Text style={styles.monthSubTitle}>Bikram Sambat (BS)</Text>
-                </>
-              )}
+              <Text style={styles.monthTitle}>
+                {activeSystem === 'AD'
+                  ? `${GREGORIAN_MONTH_NAMES[adMonth]} ${adYear}`
+                  : `${NEPALI_MONTH_NAMES_EN[bsMonth]} ${bsYear}`}
+              </Text>
             </View>
 
             <TouchableOpacity
@@ -527,14 +517,9 @@ const styles = StyleSheet.create({
   },
   monthTitle: {
     fontFamily: fonts.bold,
-    fontSize: 15,
+    fontSize: 16,
     color: '#0F172A',
-  },
-  monthSubTitle: {
-    fontFamily: fonts.medium,
-    fontSize: 11,
-    color: '#64748B',
-    marginTop: 1,
+    letterSpacing: -0.2,
   },
   navArrow: {
     width: 32,
