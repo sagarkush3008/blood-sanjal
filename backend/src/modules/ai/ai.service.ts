@@ -1,3 +1,5 @@
+// **IMPORTANT: Run 'npm install @google/generative-ai@latest' in your backend terminal to ensure the latest Gemini models and API endpoints are supported.**
+
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AppError } from '../../core/errors/appError';
 
@@ -19,17 +21,20 @@ export interface AIEligibilityResult {
 }
 
 export class AIService {
+  /**
+   * Analyzes blood donation eligibility using Google Gemini Generative AI.
+   * Model instantiation uses exact model names without 'models/' prefix,
+   * with automatic fallback across supported model tiers (1.5-flash -> 1.5-pro -> gemini-pro -> 2.5-flash).
+   */
   public static async analyzeDonationEligibility(healthData: HealthData): Promise<AIEligibilityResult> {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       console.error('[AIService] ❌ GEMINI_API_KEY is not defined in environment variables');
       throw new AppError(500, 'INTERNAL_ERROR', 'AI Configuration is missing.');
-    } else {
-      console.log(`[AIService] ✅ API Key loaded successfully (Starts with: ${apiKey.substring(0, 4)}... Length: ${apiKey.length})`);
     }
 
+    // 1. Initialize GoogleGenerativeAI with your API key
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-1.5-flash' });
 
     const prompt = `
       Evaluate blood donation eligibility. 
@@ -52,23 +57,44 @@ export class AIService {
       }
     `;
 
-    try {
-      const result = await model.generateContent(prompt);
-      const responseText = result.response.text().trim();
-      
-      // Extract JSON using regex in case the AI adds conversational text
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('AI response did not contain valid JSON format');
-      }
-      const parsedData: AIEligibilityResult = JSON.parse(jsonMatch[0]);
+    // Candidate models in priority order (exact names, NO "models/" prefix)
+    const candidateModels = [
+      process.env.GEMINI_MODEL || 'gemini-1.5-flash',
+      'gemini-1.5-pro',
+      'gemini-pro',
+      'gemini-2.5-flash',
+      'gemini-flash-latest'
+    ];
 
-      return parsedData;
-    } catch (error: any) {
-      console.error('\n--- [AIService] GEMINI API ERROR ---');
-      console.error('Error message:', error?.message || error);
-      console.error('------------------------------------\n');
-      throw error;
+    let lastError: any = null;
+
+    for (const modelName of candidateModels) {
+      try {
+        // Exact model instantiation without extra "models/" prefix
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(prompt);
+        const responseText = result.response.text().trim();
+
+        // Extract JSON in case of extra conversational characters
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error(`AI response from ${modelName} did not contain valid JSON format`);
+        }
+
+        const parsedData: AIEligibilityResult = JSON.parse(jsonMatch[0]);
+        console.log(`[AIService] ✅ Successfully assessed eligibility using model: ${modelName}`);
+        return parsedData;
+      } catch (error: any) {
+        lastError = error;
+        console.warn(`[AIService] ⚠️ Model '${modelName}' failed: ${error?.message || error}. Trying fallback...`);
+        // Continue loop to try next model tier
+      }
     }
+
+    // Safe error reporting if all candidate models fail
+    console.error('\n--- [AIService] GEMINI API ERROR ---');
+    console.error('All model attempts failed. Last error:', lastError?.message || lastError);
+    console.error('------------------------------------\n');
+    throw new AppError(500, 'AI_SERVICE_ERROR', lastError?.message || 'Gemini AI assessment service failed across all available models');
   }
 }
