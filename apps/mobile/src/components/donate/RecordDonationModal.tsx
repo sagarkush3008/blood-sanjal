@@ -20,6 +20,7 @@ import { DonationsAPI } from '../../api/donations.api';
 import { useDonationStore } from '../../store/donationStore';
 import { scheduleEligibilityNotification } from '../../services/notification.service';
 import { CalendarPickerModal } from '../common/CalendarPickerModal';
+import { DualCalendarDatePicker } from './DualCalendarDatePicker';
 
 export interface RecordDonationModalProps {
   visible: boolean;
@@ -54,9 +55,8 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
     return `${mm}/${dd}/${yyyy}`;
   };
 
-  // Form State
-  const [donationDate, setDonationDate] = useState<string>(getTodayFormatted());
-  const [showCalendarModal, setShowCalendarModal] = useState<boolean>(false);
+  // Form State: Authoritative Gregorian AD Date
+  const [selectedAdDate, setSelectedAdDate] = useState<Date>(new Date());
   const [location, setLocation] = useState<string>('Narayani Hospital, Birgunj');
   const [campaign, setCampaign] = useState<string>('-- Independent Voluntary Donation --');
   const [showCampaignPicker, setShowCampaignPicker] = useState<boolean>(false);
@@ -140,8 +140,8 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
 
   // Form Submission
   const handleSubmit = async () => {
-    if (!donationDate.trim()) {
-      Alert.alert('Validation Error', 'Please specify the donation date (mm/dd/yyyy).');
+    if (!selectedAdDate || isNaN(selectedAdDate.getTime())) {
+      Alert.alert('Validation Error', 'Please select a valid donation date.');
       return;
     }
     if (!location.trim()) {
@@ -151,7 +151,8 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
 
     setIsSubmitting(true);
     try {
-      const isoDate = parseDateToISO(donationDate);
+      // CRITICAL: Always format authoritative Gregorian AD Date to standard ISO string
+      const isoDate = selectedAdDate.toISOString();
 
       // Build FormData payload
       const formData = new FormData();
@@ -259,42 +260,13 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
               </Text>
             </View>
 
-            {/* 2. Date Selection Module */}
-            <View style={styles.formFieldGroup}>
-              <View style={styles.dateLabelRow}>
-                <Text style={styles.fieldLabel}>Donation Date *</Text>
-                <TouchableOpacity
-                  onPress={() => setShowCalendarModal(true)}
-                  style={styles.calendarChipBtn}
-                  activeOpacity={0.75}
-                >
-                  <Ionicons name="calendar" size={13} color={BRAND_RED} style={{ marginRight: 4 }} />
-                  <Text style={styles.calendarChipText}>Open Calendar</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.fieldInputWrapper}>
-                <TouchableOpacity onPress={() => setShowCalendarModal(true)} activeOpacity={0.7}>
-                  <Ionicons name="calendar-outline" size={18} color={BRAND_RED} style={styles.fieldLeadIcon} />
-                </TouchableOpacity>
-                <TextInput
-                  style={styles.textInputControl}
-                  value={donationDate}
-                  onChangeText={setDonationDate}
-                  placeholder="mm/dd/yyyy"
-                  placeholderTextColor={SLATE_400}
-                  accessibilityLabel="Donation Date input"
-                />
-                <TouchableOpacity
-                  onPress={() => setShowCalendarModal(true)}
-                  style={styles.calendarActionIconBtn}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="calendar" size={19} color={BRAND_RED} />
-                </TouchableOpacity>
-              </View>
-            </View>
+            {/* 2. Date Selection Module: AD / BS Dual Calendar Toggle */}
+            <DualCalendarDatePicker
+              value={selectedAdDate}
+              onChange={(adDate) => setSelectedAdDate(adDate)}
+              label="Donation Date *"
+              maxDate={new Date()}
+            />
 
             {/* 3. Location Input */}
             <View style={styles.formFieldGroup}>
@@ -471,15 +443,6 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
-
-      {/* Visual Calendar Picker Modal */}
-      <CalendarPickerModal
-        visible={showCalendarModal}
-        selectedDate={donationDate}
-        format="MM/DD/YYYY"
-        onClose={() => setShowCalendarModal(false)}
-        onSelectDate={(formatted) => setDonationDate(formatted)}
-      />
     </Modal>
   );
 };

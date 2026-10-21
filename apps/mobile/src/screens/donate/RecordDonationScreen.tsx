@@ -20,6 +20,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { DonationsAPI } from '../../api/donations.api';
 import { scheduleEligibilityNotification } from '../../services/notification.service';
 import { CalendarPickerModal } from '../../components/common/CalendarPickerModal';
+import { DualCalendarDatePicker } from '../../components/donate/DualCalendarDatePicker';
 import { fonts, colors } from '../../theme';
 
 interface SelectedImage {
@@ -40,11 +41,8 @@ export const RecordDonationScreen = () => {
   const navigation = useNavigation<any>();
   const queryClient = useQueryClient();
 
-  // Form State
-  const [donationDate, setDonationDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
-  );
-  const [showCalendarModal, setShowCalendarModal] = useState<boolean>(false);
+  // Form State: Authoritative Gregorian AD Date
+  const [selectedAdDate, setSelectedAdDate] = useState<Date>(new Date());
   const [hospitalName, setHospitalName] = useState<string>('Narayani Hospital, Birgunj');
   const [selectedCampaign, setSelectedCampaign] = useState<string>('');
   const [showCampaignDropdown, setShowCampaignDropdown] = useState<boolean>(false);
@@ -119,8 +117,8 @@ export const RecordDonationScreen = () => {
   const recordMutation = useMutation({
     mutationFn: async () => {
       // Validate required fields
-      if (!donationDate.trim()) {
-        throw new Error('Please enter the donation date.');
+      if (!selectedAdDate || isNaN(selectedAdDate.getTime())) {
+        throw new Error('Please select a valid donation date.');
       }
       if (!hospitalName.trim()) {
         throw new Error('Please enter the donation location or hospital name.');
@@ -128,7 +126,7 @@ export const RecordDonationScreen = () => {
 
       // Construct FormData for multipart upload
       const formData = new FormData();
-      formData.append('donationDate', donationDate.trim());
+      formData.append('donationDate', selectedAdDate.toISOString());
       formData.append('hospitalName', hospitalName.trim());
       formData.append('location', hospitalName.trim());
       formData.append('campaignId', selectedCampaign || '');
@@ -231,41 +229,13 @@ export const RecordDonationScreen = () => {
           </View>
         )}
 
-        {/* 2. Donation Date */}
-        <View style={styles.fieldGroup}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <Text style={styles.fieldLabel}>Donation Date *</Text>
-            <TouchableOpacity
-              onPress={() => setShowCalendarModal(true)}
-              style={styles.openCalendarBadge}
-              activeOpacity={0.75}
-            >
-              <Ionicons name="calendar" size={13} color="#DC2626" style={{ marginRight: 4 }} />
-              <Text style={styles.openCalendarBadgeText}>Open Calendar</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.inputWrapper}>
-            <TouchableOpacity onPress={() => setShowCalendarModal(true)} activeOpacity={0.7}>
-              <Ionicons name="calendar-outline" size={19} color="#DC2626" style={styles.inputIcon} />
-            </TouchableOpacity>
-            <TextInput
-              style={styles.textInput}
-              value={donationDate}
-              onChangeText={setDonationDate}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor="#94A3B8"
-            />
-            <TouchableOpacity
-              onPress={() => setShowCalendarModal(true)}
-              style={{ padding: 6 }}
-              activeOpacity={0.7}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Ionicons name="calendar" size={20} color="#DC2626" />
-            </TouchableOpacity>
-          </View>
-        </View>
+        {/* 2. Donation Date (AD / BS Dual Calendar) */}
+        <DualCalendarDatePicker
+          value={selectedAdDate}
+          onChange={(adDate) => setSelectedAdDate(adDate)}
+          label="Donation Date *"
+          maxDate={new Date()}
+        />
 
         {/* 3. Donation Location / Hospital */}
         <View style={styles.fieldGroup}>
@@ -455,15 +425,6 @@ export const RecordDonationScreen = () => {
           )}
         </TouchableOpacity>
       </ScrollView>
-
-      {/* Visual Calendar Picker Modal */}
-      <CalendarPickerModal
-        visible={showCalendarModal}
-        selectedDate={donationDate}
-        format="YYYY-MM-DD"
-        onClose={() => setShowCalendarModal(false)}
-        onSelectDate={(formatted) => setDonationDate(formatted)}
-      />
     </SafeAreaView>
   );
 };

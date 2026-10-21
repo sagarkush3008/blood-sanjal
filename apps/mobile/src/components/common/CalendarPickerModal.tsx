@@ -8,178 +8,322 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import {
+  getNepaliDateInstance,
+  getDaysInBsMonth,
+  bsToJsDate,
+  formatADDisplay,
+  formatBSDisplay,
+  NEPALI_MONTH_NAMES_EN,
+  NEPALI_MONTH_NAMES_NP,
+  NEPALI_WEEKDAYS_SHORT,
+  parseADStringToDate,
+  parseBSStringToDate,
+} from '../../utils/nepaliDate.utils';
 
-interface CalendarPickerModalProps {
+export type CalendarSystem = 'AD' | 'BS';
+
+export interface CalendarPickerModalProps {
   visible: boolean;
-  selectedDate?: string; // e.g., '10/21/2026' or '2026-10-21'
+  selectedDate?: string | Date; // e.g., '10/21/2026' or '2083/07/04' or Date
+  calendarSystem?: CalendarSystem; // Default 'AD'
+  onToggleCalendarSystem?: (system: CalendarSystem) => void;
   onClose: () => void;
-  onSelectDate: (formatted: string, date: Date) => void;
+  onSelectDate: (formatted: string, standardDate: Date) => void;
   format?: 'MM/DD/YYYY' | 'YYYY-MM-DD';
   maxDate?: Date;
 }
 
-const MONTH_NAMES = [
+const GREGORIAN_MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
-const WEEKDAY_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const GREGORIAN_WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 const BRAND_RED = '#E63946';
 
 export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
   visible,
   selectedDate,
+  calendarSystem = 'AD',
+  onToggleCalendarSystem,
   onClose,
   onSelectDate,
   format = 'MM/DD/YYYY',
   maxDate = new Date(),
 }) => {
-  // Parse initial selected date or default to current date
-  const parseInitial = (): Date => {
+  const [activeSystem, setActiveSystem] = useState<CalendarSystem>(calendarSystem);
+
+  // Parse initial date to standard JS Date
+  const parseInitialDate = (): Date => {
     if (!selectedDate) return new Date();
-    // Try parsing mm/dd/yyyy
-    const slashParts = selectedDate.split('/');
-    if (slashParts.length === 3) {
-      const mm = parseInt(slashParts[0], 10) - 1;
-      const dd = parseInt(slashParts[1], 10);
-      const yyyy = parseInt(slashParts[2], 10);
-      const parsed = new Date(yyyy, mm, dd);
-      if (!isNaN(parsed.getTime())) return parsed;
+    if (selectedDate instanceof Date) return selectedDate;
+
+    // Try BS parser first if string contains BS or year is 207x/208x
+    if (selectedDate.includes('BS') || selectedDate.startsWith('207') || selectedDate.startsWith('208')) {
+      const bsParsed = parseBSStringToDate(selectedDate);
+      if (bsParsed) return bsParsed;
     }
-    // Try parsing yyyy-mm-dd
-    const dashParts = selectedDate.split('-');
-    if (dashParts.length === 3) {
-      const yyyy = parseInt(dashParts[0], 10);
-      const mm = parseInt(dashParts[1], 10) - 1;
-      const dd = parseInt(dashParts[2], 10);
-      const parsed = new Date(yyyy, mm, dd);
-      if (!isNaN(parsed.getTime())) return parsed;
-    }
-    return new Date();
+
+    const adParsed = parseADStringToDate(selectedDate);
+    if (adParsed) return adParsed;
+
+    const fallback = new Date(selectedDate);
+    return isNaN(fallback.getTime()) ? new Date() : fallback;
   };
 
-  const [activeMonthDate, setActiveMonthDate] = useState<Date>(parseInitial());
-  const [pickedDate, setPickedDate] = useState<Date>(parseInitial());
+  const [currentJsDate, setCurrentJsDate] = useState<Date>(parseInitialDate());
+
+  // AD state
+  const [adMonthDate, setAdMonthDate] = useState<Date>(parseInitialDate());
+
+  // BS state (year, month 0-11)
+  const initialNd = getNepaliDateInstance(parseInitialDate());
+  const [bsYear, setBsYear] = useState<number>(initialNd.getYear());
+  const [bsMonth, setBsMonth] = useState<number>(initialNd.getMonth());
 
   useEffect(() => {
     if (visible) {
-      const initial = parseInitial();
-      setActiveMonthDate(initial);
-      setPickedDate(initial);
+      const init = parseInitialDate();
+      setCurrentJsDate(init);
+      setAdMonthDate(init);
+      const nd = getNepaliDateInstance(init);
+      setBsYear(nd.getYear());
+      setBsMonth(nd.getMonth());
+      setActiveSystem(calendarSystem);
     }
-  }, [visible, selectedDate]);
+  }, [visible, selectedDate, calendarSystem]);
 
-  const year = activeMonthDate.getFullYear();
-  const month = activeMonthDate.getMonth();
-
-  // Navigation handlers
-  const handlePrevMonth = () => {
-    setActiveMonthDate(new Date(year, month - 1, 1));
+  const handleSystemChange = (sys: CalendarSystem) => {
+    setActiveSystem(sys);
+    if (onToggleCalendarSystem) {
+      onToggleCalendarSystem(sys);
+    }
+    // Synchronize views
+    if (sys === 'BS') {
+      const nd = getNepaliDateInstance(currentJsDate);
+      setBsYear(nd.getYear());
+      setBsMonth(nd.getMonth());
+    } else {
+      setAdMonthDate(new Date(currentJsDate));
+    }
   };
 
-  const handleNextMonth = () => {
-    // Only navigate to next month if it doesn't exceed maxDate year/month
-    const nextMonth = new Date(year, month + 1, 1);
-    if (maxDate && nextMonth.getFullYear() > maxDate.getFullYear() && nextMonth.getMonth() > maxDate.getMonth()) {
+  // ----------------------------------------------------------------------
+  // AD Navigation & Logic
+  // ----------------------------------------------------------------------
+  const adYear = adMonthDate.getFullYear();
+  const adMonth = adMonthDate.getMonth();
+
+  const handlePrevAdMonth = () => {
+    setAdMonthDate(new Date(adYear, adMonth - 1, 1));
+  };
+
+  const handleNextAdMonth = () => {
+    const nextMonth = new Date(adYear, adMonth + 1, 1);
+    if (maxDate && (nextMonth.getFullYear() > maxDate.getFullYear() || (nextMonth.getFullYear() === maxDate.getFullYear() && nextMonth.getMonth() > maxDate.getMonth()))) {
       return;
     }
-    setActiveMonthDate(nextMonth);
+    setAdMonthDate(nextMonth);
   };
 
-  // Days in month calculation
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDayOfWeek = new Date(year, month, 1).getDay();
+  const adDaysInMonth = new Date(adYear, adMonth + 1, 0).getDate();
+  const adFirstDayOfWeek = new Date(adYear, adMonth, 1).getDay();
 
-  // Format date helper
-  const formatDateOutput = (d: Date): string => {
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    const yyyy = d.getFullYear();
-    if (format === 'YYYY-MM-DD') {
-      return `${yyyy}-${mm}-${dd}`;
-    }
-    return `${mm}/${dd}/${yyyy}`;
-  };
-
-  // Select day handler
-  const handleDaySelect = (day: number) => {
-    const candidate = new Date(year, month, day);
-    // Ignore future dates if maxDate is set
+  const handleSelectAdDay = (day: number) => {
+    const candidate = new Date(adYear, adMonth, day);
     if (maxDate && candidate.getTime() > maxDate.getTime() + 86400000) {
       return;
     }
-    setPickedDate(candidate);
-    onSelectDate(formatDateOutput(candidate), candidate);
+    setCurrentJsDate(candidate);
+    const formatted = formatADDisplay(candidate, format);
+    onSelectDate(formatted, candidate);
+    onClose();
+  };
+
+  // ----------------------------------------------------------------------
+  // BS Navigation & Logic
+  // ----------------------------------------------------------------------
+  const handlePrevBsMonth = () => {
+    if (bsMonth === 0) {
+      if (bsYear > 2000) {
+        setBsYear(bsYear - 1);
+        setBsMonth(11);
+      }
+    } else {
+      setBsMonth(bsMonth - 1);
+    }
+  };
+
+  const handleNextBsMonth = () => {
+    if (bsMonth === 11) {
+      if (bsYear < 2090) {
+        setBsYear(bsYear + 1);
+        setBsMonth(0);
+      }
+    } else {
+      setBsMonth(bsMonth + 1);
+    }
+  };
+
+  const bsDaysInMonth = getDaysInBsMonth(bsYear, bsMonth);
+  const bsFirstDayOfWeek = getNepaliDateInstance(bsToJsDate(bsYear, bsMonth, 1)).getDay();
+
+  const handleSelectBsDay = (day: number) => {
+    const jsCandidate = bsToJsDate(bsYear, bsMonth, day);
+    if (maxDate && jsCandidate.getTime() > maxDate.getTime() + 86400000) {
+      return;
+    }
+    setCurrentJsDate(jsCandidate);
+    const formatted = formatBSDisplay(jsCandidate, 'verbose');
+    onSelectDate(formatted, jsCandidate);
     onClose();
   };
 
   // Handle Pick Today
   const handleSelectToday = () => {
     const today = new Date();
-    setPickedDate(today);
-    onSelectDate(formatDateOutput(today), today);
+    setCurrentJsDate(today);
+    if (activeSystem === 'BS') {
+      const formatted = formatBSDisplay(today, 'verbose');
+      onSelectDate(formatted, today);
+    } else {
+      const formatted = formatADDisplay(today, format);
+      onSelectDate(formatted, today);
+    }
     onClose();
   };
 
-  const isSelected = (day: number) => {
+  // Selected date match checks
+  const isSelectedAd = (day: number) => {
     return (
-      pickedDate.getDate() === day &&
-      pickedDate.getMonth() === month &&
-      pickedDate.getFullYear() === year
+      currentJsDate.getDate() === day &&
+      currentJsDate.getMonth() === adMonth &&
+      currentJsDate.getFullYear() === adYear
     );
   };
 
-  const isToday = (day: number) => {
+  const isTodayAd = (day: number) => {
     const today = new Date();
     return (
       today.getDate() === day &&
-      today.getMonth() === month &&
-      today.getFullYear() === year
+      today.getMonth() === adMonth &&
+      today.getFullYear() === adYear
     );
   };
 
-  const isFuture = (day: number) => {
+  const isFutureAd = (day: number) => {
     if (!maxDate) return false;
-    const dateToCheck = new Date(year, month, day, 23, 59, 59);
-    return dateToCheck.getTime() > maxDate.getTime();
+    const testDate = new Date(adYear, adMonth, day, 23, 59, 59);
+    return testDate.getTime() > maxDate.getTime();
   };
 
-  // Build grid items (padding cells + day cells)
-  const gridCells = [];
-  for (let i = 0; i < firstDayOfWeek; i++) {
-    gridCells.push(<View key={`empty-${i}`} style={styles.dayCell} />);
-  }
-  for (let day = 1; day <= daysInMonth; day++) {
-    const future = isFuture(day);
-    const active = isSelected(day);
-    const todayCell = isToday(day);
+  // BS match checks
+  const currentNd = getNepaliDateInstance(currentJsDate);
+  const todayNd = getNepaliDateInstance(new Date());
 
-    gridCells.push(
-      <TouchableOpacity
-        key={`day-${day}`}
-        style={[
-          styles.dayCell,
-          active && styles.dayCellActive,
-          todayCell && !active && styles.dayCellToday,
-        ]}
-        disabled={future}
-        onPress={() => handleDaySelect(day)}
-        activeOpacity={0.7}
-      >
-        <Text
-          style={[
-            styles.dayText,
-            active && styles.dayTextActive,
-            future && styles.dayTextDisabled,
-            todayCell && !active && styles.dayTextToday,
-          ]}
-        >
-          {day}
-        </Text>
-      </TouchableOpacity>
+  const isSelectedBs = (day: number) => {
+    return (
+      currentNd.getDate() === day &&
+      currentNd.getMonth() === bsMonth &&
+      currentNd.getYear() === bsYear
     );
-  }
+  };
+
+  const isTodayBs = (day: number) => {
+    return (
+      todayNd.getDate() === day &&
+      todayNd.getMonth() === bsMonth &&
+      todayNd.getYear() === bsYear
+    );
+  };
+
+  const isFutureBs = (day: number) => {
+    if (!maxDate) return false;
+    const testJs = bsToJsDate(bsYear, bsMonth, day);
+    testJs.setHours(23, 59, 59, 999);
+    return testJs.getTime() > maxDate.getTime();
+  };
+
+  // ----------------------------------------------------------------------
+  // Render Days Grid
+  // ----------------------------------------------------------------------
+  const renderAdGrid = () => {
+    const cells = [];
+    for (let i = 0; i < adFirstDayOfWeek; i++) {
+      cells.push(<View key={`ad-empty-${i}`} style={styles.dayCell} />);
+    }
+    for (let day = 1; day <= adDaysInMonth; day++) {
+      const future = isFutureAd(day);
+      const active = isSelectedAd(day);
+      const todayCell = isTodayAd(day);
+
+      cells.push(
+        <TouchableOpacity
+          key={`ad-day-${day}`}
+          style={[
+            styles.dayCell,
+            active && styles.dayCellActive,
+            todayCell && !active && styles.dayCellToday,
+          ]}
+          disabled={future}
+          onPress={() => handleSelectAdDay(day)}
+          activeOpacity={0.7}
+        >
+          <Text
+            style={[
+              styles.dayText,
+              active && styles.dayTextActive,
+              future && styles.dayTextDisabled,
+              todayCell && !active && styles.dayTextToday,
+            ]}
+          >
+            {day}
+          </Text>
+        </TouchableOpacity>
+      );
+    }
+    return cells;
+  };
+
+  const renderBsGrid = () => {
+    const cells = [];
+    for (let i = 0; i < bsFirstDayOfWeek; i++) {
+      cells.push(<View key={`bs-empty-${i}`} style={styles.dayCell} />);
+    }
+    for (let day = 1; day <= bsDaysInMonth; day++) {
+      const future = isFutureBs(day);
+      const active = isSelectedBs(day);
+      const todayCell = isTodayBs(day);
+
+      cells.push(
+        <TouchableOpacity
+          key={`bs-day-${day}`}
+          style={[
+            styles.dayCell,
+            active && styles.dayCellActive,
+            todayCell && !active && styles.dayCellToday,
+          ]}
+          disabled={future}
+          onPress={() => handleSelectBsDay(day)}
+          activeOpacity={0.7}
+        >
+          <Text
+            style={[
+              styles.dayText,
+              active && styles.dayTextActive,
+              future && styles.dayTextDisabled,
+              todayCell && !active && styles.dayTextToday,
+            ]}
+          >
+            {day}
+          </Text>
+        </TouchableOpacity>
+      );
+    }
+    return cells;
+  };
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -188,46 +332,123 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
           {/* Header Bar */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <Ionicons name="calendar" size={18} color={BRAND_RED} style={{ marginRight: 6 }} />
-              <Text style={styles.headerTitle}>Select Donation Date</Text>
+              <Ionicons name="calendar" size={17} color={BRAND_RED} style={{ marginRight: 6 }} />
+              <Text style={styles.headerTitle}>Select Date</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={20} color="#64748B" />
+
+            {/* AD / BS Dual Segmented Pill Switch */}
+            <View style={styles.segmentedToggleContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.toggleSegment,
+                  activeSystem === 'AD' && styles.toggleSegmentActive,
+                ]}
+                onPress={() => handleSystemChange('AD')}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.toggleSegmentText,
+                    activeSystem === 'AD' && styles.toggleSegmentTextActive,
+                  ]}
+                >
+                  AD
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.toggleSegment,
+                  activeSystem === 'BS' && styles.toggleSegmentActive,
+                ]}
+                onPress={() => handleSystemChange('BS')}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.toggleSegmentText,
+                    activeSystem === 'BS' && styles.toggleSegmentTextActive,
+                  ]}
+                >
+                  BS
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name="close" size={18} color="#64748B" />
             </TouchableOpacity>
           </View>
 
           {/* Month / Year Navigator */}
           <View style={styles.monthNavigator}>
-            <TouchableOpacity onPress={handlePrevMonth} style={styles.navArrow} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="chevron-back" size={20} color="#0F172A" />
+            <TouchableOpacity
+              onPress={activeSystem === 'AD' ? handlePrevAdMonth : handlePrevBsMonth}
+              style={styles.navArrow}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chevron-back" size={18} color="#0F172A" />
             </TouchableOpacity>
-            <Text style={styles.monthTitle}>
-              {MONTH_NAMES[month]} {year}
-            </Text>
-            <TouchableOpacity onPress={handleNextMonth} style={styles.navArrow} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="chevron-forward" size={20} color="#0F172A" />
+
+            <View style={styles.monthTitleWrapper}>
+              {activeSystem === 'AD' ? (
+                <>
+                  <Text style={styles.monthTitle}>
+                    {GREGORIAN_MONTH_NAMES[adMonth]} {adYear}
+                  </Text>
+                  <Text style={styles.monthSubTitle}>Gregorian (AD)</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.monthTitle}>
+                    {NEPALI_MONTH_NAMES_EN[bsMonth]} {bsYear} BS
+                  </Text>
+                  <Text style={styles.monthSubTitle}>
+                    {NEPALI_MONTH_NAMES_NP[bsMonth]} • बिक्रम संवत्
+                  </Text>
+                </>
+              )}
+            </View>
+
+            <TouchableOpacity
+              onPress={activeSystem === 'AD' ? handleNextAdMonth : handleNextBsMonth}
+              style={styles.navArrow}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chevron-forward" size={18} color="#0F172A" />
             </TouchableOpacity>
           </View>
 
           {/* Weekday Labels */}
           <View style={styles.weekdaysRow}>
-            {WEEKDAY_NAMES.map((w, idx) => (
-              <Text key={idx} style={[styles.weekdayLabel, idx === 0 && { color: BRAND_RED }]}>
-                {w}
-              </Text>
-            ))}
+            {activeSystem === 'AD'
+              ? GREGORIAN_WEEKDAYS.map((w, idx) => (
+                  <Text key={idx} style={[styles.weekdayLabel, idx === 0 && { color: BRAND_RED }]}>
+                    {w}
+                  </Text>
+                ))
+              : NEPALI_WEEKDAYS_SHORT.map((w, idx) => (
+                  <Text key={idx} style={[styles.weekdayLabel, idx === 0 && { color: BRAND_RED }]}>
+                    {w}
+                  </Text>
+                ))}
           </View>
 
           {/* Days Grid */}
-          <View style={styles.daysGrid}>{gridCells}</View>
+          <View style={styles.daysGrid}>
+            {activeSystem === 'AD' ? renderAdGrid() : renderBsGrid()}
+          </View>
 
           {/* Footer Quick Actions */}
           <View style={styles.footer}>
-            <TouchableOpacity style={styles.todayButton} onPress={handleSelectToday}>
-              <Ionicons name="today-outline" size={16} color={BRAND_RED} style={{ marginRight: 4 }} />
-              <Text style={styles.todayButtonText}>Today</Text>
+            <TouchableOpacity style={styles.todayButton} onPress={handleSelectToday} activeOpacity={0.75}>
+              <Ionicons name="today-outline" size={15} color={BRAND_RED} style={{ marginRight: 5 }} />
+              <Text style={styles.todayButtonText}>
+                {activeSystem === 'BS' ? 'आज (Today BS)' : 'Today (AD)'}
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+            <TouchableOpacity style={styles.cancelButton} onPress={onClose} activeOpacity={0.7}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -240,28 +461,28 @@ export const CalendarPickerModal: React.FC<CalendarPickerModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 18,
   },
   calendarCard: {
     width: '100%',
     maxWidth: 360,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 18,
+    padding: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    elevation: 6,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingBottom: 14,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
@@ -270,14 +491,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: '#0F172A',
   },
+  segmentedToggleContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 14,
+    padding: 2,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  toggleSegment: {
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    borderRadius: 11,
+  },
+  toggleSegmentActive: {
+    backgroundColor: BRAND_RED,
+  },
+  toggleSegmentText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  toggleSegmentTextActive: {
+    color: '#FFFFFF',
+  },
   closeBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
@@ -286,35 +531,44 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 10,
+  },
+  monthTitleWrapper: {
+    alignItems: 'center',
+  },
+  monthTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  monthSubTitle: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#64748B',
+    marginTop: 1,
   },
   navArrow: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#E2E8F0',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  monthTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
   weekdaysRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 8,
+    paddingVertical: 6,
     borderBottomWidth: 1,
     borderBottomColor: '#F8FAFC',
     marginBottom: 4,
   },
   weekdayLabel: {
-    width: 40,
+    width: 38,
     textAlign: 'center',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: '#64748B',
   },
@@ -324,12 +578,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   dayCell: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 3,
-    borderRadius: 20,
+    marginVertical: 2,
+    borderRadius: 19,
   },
   dayCellActive: {
     backgroundColor: BRAND_RED,
@@ -339,7 +593,7 @@ const styles = StyleSheet.create({
     borderColor: BRAND_RED,
   },
   dayText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: '#1E293B',
   },
@@ -358,30 +612,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 14,
-    paddingTop: 12,
+    marginTop: 10,
+    paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
   },
   todayButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 8,
     backgroundColor: '#FFF1F2',
   },
   todayButtonText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: BRAND_RED,
   },
   cancelButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
   },
   cancelButtonText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     color: '#64748B',
   },
