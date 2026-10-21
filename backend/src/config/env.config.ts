@@ -28,6 +28,8 @@ const envSchema = z.object({
   SMTP_SECURE: z.string().default('false').transform(v => v === 'true'),
   EMAIL_FROM: z.string().default('noreply@bloodsanjal.org'),
   FRONTEND_BASE_URL: z.string().default('http://localhost:3000'),
+  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_MODEL: z.string().default('gemini-1.5-flash'),
 });
 
 const parsed = envSchema.safeParse(process.env);

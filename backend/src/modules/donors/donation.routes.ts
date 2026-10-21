@@ -12,9 +12,9 @@ const upload = multer({
 
 const router = Router();
 
-router.post('/record', requireAuth, upload.single('photo'), DonationController.recordDonation);
-router.post('/', requireAuth, upload.single('photo'), DonationController.recordDonation);
-router.post('/me', requireAuth, upload.single('photo'), DonationController.recordDonation);
+router.post('/record', requireAuth, upload.any(), DonationController.recordDonation);
+router.post('/', requireAuth, upload.any(), DonationController.recordDonation);
+router.post('/me', requireAuth, upload.any(), DonationController.recordDonation);
 router.post('/log', requireAuth, DonationController.logDonationWithAI);
 router.post('/assess', requireAuth, DonationController.assessEligibility);
 

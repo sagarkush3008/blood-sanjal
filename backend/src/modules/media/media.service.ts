@@ -35,11 +35,10 @@ export class MediaService {
       throw new AppError(400, 'BAD_REQUEST', `Disallowed MIME type. Allowed: ${allowedMimes.join(', ')}`);
     }
 
-    const extension = file.originalname.split('.').pop()?.toLowerCase() || '';
+    const rawExt = file.originalname?.includes('.') ? file.originalname.split('.').pop()?.toLowerCase() : '';
     const allowedExtensions = allowedMimes.map(mime => mime.split('/')[1]);
-    // simple check: if it's jpeg, allow jpg or jpeg. webp allow webp. pdf allow pdf.
-    const isJpegOrJpg = (allowedExtensions.includes('jpeg') && (extension === 'jpg' || extension === 'jpeg'));
-    if (!allowedExtensions.includes(extension) && !isJpegOrJpg) {
+    const isJpegOrJpg = (allowedExtensions.includes('jpeg') && (rawExt === 'jpg' || rawExt === 'jpeg'));
+    if (rawExt && !allowedExtensions.includes(rawExt) && !isJpegOrJpg) {
       throw new AppError(400, 'BAD_REQUEST', `Mismatched extension. Allowed: ${allowedExtensions.join(', ')}`);
     }
 

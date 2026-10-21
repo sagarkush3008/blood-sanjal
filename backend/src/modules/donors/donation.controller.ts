@@ -17,20 +17,32 @@ export class DonationController {
 
       let imageUrl: string | undefined = req.body.imageUrl || req.body.image_url;
 
-      // Handle Multer uploaded file
-      if (req.file) {
+      // Handle Multer uploaded file (supports single, any, or fields multipart upload modes)
+      let rawFile: Express.Multer.File | undefined = req.file;
+      if (!rawFile && req.files) {
+        if (Array.isArray(req.files) && req.files.length > 0) {
+          rawFile = req.files.find((f: any) => f.fieldname === 'photo' || f.fieldname === 'evidence' || f.fieldname === 'image') || req.files[0];
+        } else if (typeof req.files === 'object') {
+          const allFiles = Object.values(req.files).flat() as Express.Multer.File[];
+          if (allFiles.length > 0) {
+            rawFile = allFiles.find(f => f.fieldname === 'photo' || f.fieldname === 'evidence' || f.fieldname === 'image') || allFiles[0];
+          }
+        }
+      }
+
+      if (rawFile) {
         try {
           const uploadResult: any = await MediaService.uploadFile(
             userId,
-            req.file,
+            rawFile,
             'donation',
             userId
           );
           imageUrl = uploadResult?.url || uploadResult?.secureUrl;
         } catch (uploadErr) {
           console.warn('[recordDonation] Cloudinary fallback to data URI');
-          const b64 = req.file.buffer.toString('base64');
-          imageUrl = `data:${req.file.mimetype};base64,${b64}`;
+          const b64 = rawFile.buffer.toString('base64');
+          imageUrl = `data:${rawFile.mimetype};base64,${b64}`;
         }
       }
 

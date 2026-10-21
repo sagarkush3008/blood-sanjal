@@ -22,26 +22,155 @@ export interface AIEligibilityResult {
 
 export class AIService {
   /**
-   * Analyzes blood donation eligibility using Google Gemini Generative AI.
-   * Model instantiation uses exact model names without 'models/' prefix,
-   * with automatic fallback across supported model tiers (1.5-flash -> 1.5-pro -> gemini-pro -> 2.5-flash).
+   * Clinical fallback engine when AI service is unavailable, unconfigured, or rate-limited.
+   * Strictly adheres to WHO, Red Cross, and Narayani Hospital clinical guidelines.
+   */
+  public static calculateRuleBasedEligibility(healthData: HealthData): AIEligibilityResult {
+    const now = new Date();
+    const lastDate = healthData.lastDonationDate ? new Date(healthData.lastDonationDate) : new Date(0);
+    const msSinceDonation = now.getTime() - lastDate.getTime();
+    const daysSinceDonation = isNaN(msSinceDonation) ? 999 : Math.floor(msSinceDonation / (1000 * 60 * 60 * 24));
+    const requiredWaitDays = healthData.gender === 'FEMALE' ? 120 : 90;
+
+    // 1. Age Restrictions
+    if (healthData.age < 18) {
+      return {
+        isEligible: false,
+        nextEligibleDate: '2099-12-31',
+        aiTips: [
+          'You must be at least 18 years of age to legally and safely donate blood.',
+          'Focus on eating iron-rich foods such as lentils, spinach, and beans.',
+          'Stay well-hydrated with 2-3 liters of clean water daily.'
+        ]
+      };
+    }
+    if (healthData.age > 65) {
+      return {
+        isEligible: false,
+        nextEligibleDate: '2099-12-31',
+        aiTips: [
+          'Donors over 65 require special medical evaluation from a registered physician.',
+          'Maintain regular moderate physical activity such as morning walking.',
+          'Consider contributing as an advocate or volunteer coordinator in community blood camps.'
+        ]
+      };
+    }
+
+    // 2. Weight Requirement
+    if (healthData.weightKg < 45) {
+      return {
+        isEligible: false,
+        nextEligibleDate: '2099-12-31',
+        aiTips: [
+          'Minimum weight requirement is 45 kg to ensure safe blood volume conservation.',
+          'Eat a balanced diet rich in wholesome proteins, complex carbs, and healthy fats.',
+          'Consult a physician or dietitian to achieve a healthy body weight.'
+        ]
+      };
+    }
+
+    // 3. Pregnancy Deferral
+    if (healthData.isPregnant) {
+      const pregnancyDate = new Date(now.getTime() + 180 * 86400000);
+      return {
+        isEligible: false,
+        nextEligibleDate: pregnancyDate.toISOString().split('T')[0],
+        aiTips: [
+          'Blood donation is deferred during pregnancy and for 6 months postpartum.',
+          'Ensure optimal iron and folic acid intake as prescribed by your doctor.',
+          'Maintain adequate rest and regular prenatal checkups.'
+        ]
+      };
+    }
+
+    // 4. Major Surgery Deferral
+    if (healthData.hasSurgery) {
+      const surgeryDate = new Date(now.getTime() + 180 * 86400000);
+      return {
+        isEligible: false,
+        nextEligibleDate: surgeryDate.toISOString().split('T')[0],
+        aiTips: [
+          'Recent major surgeries require a 6-month healing and recovery deferral.',
+          'Allow your red blood cell count and hemoglobin levels to fully normalize.',
+          'Avoid strenuous physical exertion until cleared by your surgical team.'
+        ]
+      };
+    }
+
+    // 5. Recent Tattoos or Piercings
+    if (healthData.recentTattoos) {
+      const tattooDate = new Date(now.getTime() + 180 * 86400000);
+      return {
+        isEligible: false,
+        nextEligibleDate: tattooDate.toISOString().split('T')[0],
+        aiTips: [
+          'Recent tattoos and body piercings require a 6-month safety observation deferral.',
+          'Keep tattooed skin clean and protected from direct sunlight.',
+          'We welcome you back to donate as soon as the 6-month safety period elapses.'
+        ]
+      };
+    }
+
+    // 6. Recent Antibiotic Course
+    if (healthData.recentAntibiotics) {
+      const antibioticDate = new Date(now.getTime() + 14 * 86400000);
+      return {
+        isEligible: false,
+        nextEligibleDate: antibioticDate.toISOString().split('T')[0],
+        aiTips: [
+          'Must be completely symptom-free and done with antibiotics for at least 14 days.',
+          'Complete the entire medication regimen prescribed by your healthcare provider.',
+          'Drink plenty of fluids to assist your body in clearing metabolic waste.'
+        ]
+      };
+    }
+
+    // 7. Standard 90/120 Day Cooldown
+    if (daysSinceDonation < requiredWaitDays) {
+      const remainingDays = requiredWaitDays - daysSinceDonation;
+      const nextDate = new Date(lastDate.getTime() + requiredWaitDays * 86400000);
+      return {
+        isEligible: false,
+        nextEligibleDate: nextDate.toISOString().split('T')[0],
+        aiTips: [
+          `You are in the medical recovery period (${remainingDays} days remaining of your ${requiredWaitDays}-day cycle).`,
+          'Replenish iron stores by consuming pomegranate, beetroot, spinach, and jaggery.',
+          'Stay well-hydrated with 8-10 glasses of water daily.'
+        ]
+      };
+    }
+
+    // 8. Fully Eligible
+    return {
+      isEligible: true,
+      nextEligibleDate: null,
+      aiTips: [
+        'You meet all physiological and medical criteria for voluntary blood donation! 🩸',
+        'Drink at least 500ml of water 15-30 minutes before your donation session.',
+        'Enjoy a nutritious meal 2-3 hours beforehand, and avoid fatty or fried foods.'
+      ]
+    };
+  }
+
+  /**
+   * Analyzes blood donation eligibility using Google Gemini Generative AI,
+   * with automatic fallback across multiple model tiers, followed by a clinical rule engine.
    */
   public static async analyzeDonationEligibility(healthData: HealthData): Promise<AIEligibilityResult> {
     const apiKey = process.env.GEMINI_API_KEY;
+
     if (!apiKey) {
-      console.error('[AIService] ❌ GEMINI_API_KEY is not defined in environment variables');
-      throw new AppError(500, 'INTERNAL_ERROR', 'AI Configuration is missing.');
+      console.warn('[AIService] ⚠️ GEMINI_API_KEY not found in environment. Using clinical rule engine fallback.');
+      return this.calculateRuleBasedEligibility(healthData);
     }
 
-    // 1. Initialize GoogleGenerativeAI with your API key
     const genAI = new GoogleGenerativeAI(apiKey);
-
     const prompt = `
       Evaluate blood donation eligibility. 
       User: Age ${healthData.age}, Gender ${healthData.gender}, Weight ${healthData.weightKg}kg, Tattoo ${healthData.recentTattoos}, Antibiotics ${healthData.recentAntibiotics}, Pregnant ${healthData.isPregnant}, Surgery ${healthData.hasSurgery}, Last Donation ${healthData.lastDonationDate}. 
       
       Rules: 
-      - Age <18 or >65, Weight <45, Pregnant, or Surgery = totally ineligible (nextEligibleDate can be a distant future date like 9999-12-31 or calculated based on rules, but isEligible must be false). 
+      - Age <18 or >65, Weight <45, Pregnant, or Surgery = totally ineligible (nextEligibleDate can be a distant future date like 9999-12-31, isEligible must be false). 
       - Tattoo = 6 months wait. 
       - Antibiotics = 14 days wait. 
       - Default wait = 90 days (males) / 120 days (females). 
@@ -49,7 +178,7 @@ export class AIService {
       Calculate absolute nextEligibleDate (YYYY-MM-DD). Provide 3 personalized aiTips.
 
       CRITICAL: You MUST return your response STRICTLY as a valid JSON object without any markdown wrapping, code blocks, or extra text.
-      The JSON must exactly match this format:
+      Format:
       {
         "isEligible": boolean,
         "nextEligibleDate": "YYYY-MM-DD",
@@ -57,44 +186,36 @@ export class AIService {
       }
     `;
 
-    // Candidate models in priority order (exact names, NO "models/" prefix)
     const candidateModels = [
       process.env.GEMINI_MODEL || 'gemini-1.5-flash',
       'gemini-1.5-pro',
       'gemini-pro',
       'gemini-2.5-flash',
-      'gemini-flash-latest'
     ];
 
     let lastError: any = null;
 
     for (const modelName of candidateModels) {
       try {
-        // Exact model instantiation without extra "models/" prefix
         const model = genAI.getGenerativeModel({ model: modelName });
         const result = await model.generateContent(prompt);
         const responseText = result.response.text().trim();
 
-        // Extract JSON in case of extra conversational characters
         const jsonMatch = responseText.match(/\{[\s\S]*\}/);
         if (!jsonMatch) {
-          throw new Error(`AI response from ${modelName} did not contain valid JSON format`);
+          throw new Error(`AI response from ${modelName} did not contain valid JSON`);
         }
 
         const parsedData: AIEligibilityResult = JSON.parse(jsonMatch[0]);
-        console.log(`[AIService] ✅ Successfully assessed eligibility using model: ${modelName}`);
+        console.log(`[AIService] ✅ Successfully assessed eligibility using Gemini model: ${modelName}`);
         return parsedData;
       } catch (error: any) {
         lastError = error;
-        console.warn(`[AIService] ⚠️ Model '${modelName}' failed: ${error?.message || error}. Trying fallback...`);
-        // Continue loop to try next model tier
+        console.warn(`[AIService] ⚠️ Model '${modelName}' failed (${error?.message || error}). Trying next model...`);
       }
     }
 
-    // Safe error reporting if all candidate models fail
-    console.error('\n--- [AIService] GEMINI API ERROR ---');
-    console.error('All model attempts failed. Last error:', lastError?.message || lastError);
-    console.error('------------------------------------\n');
-    throw new AppError(500, 'AI_SERVICE_ERROR', lastError?.message || 'Gemini AI assessment service failed across all available models');
+    console.warn(`[AIService] ⚠️ All Gemini models failed (${lastError?.message || lastError}). Engaging clinical rule engine fallback.`);
+    return this.calculateRuleBasedEligibility(healthData);
   }
 }
