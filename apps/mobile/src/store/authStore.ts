@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { storage } from '../utils/storage';
 import { AuthAPI } from '../api/auth.api';
+import { flushAllQueryCaches } from '../api/queryClient';
+import { useDonationStore } from './donationStore';
 
 export interface UserProfile {
   id: string;
@@ -38,6 +40,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: true,
 
   setAuth: async (token: string, user: any, refreshToken?: string) => {
+    // 1. Flush any stale query cache from previous account to ensure complete isolation
+    flushAllQueryCaches();
+
     try {
       await storage.setItem('accessToken', token);
       if (refreshToken) {
@@ -57,6 +62,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           privacySettings: user.privacySettings,
         };
         await storage.setItem('user', JSON.stringify(normalizedUser));
+
+        // 2. Synchronize isolated donation cooldown specifically for this user
+        await useDonationStore.getState().syncCooldown(normalizedUser.id);
+
         set({ token, user: normalizedUser, isLoading: false });
         return;
       }
@@ -92,6 +101,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Best-effort server side revocation
       await AuthAPI.logout().catch(() => {});
     } catch {}
+
+    // 1. Wipe all React Query in-memory caches across all components
+    flushAllQueryCaches();
+
+    // 2. Reset donation cooldown global state and wipe persisted cooldown from storage
+    const currentUserId = get().user?.id;
+    await useDonationStore.getState().clearCooldown(currentUserId);
 
     try {
       await storage.deleteItem('accessToken');
@@ -139,12 +155,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             privacySettings: profile.privacySettings,
           };
           await storage.setItem('user', JSON.stringify(freshUser));
+          await useDonationStore.getState().syncCooldown(freshUser.id);
           set({ user: freshUser, isLoading: false });
           return;
         }
       } catch (err: any) {
         // If 401 (unauthorized) or 404 (user deleted) and refresh fails, clean up
         if (err.response?.status === 401 || err.response?.status === 404) {
+          flushAllQueryCaches();
+          await useDonationStore.getState().clearCooldown();
           await storage.deleteItem('accessToken');
           await storage.deleteItem('refreshToken');
           await storage.deleteItem('user');

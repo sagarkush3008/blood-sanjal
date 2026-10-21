@@ -171,7 +171,10 @@ export class DonationService {
 
     const isStaffOrAdmin = ['ADMIN', 'SUPER_ADMIN', 'HOSPITAL', 'BLOOD_BANK', 'NGO'].includes(userRole || '');
 
-    if (!isStaffOrAdmin && currentUserId) {
+    if (!isStaffOrAdmin) {
+      if (!currentUserId) {
+        throw new AppError(401, 'UNAUTHENTICATED', 'Authentication required to view donation history');
+      }
       const myProfile = await DonorProfile.findOne({ userId: currentUserId });
       if (!myProfile) {
         return { results: [], items: [], data: [], pagination: { page: 1, limit: 20, count: 0, total: 0 }, total: 0, page: 1, limit: 20 };

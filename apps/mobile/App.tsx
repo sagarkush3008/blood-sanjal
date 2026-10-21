@@ -46,15 +46,7 @@ if (TextInput.defaultProps == null) {
 // @ts-ignore
 TextInput.defaultProps.style = [{ fontFamily: defaultFont }, TextInput.defaultProps.style];
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 2,
-      refetchOnWindowFocus: true,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-    },
-  },
-});
+import { queryClient } from './src/api/queryClient';
 
 export default function App() {
   const [fontsLoaded] = useFonts({

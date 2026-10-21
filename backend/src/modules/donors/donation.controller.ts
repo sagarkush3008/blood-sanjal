@@ -10,7 +10,7 @@ import { MediaService } from '../media/media.service';
 export class DonationController {
   static async recordDonation(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = req.user?.userId || req.body.userId;
+      const userId = req.user?.userId;
       if (!userId) {
         return res.status(401).json({ success: false, message: 'User not authenticated' });
       }
@@ -81,7 +81,7 @@ export class DonationController {
 
   static async logDonationWithAI(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = req.body.userId || req.user?.userId;
+      const userId = req.user?.userId;
       const healthData: HealthData = req.body.healthData;
 
       if (!userId || !healthData) {
@@ -123,7 +123,7 @@ export class DonationController {
 
   static async assessEligibility(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = req.body.userId || req.user?.userId;
+      const userId = req.user?.userId;
       const healthData: HealthData = req.body; // Map directly
 
       if (!userId || !healthData) {
