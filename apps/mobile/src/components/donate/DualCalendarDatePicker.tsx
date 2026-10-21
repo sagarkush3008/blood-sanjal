@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -46,7 +47,7 @@ export interface DualCalendarDatePickerProps {
   defaultMode?: CalendarSystem;
 
   /**
-   * Error message to display beneath the field
+   * External error message to display beneath the field
    */
   errorMessage?: string;
 
@@ -56,8 +57,73 @@ export interface DualCalendarDatePickerProps {
   disabled?: boolean;
 }
 
-// Brand Red strictly for focus / active states; neutrals for flat, airy canvas
-const BRAND_RED = '#E63946';
+// Brand Red strictly for focus / active states & CTAs
+const BRAND_RED = '#DC2626';
+const ERROR_RED = '#EF4444';
+
+/**
+ * Smart date mask that enforces YYYY-MM-DD with auto-hyphen insertion
+ * and smart logical restrictions (Month <= 12, Day <= 31).
+ */
+function applySmartDateMask(text: string, prevText: string): string {
+  // If user is deleting/backspacing
+  const isDeleting = text.length < prevText.length;
+  if (isDeleting) {
+    // If user deleted a hyphen (e.g. was "2026-10-", now "2026-10")
+    if (prevText.endsWith('-') && text === prevText.slice(0, -1)) {
+      return text.slice(0, -1); // also remove the digit preceding the hyphen
+    }
+    return text;
+  }
+
+  // Extract only numbers, max 8 digits for YYYYMMDD
+  const digits = text.replace(/\D/g, '').slice(0, 8);
+  if (!digits) return '';
+
+  // 1-4 digits: Year
+  if (digits.length <= 4) {
+    return digits;
+  }
+
+  const year = digits.slice(0, 4);
+  let monthPart = digits.slice(4);
+
+  // Smart Month restrictions: Month cannot exceed 12
+  if (monthPart.length === 1) {
+    // If single digit is 2..9, auto-pad with leading 0 (e.g. 5 -> 05)
+    if (parseInt(monthPart, 10) > 1) {
+      monthPart = '0' + monthPart;
+    }
+  } else if (monthPart.length >= 2) {
+    let mNum = parseInt(monthPart.slice(0, 2), 10);
+    if (mNum > 12) mNum = 12;
+    if (mNum === 0) mNum = 1;
+    monthPart = String(mNum).padStart(2, '0') + monthPart.slice(2);
+  }
+
+  // 5-6 digits: Year-Month
+  if (monthPart.length <= 2) {
+    return `${year}-${monthPart}`;
+  }
+
+  const month = monthPart.slice(0, 2);
+  let dayPart = monthPart.slice(2, 4);
+
+  // Smart Day restrictions: Day cannot exceed 31
+  if (dayPart.length === 1) {
+    // If single digit is 4..9, auto-pad with leading 0 (e.g. 8 -> 08)
+    if (parseInt(dayPart, 10) > 3) {
+      dayPart = '0' + dayPart;
+    }
+  } else if (dayPart.length === 2) {
+    let dNum = parseInt(dayPart, 10);
+    if (dNum > 31) dNum = 31;
+    if (dNum === 0) dNum = 1;
+    dayPart = String(dNum).padStart(2, '0');
+  }
+
+  return `${year}-${month}-${dayPart}`;
+}
 
 export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
   value,
@@ -68,10 +134,10 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
   errorMessage,
   disabled = false,
 }) => {
-  // 1. Calendar System Toggle State ('AD' vs 'BS')
+  // Calendar System Toggle ('AD' vs 'BS')
   const [calendarMode, setCalendarMode] = useState<CalendarSystem>(defaultMode);
 
-  // 2. Authoritative Gregorian Date parser
+  // Authoritative Gregorian Date parser
   const getAuthoritativeDate = (val: Date | string): Date => {
     if (!val) return new Date();
     if (val instanceof Date) return isNaN(val.getTime()) ? new Date() : val;
@@ -83,7 +149,7 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
 
   const [currentAdDate, setCurrentAdDate] = useState<Date>(getAuthoritativeDate(value));
 
-  // 3. Pure Numeric Format (e.g. 2026-10-21 for AD, 2083-07-04 for BS)
+  // Numeric Format: YYYY-MM-DD
   const getDisplayValue = (date: Date, mode: CalendarSystem): string => {
     if (mode === 'BS') {
       return formatBSDisplay(date, 'numeric');
@@ -96,61 +162,169 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
   );
 
   const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
+  const [isFocused, setIsFocused] = useState<boolean>(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  // Animated Values for Smooth Focus & Error Transitions
+  const focusAnim = useRef(new Animated.Value(0)).current;
+  const errorAnim = useRef(new Animated.Value(0)).current;
+
+  const inputRef = useRef<TextInput>(null);
 
   // Synchronize when external value prop changes
   useEffect(() => {
     const parsed = getAuthoritativeDate(value);
     setCurrentAdDate(parsed);
     setDisplayInput(getDisplayValue(parsed, calendarMode));
+    setLocalError(null);
   }, [value]);
+
+  // Smooth Focus Animation (Border color, background glow)
+  useEffect(() => {
+    Animated.timing(focusAnim, {
+      toValue: isFocused ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [isFocused]);
+
+  // Smooth Error Banner Animation
+  const activeError = errorMessage || localError;
+  useEffect(() => {
+    Animated.timing(errorAnim, {
+      toValue: activeError ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [activeError]);
 
   // Handle switching between AD and BS modes
   const handleToggleMode = (newMode: CalendarSystem) => {
     if (newMode === calendarMode) return;
     setCalendarMode(newMode);
-    // Smoothly reformat the visual text to pure numeric without altering the underlying Gregorian date
+    setLocalError(null);
     setDisplayInput(getDisplayValue(currentAdDate, newMode));
   };
 
   // Date selection callback from visual Calendar Modal
-  const handleSelectFromCalendar = (formattedString: string, standardDate: Date) => {
+  const handleSelectFromCalendar = (_formattedString: string, standardDate: Date) => {
     setCurrentAdDate(standardDate);
     setDisplayInput(getDisplayValue(standardDate, calendarMode));
-    // Emit authoritative Gregorian AD date and ISO string to parent form
+    setLocalError(null);
     onChange(standardDate, standardDate.toISOString());
   };
 
-  // Handle manual typing in input
-  const handleTextChange = (text: string) => {
-    setDisplayInput(text);
+  // Validate date logic (especially future date prevention)
+  const validateAndEmitDate = (dateStr: string) => {
+    if (dateStr.length < 10) return;
+
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
 
     if (calendarMode === 'AD') {
-      const parsed = parseADStringToDate(text);
-      if (parsed) {
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        const d = parseInt(parts[2], 10);
+        const parsed = new Date(y, m, d);
+
+        if (isNaN(parsed.getTime()) || parsed.getMonth() !== m || parsed.getDate() !== d) {
+          setLocalError('Please enter a valid calendar date.');
+          return;
+        }
+
+        if (parsed.getTime() > todayEnd.getTime()) {
+          setLocalError('Donation date cannot be in the future.');
+          return;
+        }
+
+        if (y < 1920) {
+          setLocalError('Please enter a valid donation year.');
+          return;
+        }
+
+        setLocalError(null);
         setCurrentAdDate(parsed);
         onChange(parsed, parsed.toISOString());
       }
     } else {
-      const parsed = parseBSStringToDate(text);
-      if (parsed) {
-        setCurrentAdDate(parsed);
-        onChange(parsed, parsed.toISOString());
+      // BS Mode
+      const parsed = parseBSStringToDate(dateStr);
+      if (!parsed || isNaN(parsed.getTime())) {
+        setLocalError('Please enter a valid BS calendar date.');
+        return;
       }
+
+      if (parsed.getTime() > todayEnd.getTime()) {
+        setLocalError('Donation date cannot be in the future.');
+        return;
+      }
+
+      setLocalError(null);
+      setCurrentAdDate(parsed);
+      onChange(parsed, parsed.toISOString());
+    }
+  };
+
+  // Handle manual typing in input with smart masking
+  const handleTextChange = (text: string) => {
+    const masked = applySmartDateMask(text, displayInput);
+    setDisplayInput(masked);
+
+    // If user is actively typing/editing, clear error until complete
+    if (localError && masked.length < 10) {
+      setLocalError(null);
+    }
+
+    if (masked.length === 10) {
+      validateAndEmitDate(masked);
     }
   };
 
   const handleBlur = () => {
-    // If input is invalid or incomplete on blur, restore clean numeric representation
-    setDisplayInput(getDisplayValue(currentAdDate, calendarMode));
+    setIsFocused(false);
+    if (displayInput.length > 0 && displayInput.length < 10) {
+      setLocalError('Please enter a complete date (YYYY-MM-DD).');
+    } else if (!localError) {
+      // Restore clean formatting
+      setDisplayInput(getDisplayValue(currentAdDate, calendarMode));
+    }
   };
+
+  const handleFocus = () => {
+    setIsFocused(true);
+  };
+
+  // Animated Interpolations for Ultra-Premium Polish
+  const animatedBorderColor = activeError
+    ? ERROR_RED
+    : focusAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['#E5E7EB', BRAND_RED],
+      });
+
+  const animatedBackgroundColor = activeError
+    ? '#FEF2F2'
+    : focusAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['#F9FAFB', '#FFFFFF'],
+      });
+
+  const animatedShadowOpacity = activeError
+    ? 0.1
+    : focusAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 0.08],
+      });
 
   return (
     <View style={styles.container}>
-      {/* 1. Clean Label and Minimal Segmented Pill Toggle */}
+      {/* 1. Crisp Label and Minimalist Segmented Pill Toggle */}
       <View style={styles.headerRow}>
         <Text style={styles.fieldLabel}>{label}</Text>
 
-        {/* Minimalist Segmented Pill Toggle Switch */}
+        {/* Minimalist Segmented Pill Toggle Switch (AD / BS) */}
         <View style={styles.segmentedToggleContainer}>
           <TouchableOpacity
             style={[
@@ -194,49 +368,79 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
         </View>
       </View>
 
-      {/* 2. Flat & Airy Numeric Input Field */}
-      <View
+      {/* 2. Ultra-Minimal, Animated Input Box (56px, 12px Radius, Stripe/Apple Polish) */}
+      <Animated.View
         style={[
           styles.inputWrapper,
-          errorMessage ? styles.inputWrapperError : null,
-          disabled ? styles.inputWrapperDisabled : null,
+          {
+            borderColor: animatedBorderColor,
+            backgroundColor: animatedBackgroundColor,
+            shadowOpacity: animatedShadowOpacity,
+          },
+          disabled && styles.inputWrapperDisabled,
         ]}
       >
-        <TouchableOpacity
-          onPress={() => !disabled && setIsCalendarOpen(true)}
-          activeOpacity={0.7}
-          style={styles.leadIconBtn}
-          accessibilityLabel="Open calendar"
-        >
-          <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
-        </TouchableOpacity>
-
         <TextInput
+          ref={inputRef}
           style={styles.textInput}
           value={displayInput}
           onChangeText={handleTextChange}
+          onFocus={handleFocus}
           onBlur={handleBlur}
-          placeholder="YYYY-MM-DD"
+          placeholder="YYYY - MM - DD"
           placeholderTextColor="#9CA3AF"
+          keyboardType="number-pad"
+          maxLength={10}
           editable={!disabled}
+          selectionColor={BRAND_RED}
           accessibilityLabel={`${label} ${calendarMode} input`}
         />
 
+        {/* Right-Aligned Weighted Calendar Icon */}
         <TouchableOpacity
           style={styles.calendarActionBtn}
           onPress={() => !disabled && setIsCalendarOpen(true)}
-          activeOpacity={0.75}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          accessibilityLabel="Choose date from calendar modal"
+          activeOpacity={0.7}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          accessibilityLabel="Open visual calendar modal"
         >
-          <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
+          <Ionicons
+            name="calendar-outline"
+            size={20}
+            color={activeError ? ERROR_RED : isFocused ? BRAND_RED : '#9CA3AF'}
+          />
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
-      {/* 3. Error message if validation fails */}
-      {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+      {/* 3. Graceful Animated Error / Warning Text */}
+      {activeError ? (
+        <Animated.View
+          style={[
+            styles.errorRow,
+            {
+              opacity: errorAnim,
+              transform: [
+                {
+                  translateY: errorAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-4, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <Ionicons
+            name="alert-circle"
+            size={13}
+            color={ERROR_RED}
+            style={styles.errorIcon}
+          />
+          <Text style={styles.errorText}>{activeError}</Text>
+        </Animated.View>
+      ) : null}
 
-      {/* 4. Unified AD/BS Interactive Calendar Picker Modal */}
+      {/* 4. Unified Interactive Calendar Modal */}
       <CalendarPickerModal
         visible={isCalendarOpen}
         selectedDate={currentAdDate}
@@ -252,7 +456,7 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 28, // Massive whitespace between form sections
+    marginBottom: 28, // Spacious whitespace between form groups
   },
   headerRow: {
     flexDirection: 'row',
@@ -262,8 +466,9 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     fontFamily: fonts.medium,
-    fontSize: 13,
-    color: '#374151',
+    fontSize: 14,
+    color: '#374151', // Crisp dark gray
+    letterSpacing: -0.2,
   },
   segmentedToggleContainer: {
     flexDirection: 'row',
@@ -293,39 +498,47 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB', // Flat, subtle light gray
-    borderWidth: 1,
-    borderColor: '#E5E7EB', // Faint 1px border
+    justifyContent: 'space-between',
+    borderWidth: 1.5,
     borderRadius: 12,
-    paddingHorizontal: 14,
-    height: 52, // Slightly taller for modern breathing room
-  },
-  inputWrapperError: {
-    borderColor: '#EF4444',
+    paddingHorizontal: 16,
+    height: 56, // Spacious 56px height
+    shadowColor: BRAND_RED,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 2,
   },
   inputWrapperDisabled: {
     backgroundColor: '#F3F4F6',
     opacity: 0.6,
   },
-  leadIconBtn: {
-    marginRight: 10,
-  },
   textInput: {
     flex: 1,
     fontFamily: fonts.medium,
-    fontSize: 14,
+    fontSize: 15,
     color: '#111827',
+    letterSpacing: 0.5,
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,
   },
   calendarActionBtn: {
-    padding: 4,
-    marginLeft: 6,
+    padding: 6,
+    marginLeft: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+    paddingHorizontal: 2,
+  },
+  errorIcon: {
+    marginRight: 5,
   },
   errorText: {
     fontFamily: fonts.medium,
-    fontSize: 11,
-    color: '#EF4444',
-    marginTop: 6,
-    paddingHorizontal: 2,
+    fontSize: 12,
+    color: ERROR_RED,
+    letterSpacing: -0.1,
   },
 });

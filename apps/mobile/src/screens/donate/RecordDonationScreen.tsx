@@ -122,6 +122,11 @@ export const RecordDonationScreen = () => {
       if (!selectedAdDate || isNaN(selectedAdDate.getTime())) {
         throw new Error('Please select a valid donation date.');
       }
+      const todayEnd = new Date();
+      todayEnd.setHours(23, 59, 59, 999);
+      if (selectedAdDate.getTime() > todayEnd.getTime()) {
+        throw new Error('Donation date cannot be in the future.');
+      }
       if (!hospitalName.trim()) {
         throw new Error('Please enter the donation location or hospital name.');
       }

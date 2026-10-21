@@ -111,6 +111,12 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
       Alert.alert('Validation Error', 'Please select a valid donation date.');
       return;
     }
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+    if (selectedAdDate.getTime() > todayEnd.getTime()) {
+      Alert.alert('Validation Error', 'Donation date cannot be in the future.');
+      return;
+    }
     if (!location.trim()) {
       Alert.alert('Validation Error', 'Please enter the donation location or hospital name.');
       return;
