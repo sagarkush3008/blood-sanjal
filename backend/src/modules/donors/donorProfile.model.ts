@@ -20,6 +20,13 @@ export interface IDonorProfile extends Document {
   lastStatusChangedAt?: Date | null;
   lastStatusChangedBy?: mongoose.Types.ObjectId | null;
   lastRecoveryTips?: string[];
+  // DEDICATED MANUAL AVAILABILITY FIELDS (Strictly isolated from 90-day medical donation cooldown)
+  manualAvailabilityStatus?: 'ACTIVE' | 'INACTIVE';
+  manualInactiveUntil?: Date | null;
+  manualPauseDuration?: number | null;
+  manualPauseUnit?: 'HOURS' | 'DAYS' | null;
+  manualInactiveReason?: string | null;
+  manualPaused?: boolean;
 }
 
 const donorProfileSchema = new Schema<IDonorProfile>(
@@ -43,6 +50,13 @@ const donorProfileSchema = new Schema<IDonorProfile>(
     lastStatusChangedAt: { type: Date, default: null },
     lastStatusChangedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     lastRecoveryTips: { type: [String], default: [] },
+    // DEDICATED MANUAL AVAILABILITY COLUMNS
+    manualAvailabilityStatus: { type: String, enum: ['ACTIVE', 'INACTIVE'], default: 'ACTIVE' },
+    manualInactiveUntil: { type: Date, default: null },
+    manualPauseDuration: { type: Number, default: null },
+    manualPauseUnit: { type: String, enum: ['HOURS', 'DAYS'], default: null },
+    manualInactiveReason: { type: String, maxlength: 300, default: null },
+    manualPaused: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

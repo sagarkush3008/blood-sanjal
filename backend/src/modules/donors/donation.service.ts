@@ -62,6 +62,19 @@ export class DonationService {
     profile.lastDonationDate = donationDate;
     profile.next_eligible_date = nextEligibleDate;
     profile.reminderDate = nextEligibleDate;
+
+    // Guard against historical state pollution
+    if (profile.donorStatus === 'RESTING') {
+      profile.donorStatus = profile.manualAvailabilityStatus || 'ACTIVE';
+    }
+    if (profile.inactiveUntil && !profile.manualInactiveUntil) {
+      profile.inactiveUntil = null;
+    }
+    if (!profile.manualAvailabilityStatus) {
+      profile.manualAvailabilityStatus = profile.donorStatus === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE';
+      profile.manualPaused = profile.manualAvailabilityStatus === 'INACTIVE';
+    }
+
     await profile.save();
 
     return {

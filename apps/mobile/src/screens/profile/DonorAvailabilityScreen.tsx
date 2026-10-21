@@ -115,20 +115,33 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
   const isLoading = isStatusLoading || isProfileLoading;
   const isPendingAction = makeActiveMutation.isPending || setAvailabilityMutation.isPending;
 
+  // Resolve manual active status strictly isolated from medical resting state
+  const isProfileManualActive = profileData?.manualAvailabilityStatus
+    ? profileData.manualAvailabilityStatus === 'ACTIVE'
+    : (profileData?.donorStatus !== 'INACTIVE' && profileData?.donorStatus !== 'RESTING' && profileData?.donorStatus !== 'UNAVAILABLE');
+
   // Local active state variable that toggles between true and false
   const [isActive, setIsActive] = useState<boolean>(() => {
-    return statusData?.status === 'ACTIVE' || profileData?.donorStatus === 'ACTIVE';
+    if (statusData?.status) return statusData.status === 'ACTIVE';
+    return isProfileManualActive;
   });
 
   // Sync state when backend status query finishes or updates
   useEffect(() => {
-    if (statusData?.status || profileData?.donorStatus) {
-      setIsActive(statusData?.status === 'ACTIVE' || profileData?.donorStatus === 'ACTIVE');
+    if (statusData?.status) {
+      setIsActive(statusData.status === 'ACTIVE');
+    } else if (profileData) {
+      setIsActive(isProfileManualActive);
     }
-  }, [statusData?.status, profileData?.donorStatus]);
+  }, [statusData?.status, profileData?.manualAvailabilityStatus, profileData?.donorStatus]);
 
   const isInactive = !isActive;
-  const inactiveUntil = profileData?.inactiveUntil;
+  // Strictly read dedicated manual snooze timestamp (ignore 90-day medical cooldown dates)
+  const isCooldownDate = profileData?.inactiveUntil && (
+    profileData.inactiveUntil === profileData?.next_eligible_date ||
+    profileData.inactiveUntil === profileData?.reminderDate
+  );
+  const inactiveUntil = profileData?.manualInactiveUntil || (!isCooldownDate ? profileData?.inactiveUntil : null);
 
   const handleToggleMainStatus = () => {
     const nextState = !isActive;

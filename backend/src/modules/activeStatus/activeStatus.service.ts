@@ -77,12 +77,12 @@ class ActiveStatusService {
             districtId: u.districtId ? String(u.districtId) : '',
             cityId: u.cityId ? String(u.cityId) : ''
           },
-          donorStatus: p.donorStatus === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
+          donorStatus: (p.manualAvailabilityStatus === 'ACTIVE' || p.donorStatus === 'ACTIVE' || p.donorStatus === 'RESTING') ? 'ACTIVE' : 'INACTIVE',
           isOnline,
           lastHeartbeat: lastHb,
-          visibility: p.donorStatus === 'ACTIVE',
-          inactiveUntil: p.inactiveUntil ? p.inactiveUntil.toISOString() : undefined,
-          inactiveReason: p.inactiveReason || undefined,
+          visibility: (p.manualAvailabilityStatus === 'ACTIVE' || p.donorStatus === 'ACTIVE' || p.donorStatus === 'RESTING'),
+          inactiveUntil: p.manualInactiveUntil ? p.manualInactiveUntil.toISOString() : undefined,
+          inactiveReason: p.manualInactiveReason || p.inactiveReason || undefined,
           totalDonations: p.totalDonations || 0,
           lastDonationDate: p.lastDonationDate
             ? p.lastDonationDate.toISOString().split('T')[0]
@@ -613,12 +613,12 @@ class ActiveStatusService {
               districtId: u.districtId ? String(u.districtId) : '',
               cityId: u.cityId ? String(u.cityId) : ''
             },
-            donorStatus: (p?.donorStatus === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE') as DonorStatus,
+            donorStatus: ((p?.manualAvailabilityStatus === 'ACTIVE' || p?.donorStatus === 'ACTIVE' || p?.donorStatus === 'RESTING') ? 'ACTIVE' : 'INACTIVE') as DonorStatus,
             isOnline: true,
             lastHeartbeat: nowIso,
-            visibility: p?.donorStatus === 'ACTIVE',
-            inactiveUntil: p?.inactiveUntil ? p.inactiveUntil.toISOString() : undefined,
-            inactiveReason: p?.inactiveReason || undefined,
+            visibility: (p?.manualAvailabilityStatus === 'ACTIVE' || p?.donorStatus === 'ACTIVE' || p?.donorStatus === 'RESTING'),
+            inactiveUntil: p?.manualInactiveUntil ? p.manualInactiveUntil.toISOString() : undefined,
+            inactiveReason: p?.manualInactiveReason || p?.inactiveReason || undefined,
             totalDonations: p?.totalDonations || 0,
             lastDonationDate: p?.lastDonationDate
               ? p.lastDonationDate.toISOString().split('T')[0]

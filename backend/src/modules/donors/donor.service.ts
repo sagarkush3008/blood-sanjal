@@ -29,12 +29,51 @@ export class DonorService {
         profile = await DonorProfile.create({
           userId,
           bloodGroup: user.bloodGroup,
-          donorStatus: 'INACTIVE',
+          donorStatus: 'ACTIVE',
+          manualAvailabilityStatus: 'ACTIVE',
+          manualPaused: false,
         });
       } else {
         throw new AppError(404, 'NOT_FOUND', 'Donor profile not found. Please set your blood group first.');
       }
     }
+
+    // AUTO-SANITIZATION: Clean up legacy data contamination from previous donation recordings
+    let dirty = false;
+    if (profile.donorStatus === 'RESTING') {
+      profile.donorStatus = profile.manualAvailabilityStatus || 'ACTIVE';
+      dirty = true;
+    }
+
+    // If inactiveUntil matches the 90-day medical cooldown date, detach it from manual pause
+    if (profile.inactiveUntil) {
+      const isCooldownDate =
+        (profile.next_eligible_date && profile.inactiveUntil.getTime() === new Date(profile.next_eligible_date).getTime()) ||
+        (profile.reminderDate && profile.inactiveUntil.getTime() === new Date(profile.reminderDate).getTime()) ||
+        (profile.lastDonationDate && (profile.inactiveUntil.getTime() - new Date(profile.lastDonationDate).getTime()) >= 80 * 86400000);
+      
+      if (isCooldownDate) {
+        profile.inactiveUntil = profile.manualInactiveUntil || null;
+        if (profile.availabilityMode === 'TEMPORARY_INACTIVE' && !profile.manualInactiveUntil) {
+          profile.availabilityMode = 'AVAILABLE';
+        }
+        if (!profile.manualInactiveUntil) {
+          profile.inactiveReason = null;
+        }
+        dirty = true;
+      }
+    }
+
+    if (!profile.manualAvailabilityStatus) {
+      profile.manualAvailabilityStatus = profile.donorStatus === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE';
+      profile.manualPaused = profile.manualAvailabilityStatus === 'INACTIVE';
+      dirty = true;
+    }
+
+    if (dirty) {
+      await profile.save();
+    }
+
     return profile;
   }
 
@@ -51,7 +90,9 @@ export class DonorService {
       profile = await DonorProfile.create({
         userId,
         bloodGroup,
-        donorStatus: 'INACTIVE',
+        donorStatus: 'ACTIVE',
+        manualAvailabilityStatus: 'ACTIVE',
+        manualPaused: false,
       });
     }
 
@@ -61,7 +102,13 @@ export class DonorService {
 
     if (data.status === 'ACTIVE') {
       profile.donorStatus = 'ACTIVE';
+      profile.manualAvailabilityStatus = 'ACTIVE';
+      profile.manualPaused = false;
       profile.availabilityMode = 'AVAILABLE';
+      profile.manualInactiveUntil = null;
+      profile.manualPauseDuration = null;
+      profile.manualPauseUnit = null;
+      profile.manualInactiveReason = null;
       profile.inactiveUntil = undefined;
       profile.inactiveReason = undefined;
       profile.inactiveUnit = undefined;
@@ -74,12 +121,16 @@ export class DonorService {
       delete profile.inactiveStartedAt;
     } else if (data.status === 'INACTIVE') {
       profile.donorStatus = 'INACTIVE';
+      profile.manualAvailabilityStatus = 'INACTIVE';
+      profile.manualPaused = true;
       profile.inactiveStartedAt = now;
 
       if (data.reason && typeof data.reason === 'string' && data.reason.trim() !== '') {
         profile.inactiveReason = data.reason.trim();
+        profile.manualInactiveReason = data.reason.trim();
       } else {
         profile.inactiveReason = null;
+        profile.manualInactiveReason = null;
       }
 
       let inactiveUntil = null;
@@ -89,6 +140,8 @@ export class DonorService {
           if (data.durationHours < 1 || data.durationHours > 72) throw new AppError(400, 'VALIDATION_ERROR', 'durationHours must be between 1 and 72');
           profile.inactiveUnit = 'HOURS';
           profile.inactiveDuration = data.durationHours;
+          profile.manualPauseUnit = 'HOURS';
+          profile.manualPauseDuration = data.durationHours;
           const target = new Date(now);
           target.setHours(target.getHours() + data.durationHours);
           inactiveUntil = target;
@@ -96,6 +149,8 @@ export class DonorService {
           if (data.durationDays < 1 || data.durationDays > 90) throw new AppError(400, 'VALIDATION_ERROR', 'durationDays must be between 1 and 90');
           profile.inactiveUnit = 'DAYS';
           profile.inactiveDuration = data.durationDays;
+          profile.manualPauseUnit = 'DAYS';
+          profile.manualPauseDuration = data.durationDays;
           const target = new Date(now);
           target.setDate(target.getDate() + data.durationDays);
           inactiveUntil = target;
@@ -104,8 +159,11 @@ export class DonorService {
         profile.availabilityMode = 'INDEFINITE_INACTIVE';
         profile.inactiveUnit = null;
         profile.inactiveDuration = null;
+        profile.manualPauseUnit = null;
+        profile.manualPauseDuration = null;
       }
       profile.inactiveUntil = inactiveUntil;
+      profile.manualInactiveUntil = inactiveUntil;
     } else {
       throw new AppError(400, 'VALIDATION_ERROR', 'Invalid status. Must be ACTIVE or INACTIVE.');
     }
@@ -172,7 +230,13 @@ export class DonorService {
 
     if (data.status === 'ACTIVE') {
       profile.donorStatus = 'ACTIVE';
+      profile.manualAvailabilityStatus = 'ACTIVE';
+      profile.manualPaused = false;
       profile.availabilityMode = 'AVAILABLE';
+      profile.manualInactiveUntil = null;
+      profile.manualPauseDuration = null;
+      profile.manualPauseUnit = null;
+      profile.manualInactiveReason = null;
       profile.inactiveUntil = null;
       profile.inactiveReason = null;
       profile.inactiveUnit = null;
@@ -180,8 +244,14 @@ export class DonorService {
       profile.inactiveStartedAt = null;
     } else if (data.status === 'INACTIVE') {
       profile.donorStatus = 'INACTIVE';
+      profile.manualAvailabilityStatus = 'INACTIVE';
+      profile.manualPaused = true;
       profile.availabilityMode = 'INDEFINITE_INACTIVE';
       profile.inactiveStartedAt = now;
+      profile.manualInactiveUntil = null;
+      profile.manualPauseDuration = null;
+      profile.manualPauseUnit = null;
+      profile.manualInactiveReason = null;
       profile.inactiveUntil = null;
       profile.inactiveReason = null;
       profile.inactiveUnit = null;

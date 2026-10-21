@@ -174,17 +174,43 @@ export const HomeScreen = () => {
 
   const badgeText = `${daysLeft} Days Left`;
 
-  const isAvailable = donorProfile?.donorStatus === 'ACTIVE';
-  const inactiveReason = donorProfile?.inactiveReason;
-  const inactiveUntil = donorProfile?.inactiveUntil;
+  // =========================================================================
+  // 1. STRICTLY ISOLATED MANUAL AVAILABILITY STATE
+  // =========================================================================
+  // CRITICAL ENFORCEMENT: Hard-bound ONLY to dedicated manual inactive state variables.
+  // 0% access to donation cooldown variables (lastDonationDate, next_eligible_date).
+  // If the user's manual pause state is null/false, this specific UI section must remain hidden or show 'Active', regardless of any recent blood donations.
+  const manualAvailability = donorProfile?.manualAvailabilityStatus;
+  const isExplicitlyManualInactive =
+    manualAvailability === 'INACTIVE' ||
+    donorProfile?.manualPaused === true ||
+    (donorProfile?.donorStatus === 'INACTIVE' &&
+      donorProfile?.donorStatus !== 'RESTING' &&
+      donorProfile?.donorStatus !== 'UNAVAILABLE');
+
+  // Dedicated manual pause timestamp (strictly decoupled from next_eligible_date/reminderDate)
+  let manualInactiveUntilDate: Date | null = null;
+  if (isExplicitlyManualInactive) {
+    if (donorProfile?.manualInactiveUntil) {
+      manualInactiveUntilDate = new Date(donorProfile.manualInactiveUntil);
+    } else if (
+      donorProfile?.inactiveUntil &&
+      (!nextEligibleRaw || donorProfile.inactiveUntil !== nextEligibleRaw) &&
+      (!lastDonationRaw || (new Date(donorProfile.inactiveUntil).getTime() - new Date(lastDonationRaw).getTime()) < 80 * 86400000)
+    ) {
+      // Safe fallback ONLY if inactiveUntil is NOT the 90-day medical cooldown date
+      manualInactiveUntilDate = new Date(donorProfile.inactiveUntil);
+    }
+  }
+
+  const isAvailable = !isExplicitlyManualInactive;
   
-  let relativeText = null;
-  let exactTimeText = null;
+  let relativeText: string | null = null;
+  let exactTimeText: string | null = null;
   
-  if (!isAvailable && inactiveUntil) {
-    const untilDate = new Date(inactiveUntil);
+  if (isExplicitlyManualInactive && manualInactiveUntilDate && !isNaN(manualInactiveUntilDate.getTime())) {
     const now = new Date();
-    const diffMs = untilDate.getTime() - now.getTime();
+    const diffMs = manualInactiveUntilDate.getTime() - now.getTime();
     
     if (diffMs > 0) {
       const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
@@ -198,8 +224,8 @@ export const HomeScreen = () => {
         relativeText = `< 1 hr`;
       }
       
-      const timeStr = untilDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-      const dateStr = untilDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const timeStr = manualInactiveUntilDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      const dateStr = manualInactiveUntilDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       exactTimeText = `${dateStr}, ${timeStr}`;
     } else {
        relativeText = 'Shortly';
