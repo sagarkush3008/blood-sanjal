@@ -45,12 +45,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     flushAllQueryCaches();
 
     try {
+      // 2. CRITICAL: Strictly await saving tokens into persistent storage BEFORE updating global state or navigating
       await storage.setItem('accessToken', token);
       if (refreshToken) {
         await storage.setItem('refreshToken', refreshToken);
       }
+
+      let normalizedUser: UserProfile | null = null;
       if (user) {
-        const normalizedUser: UserProfile = {
+        normalizedUser = {
           id: user.id || user._id,
           _id: user._id || user.id,
           name: user.name || 'User',
@@ -64,16 +67,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         };
         await storage.setItem('user', JSON.stringify(normalizedUser));
 
-        // 2. Synchronize isolated donation cooldown specifically for this user
+        // 3. Synchronize isolated donation cooldown specifically for this user
         await useDonationStore.getState().syncCooldown(normalizedUser.id);
-
-        set({ token, user: normalizedUser, isLoading: false });
-        return;
       }
+
+      // 4. Update global state ONLY after storage writes are confirmed completed
+      set({ token, user: normalizedUser, isLoading: false });
     } catch (e) {
-      console.warn('[useAuthStore] Failed to save auth to storage', e);
+      console.error('[useAuthStore] Critical error saving auth to storage:', e);
+      throw e;
     }
-    set({ token, user, isLoading: false });
   },
 
   updateToken: async (newToken: string, newRefreshToken?: string) => {

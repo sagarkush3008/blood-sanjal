@@ -14,7 +14,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthAPI } from '../../api/auth.api';
 import { API_BASE_URL, apiClient } from '../../api/client';
@@ -61,27 +60,36 @@ export const LoginScreen = () => {
     defaultValues: { email: '', password: '' },
   });
 
-  const loginMutation = useMutation({
-    mutationFn: (data: LoginFormData) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const onSubmit = async (data: LoginFormData) => {
+    // 1. Strict guard: Prevent multiple simultaneous API requests
+    if (isLoading) return;
+    setIsLoading(true);
+    setApiError(null);
+
+    try {
       const isEmail = data.email.includes('@');
       const payload = isEmail
         ? { email: data.email.trim(), password: data.password }
         : { phone: data.email.trim(), password: data.password };
-      return AuthAPI.login(payload);
-    },
-    onSuccess: async (response: any) => {
-      const payload = response?.data?.accessToken ? response.data : (response?.data?.data || response?.data || {});
-      const accessToken = payload.accessToken || response?.accessToken;
-      const refreshToken = payload.refreshToken || response?.refreshToken;
-      const user = payload.user || response?.user;
 
-      if (accessToken) {
-        await setAuth(accessToken, user, refreshToken);
-      } else {
-        setApiError('Authentication failed: Missing token in response.');
+      // 2. Properly await the API response
+      const response: any = await AuthAPI.login(payload);
+      const payloadData = response?.data?.accessToken ? response.data : (response?.data?.data || response?.data || {});
+      const accessToken = payloadData.accessToken || response?.accessToken;
+      const refreshToken = payloadData.refreshToken || response?.refreshToken;
+      const user = payloadData.user || response?.user;
+
+      if (!accessToken) {
+        throw new Error('Authentication failed: Missing access token in server response.');
       }
-    },
-    onError: (error: any) => {
+
+      // 3. Strictly await the saving of Auth Token in storage BEFORE updating global state or triggering navigation
+      await setAuth(accessToken, user, refreshToken);
+
+      // Successfully authenticated: global state is now updated with verified token in storage.
+    } catch (error: any) {
       console.warn('[LoginScreen] Error:', error?.response?.data || error?.message);
       const message =
         error.response?.data?.error?.message ||
@@ -89,33 +97,34 @@ export const LoginScreen = () => {
         (error.message?.includes('Network Error') ? 'Network Error: Cannot connect to server. Check your connection.' : error.message) ||
         'Invalid credentials. Please verify your email/phone and password.';
       setApiError(message);
-    },
-  });
-
-  const onSubmit = (data: LoginFormData) => {
-    setApiError(null);
-    loginMutation.mutate(data);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const fillAdmin = () => {
+    if (isLoading) return;
     setValue('email', 'admin@bloodsanjal.org');
     setValue('password', 'Password123!');
     setApiError(null);
   };
 
   const fillDonor1 = () => {
+    if (isLoading) return;
     setValue('email', 'donor@bloodsanjal.org');
     setValue('password', 'Password123!');
     setApiError(null);
   };
 
   const fillDonor2 = () => {
+    if (isLoading) return;
     setValue('email', 'donor2@bloodsanjal.org');
     setValue('password', 'Password123!');
     setApiError(null);
   };
 
   const fillRecipient = () => {
+    if (isLoading) return;
     setValue('email', 'recipient@bloodsanjal.org');
     setValue('password', 'Password123!');
     setApiError(null);
@@ -211,7 +220,8 @@ export const LoginScreen = () => {
                 title="Sign In"
                 icon="log-in-outline"
                 onPress={handleSubmit(onSubmit)}
-                loading={loginMutation.isPending}
+                loading={isLoading}
+                disabled={isLoading}
               />
             </View>
 
@@ -219,19 +229,35 @@ export const LoginScreen = () => {
             <View style={styles.demoSection}>
               <Text style={styles.demoLabel}>Demo Quick Credentials</Text>
               <View style={styles.demoButtonGroup}>
-                <TouchableOpacity style={styles.demoButton} onPress={fillAdmin}>
+                <TouchableOpacity
+                  style={[styles.demoButton, isLoading && { opacity: 0.5 }]}
+                  onPress={fillAdmin}
+                  disabled={isLoading}
+                >
                   <Ionicons name="shield-checkmark" size={14} color={colors.primary} />
                   <Text style={styles.demoButtonText}>Admin</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.demoButton} onPress={fillDonor1}>
+                <TouchableOpacity
+                  style={[styles.demoButton, isLoading && { opacity: 0.5 }]}
+                  onPress={fillDonor1}
+                  disabled={isLoading}
+                >
                   <Ionicons name="water" size={14} color={colors.primary} />
                   <Text style={styles.demoButtonText}>Donor 1 (O+)</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.demoButton} onPress={fillDonor2}>
+                <TouchableOpacity
+                  style={[styles.demoButton, isLoading && { opacity: 0.5 }]}
+                  onPress={fillDonor2}
+                  disabled={isLoading}
+                >
                   <Ionicons name="water" size={14} color="#059669" />
                   <Text style={styles.demoButtonText}>Donor 2 (B+)</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.demoButton} onPress={fillRecipient}>
+                <TouchableOpacity
+                  style={[styles.demoButton, isLoading && { opacity: 0.5 }]}
+                  onPress={fillRecipient}
+                  disabled={isLoading}
+                >
                   <Ionicons name="person" size={14} color={colors.primary} />
                   <Text style={styles.demoButtonText}>Recipient</Text>
                 </TouchableOpacity>
