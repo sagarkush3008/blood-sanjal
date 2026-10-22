@@ -217,4 +217,15 @@ export class DonationController {
       res.status(200).json(SuccessResponse(result, req.id));
     } catch (error) { next(error); }
   }
+
+  static async resetCooldown(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        return res.status(401).json({ success: false, message: 'User not authenticated' });
+      }
+      const result = await DonationService.resetCooldown(userId);
+      res.status(200).json(SuccessResponse(result, req.id));
+    } catch (error) { next(error); }
+  }
 }

@@ -250,4 +250,28 @@ export class DonationService {
 
     return record;
   }
+
+  static async resetCooldown(userId: string) {
+    const profile = await DonorProfile.findOne({ userId });
+    if (!profile) {
+      throw new AppError(404, 'NOT_FOUND', 'Donor profile not found');
+    }
+
+    profile.lastDonationDate = undefined;
+    profile.next_eligible_date = undefined;
+    profile.reminderDate = undefined;
+    profile.totalDonations = 0;
+    await profile.save();
+
+    // Clear test records so form submission with current date does not hit CONFLICT
+    await DonationRecord.deleteMany({ donorProfileId: profile._id });
+    await User.findByIdAndUpdate(userId, { totalDonations: 0 }).catch(() => {});
+
+    return {
+      message: 'Recovery cooldown successfully reset. You can now submit a donation again.',
+      isEligible: true,
+      totalDonations: 0,
+      next_eligible_date: null
+    };
+  }
 }

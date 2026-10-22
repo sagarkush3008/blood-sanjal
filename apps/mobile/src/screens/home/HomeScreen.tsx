@@ -22,6 +22,7 @@ import { useDonationStore } from '../../store/donationStore';
 import { AuthAPI } from '../../api/auth.api';
 import { NotificationsAPI } from '../../api/notifications.api';
 import { DonorsAPI } from '../../api/donors.api';
+import { DonationsAPI } from '../../api/donations.api';
 import { BloodRequestsAPI } from '../../api/requests.api';
 import { RequestCard } from '../../components/requests/RequestCard';
 import { RecordDonationModal } from '../../components/donate/RecordDonationModal';
@@ -155,8 +156,14 @@ export const HomeScreen = () => {
     return () => clearInterval(timer);
   }, []);
 
+  const [isResettingCooldown, setIsResettingCooldown] = useState(false);
+
   // Determine effective next eligible date from Zustand store or live profile (Medical Cooldown ONLY)
   const effectiveNextEligibleRaw = useMemo(() => {
+    // If backend profile has explicitly loaded and has NO cooldown dates, clear any lingering local store
+    if (donorProfile && !donorProfile.next_eligible_date && !donorProfile.reminderDate && !donorProfile.lastDonationDate) {
+      return null;
+    }
     if (storeNextEligible) return storeNextEligible;
     if (donorProfile?.next_eligible_date) return donorProfile.next_eligible_date;
     if (donorProfile?.reminderDate) return donorProfile.reminderDate;
@@ -169,7 +176,35 @@ export const HomeScreen = () => {
       }
     }
     return null;
-  }, [storeNextEligible, donorProfile?.next_eligible_date, donorProfile?.reminderDate, donorProfile?.lastDonationDate, storeLastDonation]);
+  }, [storeNextEligible, donorProfile, storeLastDonation]);
+
+  const handleResetCooldown = () => {
+    Alert.alert(
+      'Reset Recovery Cooldown?',
+      'This will clear your 90-day recovery cooldown so you can test and record a blood donation again immediately.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset Now',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsResettingCooldown(true);
+              await DonationsAPI.resetCooldown();
+              const currentUserId = user?._id || user?.id;
+              await useDonationStore.getState().clearCooldown(currentUserId);
+              await Promise.all([refetchMe(), refetchDonor()]);
+              Alert.alert('Cooldown Cleared', 'You can now fill the donation form again!');
+            } catch (err: any) {
+              Alert.alert('Reset Failed', err?.response?.data?.error?.message || err?.message || 'Could not reset cooldown');
+            } finally {
+              setIsResettingCooldown(false);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   // Effective last donation date
   const effectiveLastDonationRaw = donorProfile?.lastDonationDate || storeLastDonation || null;
@@ -533,10 +568,23 @@ export const HomeScreen = () => {
             </View>
 
             <View style={styles.timerFooterRow}>
-              <Ionicons name="shield-checkmark" size={14} color="#059669" />
-              <Text style={styles.timerFooterText}>
-                Last recorded: {formattedLastDonation} • Safe medical protocol
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, marginRight: 8 }}>
+                <Ionicons name="shield-checkmark" size={14} color="#059669" />
+                <Text style={styles.timerFooterText} numberOfLines={1}>
+                  Last: {formattedLastDonation}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.resetCooldownPill}
+                onPress={handleResetCooldown}
+                disabled={isResettingCooldown}
+                activeOpacity={0.7}
+              >
+                <Feather name="refresh-cw" size={11} color="#DC2626" />
+                <Text style={styles.resetCooldownPillText}>
+                  {isResettingCooldown ? 'Resetting...' : 'Reset Cooldown'}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -1025,6 +1073,22 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Inter_500Medium',
     color: '#64748B',
+  },
+  resetCooldownPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  resetCooldownPillText: {
+    fontSize: 11.5,
+    fontFamily: 'Inter_600SemiBold',
+    color: '#DC2626',
   },
 
   quickActionsTitle: {

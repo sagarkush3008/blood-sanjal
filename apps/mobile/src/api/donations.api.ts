@@ -14,4 +14,5 @@ export const DonationsAPI = {
   updateStatus: (id: string, data: any) => apiClient.patch(`/donations/${id}`, data),
   logWithAI: (data: any) => apiClient.post('/donations/log', data),
   assessEligibility: (data: any) => apiClient.post('/donations/assess', data),
+  resetCooldown: () => apiClient.post('/donations/reset-cooldown', {}),
 };
