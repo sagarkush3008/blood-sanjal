@@ -3,9 +3,9 @@ import { NativeModules, Platform } from 'react-native';
 import { storage } from '../utils/storage';
 
 // Laptop Wi-Fi IPv4 address on the local network
-const LOCAL_DEV_API_URL = 'http://192.168.1.65:5000/api/v1';
+const LOCAL_DEV_API_URL = 'http://192.168.1.71:5000/api/v1';
 
-const ACTIVE_TUNNEL_URL = 'https://preliminary-tramadol-polymer-social.trycloudflare.com/api/v1';
+const ACTIVE_TUNNEL_URL = 'https://surprising-eva-requesting-updating.trycloudflare.com/api/v1';
 
 // Dynamic Backend Host Detection
 export const getApiBaseUrl = (): string => {

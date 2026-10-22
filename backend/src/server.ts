@@ -45,7 +45,7 @@ function freePort(port: number): void {
         if (line.includes('LISTENING') && (line.includes(`:${port} `) || line.includes(`:${port}\t`))) {
           const parts = line.trim().split(/\s+/);
           const pid = parts[parts.length - 1];
-          if (pid && Number(pid) > 0 && Number(pid) !== process.pid && !killedPids.has(pid)) {
+          if (pid && Number(pid) > 0 && Number(pid) !== process.pid && Number(pid) !== process.ppid && !killedPids.has(pid)) {
             killedPids.add(pid);
             try {
               execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' });
@@ -93,6 +93,9 @@ const startServer = async () => {
         s.once('error', async (err: any) => {
           if (err.code === 'EADDRINUSE') {
             console.warn(`⚠️ [Port In Use] Port ${PORT} is occupied. Attempting automatic port recovery...`);
+            try {
+              s.close();
+            } catch {}
             freePort(PORT);
             await new Promise((r) => setTimeout(r, 600));
 
