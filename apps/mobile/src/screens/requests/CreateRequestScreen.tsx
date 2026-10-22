@@ -671,16 +671,17 @@ const styles = StyleSheet.create({
 
   /* Inputs */
   fieldBlock: {
-    marginBottom: 14,
+    marginBottom: 18,
   },
   inputGroup: {
-    marginBottom: 14,
+    marginBottom: 18,
   },
   inputLabel: {
-    fontSize: 12.5,
-    fontFamily: FONT_SEMIBOLD,
-    color: '#334155',
-    marginBottom: 6,
+    fontSize: 13.5,
+    fontFamily: FONT_MEDIUM,
+    color: '#374151',
+    marginBottom: 7,
+    letterSpacing: -0.2,
   },
   asterisk: {
     color: BRAND_RED,
@@ -688,29 +689,30 @@ const styles = StyleSheet.create({
   inputFieldWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: BORDER_COLOR,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 48,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    height: 52,
   },
   inputFieldFocused: {
-    borderColor: BORDER_FOCUS,
+    borderColor: BRAND_RED,
+    backgroundColor: '#FFFFFF',
   },
   inputFieldIcon: {
-    marginRight: 8,
+    marginRight: 10,
   },
   inputFieldText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 14.5,
     fontFamily: FONT_MEDIUM,
     color: TEXT_PRIMARY,
     paddingVertical: 0,
   },
   textAreaWrapper: {
-    height: 68,
-    paddingVertical: 8,
+    height: 76,
+    paddingVertical: 10,
     alignItems: 'flex-start',
   },
   textAreaText: {

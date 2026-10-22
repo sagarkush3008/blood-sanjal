@@ -216,6 +216,7 @@ const gracefulShutdown = async (signal: string) => {
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGBREAK', () => gracefulShutdown('SIGBREAK'));
+process.on('SIGHUP', () => gracefulShutdown('SIGHUP'));
 process.once('SIGUSR2', () => gracefulShutdown('SIGUSR2'));
 
 startServer();

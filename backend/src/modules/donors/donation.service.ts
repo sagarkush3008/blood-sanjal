@@ -238,7 +238,10 @@ export class DonationService {
     if (!record) throw new AppError(404, 'NOT_FOUND', 'Record not found');
 
     const isStaffOrAdmin = ['ADMIN', 'SUPER_ADMIN', 'HOSPITAL', 'BLOOD_BANK', 'NGO'].includes(userRole || '');
-    if (!isStaffOrAdmin && currentUserId) {
+    if (!isStaffOrAdmin) {
+      if (!currentUserId) {
+        throw new AppError(401, 'UNAUTHENTICATED', 'Authentication required to view this donation record');
+      }
       const profile: any = record.donorProfileId;
       if (profile?.userId?.toString() !== currentUserId) {
         throw new AppError(403, 'FORBIDDEN', 'Access denied to this donation record');
