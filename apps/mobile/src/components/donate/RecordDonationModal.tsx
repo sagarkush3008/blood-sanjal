@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Modal,
   View,
@@ -12,14 +12,19 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { DonationsAPI } from '../../api/donations.api';
+import { DonorsAPI } from '../../api/donors.api';
 import { useDonationStore } from '../../store/donationStore';
+import { useAuthStore } from '../../store/authStore';
 import { scheduleEligibilityNotification } from '../../services/notification.service';
 import { DualCalendarDatePicker } from './DualCalendarDatePicker';
+import { CooldownTimerCard } from './CooldownTimerCard';
 import { fonts } from '../../theme';
 
 export interface RecordDonationModalProps {
@@ -37,7 +42,13 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
   onSuccess,
 }) => {
   const queryClient = useQueryClient();
+  const user = useAuthStore((state) => state.user);
   const setCooldown = useDonationStore((state) => state.setCooldown);
+
+  const { data: donorProfile } = useQuery({
+    queryKey: ['my-profile'],
+    queryFn: () => DonorsAPI.getMyProfile().then((res) => res.data?.data || res.data).catch(() => null),
+  });
 
   // Form State: Authoritative Gregorian AD Date
   const [selectedAdDate, setSelectedAdDate] = useState<Date>(new Date());
@@ -51,6 +62,99 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [showActionSheet, setShowActionSheet] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  // In-Modal Flow State: Swap form to Cooldown Timer upon successful submission or when on active cooldown
+  const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+  const [submittedNextDate, setSubmittedNextDate] = useState<string | null>(null);
+  const [submittedLastDate, setSubmittedLastDate] = useState<string | null>(null);
+
+  const storeNextEligible = useDonationStore((state) => state.nextEligibleDate);
+  const storeLastDonation = useDonationStore((state) => state.lastDonationDate);
+
+  // Next eligible date resolution: Prioritizes active store, then live profile
+  const effectiveNextEligible = useMemo(() => {
+    if (submittedNextDate) return submittedNextDate;
+    if (storeNextEligible) return storeNextEligible;
+    if (donorProfile?.next_eligible_date) return donorProfile.next_eligible_date;
+    if (donorProfile?.reminderDate) return donorProfile.reminderDate;
+    const lastDate = storeLastDonation || donorProfile?.lastDonationDate;
+    if (lastDate) {
+      const parsed = new Date(lastDate).getTime();
+      if (!isNaN(parsed)) {
+        return new Date(parsed + 90 * 24 * 60 * 60 * 1000).toISOString();
+      }
+    }
+    return null;
+  }, [submittedNextDate, storeNextEligible, donorProfile?.next_eligible_date, donorProfile?.reminderDate, donorProfile?.lastDonationDate, storeLastDonation]);
+
+  const effectiveLastDonation = useMemo(() => {
+    return submittedLastDate || storeLastDonation || donorProfile?.lastDonationDate || null;
+  }, [submittedLastDate, storeLastDonation, donorProfile?.lastDonationDate]);
+
+  // Compute eligibility: true if no cooldown or current date >= next_eligible_date
+  const isEligibleToDonate = useMemo(() => {
+    if (isSubmitted) return false;
+    if (!effectiveNextEligible) return true;
+    const targetMs = new Date(effectiveNextEligible).getTime();
+    if (isNaN(targetMs)) return true;
+    return Date.now() >= targetMs;
+  }, [isSubmitted, effectiveNextEligible]);
+
+  const showCooldownTimer = isSubmitted || !isEligibleToDonate;
+
+  // Test account cooldown reset handler
+  const [isResettingCooldown, setIsResettingCooldown] = useState<boolean>(false);
+  const currentUserName = (user?.name || '').trim();
+  const isTestDonorAccount = Boolean(
+    (currentUserName === 'Donar 1' ||
+      currentUserName === 'Donor 1' ||
+      /\b(donor|donar)\s*1\b/i.test(currentUserName)) &&
+      !/\b(donor|donar)\s*2\b/i.test(currentUserName) &&
+      !currentUserName.toLowerCase().includes('sagar')
+  );
+
+  const handleResetCooldown = () => {
+    Alert.alert(
+      'Reset Recovery Cooldown?',
+      'This will clear your 90-day recovery cooldown so you can test and record a blood donation again immediately.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset Now',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsResettingCooldown(true);
+              await DonationsAPI.resetCooldown();
+              const currentUserId = user?._id || user?.id;
+              await useDonationStore.getState().clearCooldown(currentUserId);
+              setSubmittedNextDate(null);
+              setSubmittedLastDate(null);
+              setIsSubmitted(false);
+              queryClient.invalidateQueries({ queryKey: ['my-profile'] });
+              queryClient.invalidateQueries({ queryKey: ['me'] });
+              Alert.alert('Cooldown Cleared', 'You can now fill the donation form again!');
+            } catch (err: any) {
+              Alert.alert('Reset Failed', err?.message || 'Could not reset cooldown');
+            } finally {
+              setIsResettingCooldown(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  useEffect(() => {
+    if (visible) {
+      setIsSubmitted(false);
+    }
+  }, [visible]);
+
+  const handleClose = () => {
+    setIsSubmitted(false);
+    onClose();
+  };
 
   const campaignOptions = [
     '-- Independent Voluntary Donation --',
@@ -156,12 +260,16 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
       const newTotal = resData?.totalDonations ?? resData?.total_donations;
 
       // 2. Global State Mutation (Zustand: totalDonations & 90-day Cooldown)
-      const { nextEligibleDate } = await setCooldown(isoDate);
+      const currentUserId = user?._id || user?.id;
+      const { nextEligibleDate } = await setCooldown(isoDate, currentUserId);
       if (typeof newTotal === 'number') {
         useDonationStore.getState().setTotalDonations(newTotal);
       } else {
         useDonationStore.getState().incrementTotalDonations();
       }
+
+      setSubmittedNextDate(nextEligibleDate);
+      setSubmittedLastDate(isoDate);
 
       // 3. Automated Local Notification Scheduling (Exact 90 Days)
       await scheduleEligibilityNotification(nextEligibleDate);
@@ -189,20 +297,13 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
       });
 
       // 5. Invalidate & refetch React Query caches for donation-related datasets
-      // CRITICAL: NEVER invalidate ['donor-status']! Manual availability status (isActive, snooze timer)
-      // must remain 100% untouched and isolated during donation recording.
       queryClient.invalidateQueries({ queryKey: ['my-profile'] });
       queryClient.invalidateQueries({ queryKey: ['my-donations'] });
       queryClient.invalidateQueries({ queryKey: ['me'] });
 
-      // 6. Close the modal immediately so the UI transitions to the Countdown Timer
-      onClose();
+      // 6. Stop automatic navigation/closing: Transition UI on the SAME screen to the 90-day cooldown timer!
+      setIsSubmitted(true);
       if (onSuccess) onSuccess(resData);
-
-      Alert.alert(
-        'Donation Recorded Successfully! 🩸',
-        'Thank you for your generous contribution. Your 90-day recovery cooldown has begun. We will notify you when you are eligible to donate again.'
-      );
     } catch (err: any) {
       console.error('[RecordDonationModal] Submission error:', err);
       const errMsg =
@@ -217,38 +318,101 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={styles.modalBackdrop}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <View style={styles.sheetContainer}>
-          {/* Apple-style top drag handle */}
-          <View style={styles.sheetDragHandle} />
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="fullScreen"
+      onRequestClose={handleClose}
+    >
+      <SafeAreaView style={styles.fullScreenContainer} edges={['top', 'bottom']}>
+        <StatusBar barStyle="dark-content" />
 
-          {/* Minimal Header Bar (No divider line) */}
-          <View style={styles.headerBar}>
-            <View style={styles.headerTitleGroup}>
-              <View style={styles.headerIconCircle}>
-                <Ionicons name="water" size={16} color={BRAND_RED} />
-              </View>
-              <Text style={styles.headerTitleText}>Record Blood Donation</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.headerCloseButton}
-              onPress={onClose}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              accessibilityLabel="Close donation modal"
-            >
-              <Ionicons name="close" size={18} color="#6B7280" />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView
-            style={styles.scrollArea}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
+        {/* Minimal Top App Bar */}
+        <View style={styles.appBar}>
+          <TouchableOpacity
+            style={styles.appBarBackBtn}
+            onPress={handleClose}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessibilityLabel="Back button"
           >
+            <Feather name="arrow-left" size={22} color="#111827" />
+          </TouchableOpacity>
+          <Text style={styles.appBarTitle}>
+            {showCooldownTimer ? 'Donation Status' : 'Record Blood Donation'}
+          </Text>
+          <View style={styles.appBarSpacer} />
+        </View>
+
+        {showCooldownTimer ? (
+          /* FULL-SCREEN CONSOLIDATED RECOVERY VIEW */
+          <View style={styles.cooldownScreenWrapper}>
+            <ScrollView
+              style={styles.cooldownScrollView}
+              contentContainerStyle={styles.cooldownScrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Single Elegant Hero Icon */}
+              <View
+                style={[
+                  styles.heroIconCircle,
+                  { backgroundColor: isSubmitted ? '#ECFDF5' : '#FEE2E2' },
+                ]}
+              >
+                <Ionicons
+                  name={isSubmitted ? 'checkmark-circle' : 'time'}
+                  size={36}
+                  color={isSubmitted ? '#16A34A' : '#DC2626'}
+                />
+              </View>
+
+              {/* Bold, Clean Heading */}
+              <Text style={styles.heroHeading}>
+                {isSubmitted ? 'Donation Recorded! 🩸' : 'Recovery in Progress'}
+              </Text>
+
+              {/* Descriptive Subtitle with Generous Spacing */}
+              <Text style={styles.heroSubtitle}>
+                {isSubmitted
+                  ? 'Thank you for your lifesaver contribution. Your donation has been recorded and your 90-day recovery cooldown is active to safeguard your health.'
+                  : 'To protect donor health and adhere to medical protocols, a 90-day recovery window is required between whole blood donations. Your next donation window opens in:'}
+              </Text>
+
+              {/* Premium Countdown Timer directly below text */}
+              <View style={styles.timerSection}>
+                <CooldownTimerCard
+                  nextEligibleDate={effectiveNextEligible}
+                  lastDonationDate={effectiveLastDonation}
+                  showResetButton={isTestDonorAccount}
+                  onResetCooldown={handleResetCooldown}
+                  isResettingCooldown={isResettingCooldown}
+                />
+              </View>
+            </ScrollView>
+
+            {/* Primary 'Back to Home' Button Docked to Bottom Safe Area */}
+            <View style={styles.bottomDockedContainer}>
+              <TouchableOpacity
+                style={styles.backToHomePrimaryBtn}
+                onPress={handleClose}
+                activeOpacity={0.88}
+                accessibilityLabel="Back to Home button"
+              >
+                <Ionicons name="home-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                <Text style={styles.backToHomePrimaryBtnText}>Back to Home</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          /* STANDARD FULL-SCREEN DONATION FORM */
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
+            <ScrollView
+              style={styles.scrollArea}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+            >
             {/* 1. De-cluttered, Soft Guidance Box */}
             <View style={styles.guidanceBanner}>
               <View style={styles.guidanceHeaderRow}>
@@ -419,26 +583,27 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
               />
             </View>
 
-            {/* 8. Primary Action Focus Button */}
-            <TouchableOpacity
-              style={[styles.primarySubmitBtn, isSubmitting && styles.primarySubmitBtnDisabled]}
-              onPress={handleSubmit}
-              disabled={isSubmitting}
-              activeOpacity={0.88}
-              accessibilityLabel="Submit Donation Record button"
-            >
-              {isSubmitting ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <View style={styles.primaryBtnInnerRow}>
-                  <Ionicons name="water" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-                  <Text style={styles.primarySubmitBtnText}>Submit Donation Record</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
+              {/* 8. Primary Action Focus Button */}
+              <TouchableOpacity
+                style={[styles.primarySubmitBtn, isSubmitting && styles.primarySubmitBtnDisabled]}
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+                activeOpacity={0.88}
+                accessibilityLabel="Submit Donation Record button"
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <View style={styles.primaryBtnInnerRow}>
+                    <Ionicons name="water" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                    <Text style={styles.primarySubmitBtnText}>Submit Donation Record</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        )}
+      </SafeAreaView>
 
       {/* 9. Modern Native-feeling Action Sheet Modal for Photo Selection */}
       <Modal
@@ -507,64 +672,90 @@ export const RecordDonationModal: React.FC<RecordDonationModalProps> = ({
 };
 
 const styles = StyleSheet.create({
-  modalBackdrop: {
+  fullScreenContainer: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.4)',
-    justifyContent: 'flex-end',
-  },
-  sheetContainer: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    maxHeight: '92%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 10,
   },
-  sheetDragHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#E5E7EB',
-    alignSelf: 'center',
-    marginTop: 10,
-    marginBottom: 4,
-  },
-  headerBar: {
+  appBar: {
+    height: 54,
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 22,
-    paddingTop: 12,
-    paddingBottom: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+    backgroundColor: '#FFFFFF',
   },
-  headerTitleGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  headerIconCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#F3F4F6',
+  appBarBackBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitleText: {
-    fontFamily: fonts.bold,
+  appBarTitle: {
     fontSize: 17,
+    fontFamily: fonts.semiBold,
     color: '#111827',
+    letterSpacing: -0.2,
   },
-  headerCloseButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
+  appBarSpacer: {
+    width: 40,
+  },
+  // Full-Screen Consolidated Cooldown / Recovery Screen
+  cooldownScreenWrapper: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  cooldownScrollView: {
+    flex: 1,
+  },
+  cooldownScrollContent: {
     alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 48,
+    paddingBottom: 120,
+  },
+  heroIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  heroHeading: {
+    fontSize: 24,
+    fontFamily: fonts.bold,
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 10,
+    letterSpacing: -0.5,
+  },
+  heroSubtitle: {
+    fontSize: 14,
+    fontFamily: fonts.regular,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 22,
+    maxWidth: 340,
+    marginBottom: 36,
+  },
+  timerSection: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  bottomDockedContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 16 : 20,
   },
   scrollArea: {
     paddingHorizontal: 22,
@@ -916,5 +1107,25 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semiBold,
     fontSize: 14,
     color: '#4B5563',
+  },
+
+  backToHomePrimaryBtn: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#DC2626',
+    borderRadius: 14,
+    height: 52,
+    elevation: 0,
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  backToHomePrimaryBtnText: {
+    fontFamily: fonts.semiBold,
+    fontSize: 15,
+    color: '#FFFFFF',
+    letterSpacing: -0.2,
   },
 });

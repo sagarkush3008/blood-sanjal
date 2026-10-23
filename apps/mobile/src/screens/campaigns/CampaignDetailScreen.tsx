@@ -126,7 +126,7 @@ export const CampaignDetailScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="dark-content" />
 
       {/* Top Navigation Bar */}
       <View style={styles.navBar}>

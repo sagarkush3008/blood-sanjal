@@ -3,25 +3,17 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
-  Alert,
   TouchableOpacity,
   StatusBar,
   ScrollView,
-  Modal,
-  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
-import { DonorsAPI, DonorSearchParams } from '../../api/donors.api';
-import { ContactRequestsAPI } from '../../api/contactRequests.api';
-import { PaymentsAPI } from '../../api/payments.api';
-import { BloodGroupChip, EmptyState, SkeletonCard, PrimaryButton } from '../../components/common';
-import { DonorCard } from '../../components/donors/DonorCard';
-import { colors, spacing } from '../../theme';
-import { cleanLocationName } from '../../utils/locationHelper';
+import { BloodGroupChip, PrimaryButton } from '../../components/common';
+import { PaymentBottomSheet } from '../../components/payments/PaymentBottomSheet';
+import { colors, fonts } from '../../theme';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const DISTANCES = [5, 10, 25, 50];
@@ -35,319 +27,160 @@ export const FindBloodScreen = () => {
 
   const [selectedBloodGroup, setSelectedBloodGroup] = useState<string>(initialGroup);
   const [selectedDistance, setSelectedDistance] = useState<number>(10);
-  const [searchTriggered, setSearchTriggered] = useState<boolean>(true);
 
-  // Contact Request Dialog State
-  const [selectedDonor, setSelectedDonor] = useState<any | null>(null);
-  const [contactMessage, setContactMessage] = useState<string>('');
-  const [requestedDonorIds, setRequestedDonorIds] = useState<Set<string>>(new Set());
+  // Paywall & Payment Modal State
+  const [hasPaidFee, setHasPaidFee] = useState<boolean>(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
 
-  // Search Query
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['donors', 'search', selectedBloodGroup, selectedDistance],
-    queryFn: async () => {
-      const params: DonorSearchParams = {
-        bloodGroup: selectedBloodGroup,
-        distance: selectedDistance * 1000,
-      };
-      const res = await DonorsAPI.search(params);
-      return res.data?.data || res.data;
-    },
-    enabled: searchTriggered,
-    retry: 1,
-  });
+  const openPaymentModal = () => {
+    setIsPaymentModalOpen(true);
+  };
 
-  // Activate Search Fee Mutation
-  const activateFeeMutation = useMutation({
-    mutationFn: () => PaymentsAPI.confirmMockSearchFee(),
-    onSuccess: () => {
-      Alert.alert(
-        'Access Activated! 🎉',
-        'Your 24-hour donor search access is now active. Refetching donors...'
-      );
-      refetch();
-    },
-    onError: (err: any) => {
-      Alert.alert(
-        'Activation Error',
-        err.response?.data?.error?.message || 'Failed to activate search access.'
-      );
-    },
-  });
-
-  // Send Contact Request Mutation
-  const requestMutation = useMutation({
-    mutationFn: (payload: { donorId: string; message?: string }) =>
-      ContactRequestsAPI.create(payload),
-    onSuccess: () => {
-      if (selectedDonor) {
-        setRequestedDonorIds((prev) => new Set(prev).add(selectedDonor.id || selectedDonor.userId));
-      }
-      setSelectedDonor(null);
-      setContactMessage('');
-      queryClient.invalidateQueries({ queryKey: ['contact-requests'] });
-      Alert.alert(
-        'Contact Request Sent! ✉️',
-        'The donor has been notified. Once they accept your request, verified contact channels will become accessible.'
-      );
-    },
-    onError: (err: any) => {
-      const msg =
-        err.response?.data?.error?.message ||
-        err.response?.data?.message ||
-        'Unable to send contact request. You may already have an active request with this donor.';
-      Alert.alert('Request Failed', msg);
-    },
-  });
-
+  // Intercept Search Action
   const handleSearch = () => {
-    setSearchTriggered(true);
-    refetch();
+    if (!hasPaidFee) {
+      openPaymentModal();
+    } else {
+      // Seamlessly route to DonorListScreen
+      navigation.navigate('DonorList', {
+        selectedGroup: selectedBloodGroup,
+        distance: selectedDistance,
+      });
+    }
   };
 
-  const handleOpenContactModal = (donor: any) => {
-    setSelectedDonor(donor);
-    setContactMessage(
-      `Hello ${donor.name}, I am in urgent need of ${donor.bloodGroup} blood. Please accept this request so we can connect.`
-    );
-  };
+  // Success Routing
+  const handlePaymentSuccess = () => {
+    setIsPaymentModalOpen(false);
+    setHasPaidFee(true);
 
-  const handleSendContact = () => {
-    if (!selectedDonor) return;
-    const donorId = selectedDonor.userId || selectedDonor.id;
-    requestMutation.mutate({
-      donorId,
-      message: contactMessage.trim(),
+    // Invalidate cache so target screen fetches fresh donors
+    queryClient.invalidateQueries({ queryKey: ['donors', 'list', selectedBloodGroup] });
+
+    // Route user seamlessly to DonorListScreen
+    navigation.navigate('DonorList', {
+      selectedGroup: selectedBloodGroup,
+      distance: selectedDistance,
     });
   };
 
-  // Determine if payment is required (HTTP 402)
-  const isPaymentRequired =
-    (error as any)?.response?.status === 402 ||
-    (error as any)?.response?.data?.error?.code === 'PAYMENT_REQUIRED';
-
-  const rawResults = data?.results || (Array.isArray(data) ? data : []);
-
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="dark-content" />
 
-      {/* Header */}
+      {/* 1. Header (Clean App Bar with Settings Gear in Top Right) */}
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
           <View style={styles.headerIcon}>
             <Ionicons name="search" size={18} color={colors.primary} />
           </View>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={styles.headerTitle}>Find Blood Donors</Text>
             <Text style={styles.headerSubtitle}>
               Locate verified, consent-gated donors across Nepal
             </Text>
           </View>
-        </View>
-      </View>
-
-      {/* Filter Section */}
-      <View style={styles.filterSection}>
-        <Text style={styles.filterLabel}>Select Needed Blood Group</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipsRow}
-        >
-          {BLOOD_GROUPS.map((bg) => (
-            <BloodGroupChip
-              key={bg}
-              bloodGroup={bg}
-              selected={selectedBloodGroup === bg}
-              onPress={(group) => setSelectedBloodGroup(group)}
-              style={styles.chip}
-            />
-          ))}
-        </ScrollView>
-
-        <View style={styles.distanceRow}>
-          <Text style={styles.distanceLabel}>Distance Radius:</Text>
-          <View style={styles.distancePills}>
-            {DISTANCES.map((dist) => (
-              <TouchableOpacity
-                key={dist}
-                style={[
-                  styles.distancePill,
-                  selectedDistance === dist && styles.distancePillActive,
-                ]}
-                onPress={() => setSelectedDistance(dist)}
-              >
-                <Text
-                  style={[
-                    styles.distancePillText,
-                    selectedDistance === dist && styles.distancePillTextActive,
-                  ]}
-                >
-                  {dist} km
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <PrimaryButton
-          title="Search Donors"
-          icon="search-outline"
-          onPress={handleSearch}
-          loading={isLoading}
-          style={{ marginTop: 4 }}
-        />
-      </View>
-
-      {/* Payment / Search Fee Banner if 402 */}
-      {isPaymentRequired && (
-        <View style={styles.feeBanner}>
-          <View style={styles.feeHeader}>
-            <Ionicons name="card-outline" size={22} color="#B45309" />
-            <Text style={styles.feeTitle}>Platform Search Fee (NPR 50)</Text>
-          </View>
-          <Text style={styles.feeText}>
-            A small 24-hour maintenance contribution is required to search verified donors.
-            Blood is never charged for.
-          </Text>
           <TouchableOpacity
-            style={styles.feePayButton}
-            onPress={() => activateFeeMutation.mutate()}
-            disabled={activateFeeMutation.isPending}
+            style={styles.settingsButton}
+            onPress={() => navigation.navigate('Profile', { screen: 'Settings' })}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="button"
+            accessibilityLabel="Open settings"
           >
-            <Ionicons name="shield-checkmark" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.feePayButtonText}>
-              {activateFeeMutation.isPending ? 'Activating Access...' : 'Activate 24h Access (Mock NPR 50)'}
-            </Text>
+            <Ionicons name="settings-outline" size={20} color="#475569" />
           </TouchableOpacity>
         </View>
-      )}
-
-      {/* Donors Results List */}
-      <View style={styles.resultsContainer}>
-        {isLoading ? (
-          <View style={{ padding: 16 }}>
-            <SkeletonCard height={140} borderRadius={16} />
-            <SkeletonCard height={140} borderRadius={16} />
-            <SkeletonCard height={140} borderRadius={16} />
-          </View>
-        ) : isError && !isPaymentRequired ? (
-          <EmptyState
-            icon="alert-circle-outline"
-            title="Search Could Not Complete"
-            description="Unable to reach the donor registry. Please verify your connection."
-            actionTitle="Try Again"
-            onAction={handleSearch}
-          />
-        ) : rawResults.length === 0 && !isPaymentRequired ? (
-          <EmptyState
-            icon="water-outline"
-            title={`No ${selectedBloodGroup} Donors Found Nearby`}
-            description="No active donors match this criteria within the selected radius. Try expanding your search distance or submit an urgent blood request."
-            actionTitle="Create Blood Request"
-            onAction={() => navigation.navigate('CreateRequest', { bloodGroup: selectedBloodGroup })}
-          />
-        ) : (
-          <FlatList
-            data={rawResults}
-            keyExtractor={(item) => item.id || item.userId || item._id}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => {
-              const donorId = item.id || item.userId;
-              const isRequested = requestedDonorIds.has(donorId);
-              return (
-                <DonorCard
-                  name={item.name}
-                  bloodGroup={item.bloodGroup}
-                  donorStatus={item.donorStatus}
-                  totalDonations={item.totalDonations}
-                  lastDonationDate={item.lastDonationDate}
-                  reminderDate={item.reminderDate}
-                  inactiveUntil={item.inactiveUntil}
-                  inactiveReason={item.inactiveReason}
-                  location={cleanLocationName(
-                    item.approximateLocation?.districtId ||
-                    item.approximateLocation?.cityId ||
-                    item.approximateLocation?.provinceId ||
-                    'Nepal'
-                  )}
-                  isRequested={isRequested}
-                  onRequestContact={() => handleOpenContactModal(item)}
-                />
-              );
-            }}
-          />
-        )}
       </View>
 
-      {/* Contact Request Modal Dialog */}
-      <Modal
-        visible={!!selectedDonor}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setSelectedDonor(null)}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHeader}>
-              <View>
-                <Text style={styles.modalTitle}>Request Contact Consent</Text>
-                <Text style={styles.modalSubtitle}>
-                  Recipient to Donor: {selectedDonor?.name} ({selectedDonor?.bloodGroup})
-                </Text>
-              </View>
-              <TouchableOpacity onPress={() => setSelectedDonor(null)}>
-                <Ionicons name="close-circle" size={24} color="#94A3B8" />
-              </TouchableOpacity>
+        {/* 2. Refined Selectors Section */}
+        <View style={styles.filterSection}>
+          <Text style={styles.filterLabel}>Select Blood Group</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipsRow}
+          >
+            {BLOOD_GROUPS.map((bg) => (
+              <BloodGroupChip
+                key={bg}
+                bloodGroup={bg}
+                selected={selectedBloodGroup === bg}
+                onPress={(group) => setSelectedBloodGroup(group)}
+                style={styles.chip}
+              />
+            ))}
+          </ScrollView>
+
+          <View style={styles.distanceRow}>
+            <Text style={styles.distanceLabel}>Distance Radius:</Text>
+            <View style={styles.distancePills}>
+              {DISTANCES.map((dist) => {
+                const isSelected = selectedDistance === dist;
+                return (
+                  <TouchableOpacity
+                    key={dist}
+                    style={[
+                      styles.distancePill,
+                      isSelected && styles.distancePillActive,
+                    ]}
+                    onPress={() => setSelectedDistance(dist)}
+                    activeOpacity={0.8}
+                  >
+                    <Text
+                      style={[
+                        styles.distancePillText,
+                        isSelected && styles.distancePillTextActive,
+                      ]}
+                    >
+                      {dist} km
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
+          </View>
 
-            <Text style={styles.inputLabel}>Emergency / Request Message</Text>
-            <TextInput
-              style={styles.messageInput}
-              multiline
-              numberOfLines={4}
-              value={contactMessage}
-              onChangeText={setContactMessage}
-              placeholder="Explain hospital location, patient condition, and units needed..."
-              textAlignVertical="top"
-            />
+          {/* Primary Action Button */}
+          <PrimaryButton
+            title="Search Donors"
+            icon="search-outline"
+            onPress={handleSearch}
+            style={styles.searchButton}
+          />
+        </View>
 
-            <View style={styles.consentNotice}>
-              <Ionicons name="lock-closed" size={14} color="#10B981" />
-              <Text style={styles.consentNoticeText}>
-                The donor must review and approve this request before their phone number or direct contact info is unlocked.
-              </Text>
+        {/* 3. Borderless Trust Card (Seamless & Breathable) */}
+        <View style={styles.trustCard}>
+          <View style={styles.trustItem}>
+            <Ionicons name="shield-checkmark" size={19} color="#16A34A" style={styles.trustIcon} />
+            <View style={styles.trustTextCol}>
+              <Text style={styles.trustTitle}>Verified Donors Only</Text>
+              <Text style={styles.trustSub}>Every donor profile is verified with confirmed blood group records.</Text>
             </View>
+          </View>
 
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalCancelButton}
-                onPress={() => setSelectedDonor(null)}
-              >
-                <Text style={styles.modalCancelText}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.modalSubmitButton}
-                onPress={handleSendContact}
-                disabled={requestMutation.isPending}
-              >
-                <Text style={styles.modalSubmitText}>
-                  {requestMutation.isPending ? 'Sending...' : 'Send Request'}
-                </Text>
-              </TouchableOpacity>
+          <View style={styles.trustItem}>
+            <Ionicons name="lock-closed" size={18} color="#3B82F6" style={styles.trustIcon} />
+            <View style={styles.trustTextCol}>
+              <Text style={styles.trustTitle}>Privacy-First Consent</Text>
+              <Text style={styles.trustSub}>Direct contact numbers are revealed only after explicit donor approval.</Text>
             </View>
           </View>
         </View>
-      </Modal>
+      </ScrollView>
+
+      {/* Premium Payment Bottom Sheet Modal */}
+      <PaymentBottomSheet
+        visible={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onSuccess={handlePaymentSuccess}
+        selectedBloodGroup={selectedBloodGroup}
+        amount="NPR 15.00"
+      />
     </SafeAreaView>
   );
 };
@@ -379,44 +212,56 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontFamily: 'Inter_800ExtraBold',
+    fontFamily: fonts.bold,
     color: '#0F172A',
   },
   headerSubtitle: {
     fontSize: 12,
+    fontFamily: fonts.regular,
     color: '#64748B',
+  },
+  settingsButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F8FAFC',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scrollContent: {
+    paddingBottom: 32,
   },
   filterSection: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 18,
+    paddingBottom: 22,
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
-    marginBottom: 8,
   },
   filterLabel: {
-    fontSize: 13,
-    fontFamily: 'Inter_700Bold',
-    color: '#334155',
-    marginBottom: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    fontSize: 14,
+    fontFamily: fonts.semiBold,
+    color: '#374151',
+    marginBottom: 12,
   },
   chipsRow: {
-    paddingBottom: 10,
+    gap: 8,
+    paddingBottom: 8,
   },
   chip: {
-    marginRight: 8,
+    marginRight: 0,
   },
   distanceRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginVertical: 10,
+    marginTop: 18,
+    marginBottom: 20,
   },
   distanceLabel: {
     fontSize: 13,
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: fonts.semiBold,
     color: '#475569',
   },
   distancePills: {
@@ -424,157 +269,63 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   distancePill: {
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF', // Pure white background for inactive
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  distancePillActive: {
-    backgroundColor: colors.primarySoft,
-    borderColor: '#FECACA',
-  },
-  distancePillText: {
-    fontSize: 12,
-    fontFamily: 'Inter_600SemiBold',
-    color: '#64748B',
-  },
-  distancePillTextActive: {
-    color: colors.primary,
-  },
-  feeBanner: {
-    margin: 16,
-    padding: 16,
-    borderRadius: 14,
-    backgroundColor: '#FFFBEB',
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-  },
-  feeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 6,
-  },
-  feeTitle: {
-    fontSize: 15,
-    fontFamily: 'Inter_700Bold',
-    color: '#92400E',
-  },
-  feeText: {
-    fontSize: 13,
-    color: '#78350F',
-    lineHeight: 18,
-    marginBottom: 12,
-  },
-  feePayButton: {
-    flexDirection: 'row',
+    borderColor: '#E5E7EB', // Very faint 1px gray border
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#D97706',
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
   },
-  feePayButtonText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontFamily: 'Inter_700Bold',
+  distancePillActive: {
+    backgroundColor: '#FEF2F2', // Solid, soft red background
+    borderWidth: 0, // Absolutely zero borders
+    borderColor: 'transparent',
   },
-  resultsContainer: {
-    flex: 1,
+  distancePillText: {
+    fontSize: 12.5,
+    fontFamily: fonts.medium,
+    color: '#475569', // Dark gray text
   },
-  listContent: {
-    padding: 16,
+  distancePillTextActive: {
+    color: '#DC2626', // Pure bold Red text
+    fontFamily: fonts.bold,
   },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    justifyContent: 'flex-end',
+  searchButton: {
+    marginTop: 6,
+    borderRadius: 14,
   },
-  modalSheet: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    paddingBottom: 36,
+  // 3. Borderless Trust Card
+  trustCard: {
+    backgroundColor: '#F8FAFC', // Full-width ultra-light gray background blending seamlessly into screen
+    paddingHorizontal: 20,
+    paddingTop: 22,
+    paddingBottom: 16,
+    borderWidth: 0, // Completely remove card's outer outline/border
+    gap: 16, // Breathable 16px margin between list items
   },
-  modalHeader: {
+  trustItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 16,
   },
-  modalTitle: {
-    fontSize: 18,
-    fontFamily: 'Inter_800ExtraBold',
-    color: '#0F172A',
-  },
-  modalSubtitle: {
-    fontSize: 13,
-    color: colors.primary,
-    fontFamily: 'Inter_600SemiBold',
+  trustIcon: {
+    marginRight: 12,
     marginTop: 2,
   },
-  inputLabel: {
-    fontSize: 13,
-    fontFamily: 'Inter_600SemiBold',
-    color: '#334155',
-    marginBottom: 6,
+  trustTextCol: {
+    flex: 1,
   },
-  messageInput: {
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 12,
-    padding: 12,
+  trustTitle: {
     fontSize: 14,
+    fontFamily: fonts.semiBold,
     color: '#0F172A',
-    minHeight: 90,
-    backgroundColor: '#F8FAFC',
-    marginBottom: 12,
+    marginBottom: 2,
   },
-  consentNotice: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#ECFDF5',
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 20,
-  },
-  consentNoticeText: {
-    fontSize: 12,
-    color: '#065F46',
-    flex: 1,
-    lineHeight: 16,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  modalCancelButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-  },
-  modalCancelText: {
-    fontSize: 14,
-    fontFamily: 'Inter_600SemiBold',
-    color: '#475569',
-  },
-  modalSubmitButton: {
-    flex: 2,
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-  },
-  modalSubmitText: {
-    fontSize: 14,
-    fontFamily: 'Inter_700Bold',
-    color: '#FFFFFF',
+  trustSub: {
+    fontSize: 12.5,
+    fontFamily: fonts.regular,
+    color: '#64748B',
+    lineHeight: 18,
   },
 });

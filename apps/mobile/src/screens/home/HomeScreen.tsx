@@ -26,6 +26,7 @@ import { DonationsAPI } from '../../api/donations.api';
 import { BloodRequestsAPI } from '../../api/requests.api';
 import { RequestCard } from '../../components/requests/RequestCard';
 import { RecordDonationModal } from '../../components/donate/RecordDonationModal';
+import { BloodGroupsRegisteredGrid } from '../../components/home/BloodGroupsRegisteredGrid';
 import { colors } from '../../theme';
 import { cleanLocationName } from '../../utils/locationHelper';
 
@@ -130,6 +131,16 @@ export const HomeScreen = () => {
   const rawDisplayName = meProfile?.name || user?.name || 'Sagar';
   const displayName = rawDisplayName.replace(/\s*\((?:Donor|Recipient).*?\)/gi, '').trim() || rawDisplayName;
   const firstName = displayName.split(' ')[0];
+
+  // Access user state: Reset Cooldown button is strictly restricted ONLY to 'Donar 1' / 'Donor 1' (Completely removed from Donar 2 and regular users)
+  const currentUserName = (meProfile?.name || user?.name || '').trim();
+  const isTestDonorAccount = Boolean(
+    (currentUserName === 'Donar 1' ||
+      currentUserName === 'Donor 1' ||
+      /\b(donor|donar)\s*1\b/i.test(currentUserName)) &&
+      !/\b(donor|donar)\s*2\b/i.test(currentUserName) &&
+      !currentUserName.toLowerCase().includes('sagar')
+  );
   
   const locationText = cleanLocationName(meProfile?.cityId || user?.cityId, meProfile?.provinceId);
   
@@ -158,17 +169,19 @@ export const HomeScreen = () => {
 
   const [isResettingCooldown, setIsResettingCooldown] = useState(false);
 
-  // Determine effective next eligible date from Zustand store or live profile (Medical Cooldown ONLY)
+  // Priority 1: Direct reactive state from Zustand store (updated instantly upon donation submission)
+  // Priority 2: Live donor profile from React Query / MongoDB
   const effectiveNextEligibleRaw = useMemo(() => {
-    // If backend profile has explicitly loaded and has NO cooldown dates, clear any lingering local store
-    if (donorProfile && !donorProfile.next_eligible_date && !donorProfile.reminderDate && !donorProfile.lastDonationDate) {
-      return null;
+    if (storeNextEligible) {
+      return storeNextEligible;
     }
-    if (storeNextEligible) return storeNextEligible;
-    if (donorProfile?.next_eligible_date) return donorProfile.next_eligible_date;
-    if (donorProfile?.reminderDate) return donorProfile.reminderDate;
-    // Fallback: If lastDonationDate exists, compute lastDonationDate + 90 days
-    const lastDateRaw = donorProfile?.lastDonationDate || storeLastDonation;
+    if (donorProfile?.next_eligible_date) {
+      return donorProfile.next_eligible_date;
+    }
+    if (donorProfile?.reminderDate) {
+      return donorProfile.reminderDate;
+    }
+    const lastDateRaw = storeLastDonation || donorProfile?.lastDonationDate;
     if (lastDateRaw) {
       const parsedLast = new Date(lastDateRaw).getTime();
       if (!isNaN(parsedLast)) {
@@ -176,7 +189,7 @@ export const HomeScreen = () => {
       }
     }
     return null;
-  }, [storeNextEligible, donorProfile, storeLastDonation]);
+  }, [storeNextEligible, donorProfile?.next_eligible_date, donorProfile?.reminderDate, donorProfile?.lastDonationDate, storeLastDonation]);
 
   const handleResetCooldown = () => {
     Alert.alert(
@@ -207,7 +220,7 @@ export const HomeScreen = () => {
   };
 
   // Effective last donation date
-  const effectiveLastDonationRaw = donorProfile?.lastDonationDate || storeLastDonation || null;
+  const effectiveLastDonationRaw = storeLastDonation || donorProfile?.lastDonationDate || null;
 
   let lastDonatedDate = 'N/A';
   if (effectiveLastDonationRaw) {
@@ -220,11 +233,22 @@ export const HomeScreen = () => {
   // =========================================================================
   // MEDICAL COOLDOWN & ELIGIBILITY EVALUATION (Strict State Separation)
   // =========================================================================
-  // isEligibleToDonate: true if next_eligible_date is null, undefined, or in the past compared to current date
-  const { isEligibleToDonate, nextEligibleTime, countdown } = useMemo(() => {
+  // Computed boolean variable: isEligibleToDonate is true if next_eligible_date is null, or if current date >= next_eligible_date
+  const isEligibleToDonate = useMemo(() => {
+    if (!effectiveNextEligibleRaw) {
+      return true;
+    }
+    const targetMs = new Date(effectiveNextEligibleRaw).getTime();
+    if (isNaN(targetMs)) {
+      return true;
+    }
+    return currentTime >= targetMs;
+  }, [effectiveNextEligibleRaw, currentTime]);
+
+  // Digital countdown computation
+  const { countdown, nextEligibleTime } = useMemo(() => {
     if (!effectiveNextEligibleRaw) {
       return {
-        isEligibleToDonate: true,
         nextEligibleTime: null,
         countdown: { days: 0, hours: 0, minutes: 0, seconds: 0, totalMs: 0 },
       };
@@ -234,7 +258,6 @@ export const HomeScreen = () => {
     const targetMs = targetDate.getTime();
     if (isNaN(targetMs)) {
       return {
-        isEligibleToDonate: true,
         nextEligibleTime: null,
         countdown: { days: 0, hours: 0, minutes: 0, seconds: 0, totalMs: 0 },
       };
@@ -242,22 +265,18 @@ export const HomeScreen = () => {
 
     const diffMs = targetMs - currentTime;
     if (diffMs <= 0) {
-      // Cooldown has expired: User is eligible to donate
       return {
-        isEligibleToDonate: true,
         nextEligibleTime: targetMs,
         countdown: { days: 0, hours: 0, minutes: 0, seconds: 0, totalMs: 0 },
       };
     }
 
-    // Cooldown is active: User is ineligible to donate
     const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
 
     return {
-      isEligibleToDonate: false,
       nextEligibleTime: targetMs,
       countdown: { days, hours, minutes, seconds, totalMs: diffMs },
     };
@@ -341,7 +360,7 @@ export const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="dark-content" />
 
       {/* HEADER STRIP */}
       <View style={styles.header}>
@@ -478,116 +497,39 @@ export const HomeScreen = () => {
         </LinearGradient>
 
         {/* ================================================================= */}
-        {/* STRICT CONDITIONAL RENDERING: ELIGIBLE vs ACTIVE COOLDOWN TIMER   */}
+        {/* DONATION RECORD CTA (Clean Dashboard - Timer Delegated to Modal)   */}
         {/* ================================================================= */}
-        {isEligibleToDonate ? (
-          /* STATE A: ELIGIBLE TO DONATE -> RENDER RECORD DONATION BUTTON */
-          <View style={styles.eligibleCard}>
-            <View style={styles.eligibleCardHeader}>
-              <View style={styles.eligibleStatusPill}>
-                <Ionicons name="checkmark-circle" size={14} color="#059669" />
-                <Text style={styles.eligibleStatusText}>Eligible to Donate</Text>
-              </View>
-              <View style={styles.bloodTypePill}>
-                <Ionicons name="water" size={11} color="#DC2626" />
-                <Text style={styles.bloodTypePillText}>{bloodGroup}</Text>
-              </View>
+        <View style={styles.eligibleCard}>
+          <View style={styles.eligibleCardHeader}>
+            <View style={styles.eligibleStatusPill}>
+              <Ionicons name="checkmark-circle" size={14} color="#059669" />
+              <Text style={styles.eligibleStatusText}>Record Donation</Text>
             </View>
-
-            <View style={styles.eligibleCardBody}>
-              <Text style={styles.eligibleCardTitle}>Ready to Save a Life Today?</Text>
-              <Text style={styles.eligibleCardSubtitle}>
-                {effectiveLastDonationRaw
-                  ? `Your 90-day recovery period is complete (Last donated: ${formattedLastDonation}). You are medically clear to donate blood.`
-                  : 'You are eligible to donate whole blood. Record your voluntary donation to keep your lifesaver history updated.'}
-              </Text>
+            <View style={styles.bloodTypePill}>
+              <Ionicons name="water" size={11} color="#DC2626" />
+              <Text style={styles.bloodTypePillText}>{bloodGroup}</Text>
             </View>
-
-            <TouchableOpacity
-              style={styles.recordDonationPrimaryBtn}
-              onPress={() => setRecordModalVisible(true)}
-              activeOpacity={0.85}
-            >
-              <View style={styles.recordDonationIconCircle}>
-                <Ionicons name="add" size={18} color="#FFFFFF" />
-              </View>
-              <Text style={styles.recordDonationPrimaryBtnText}>Record Blood Donation</Text>
-              <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 'auto' }} />
-            </TouchableOpacity>
           </View>
-        ) : (
-          /* STATE B: INELIGIBLE -> RENDER ACTIVE 90-DAY DIGITAL COUNTDOWN TIMER */
-          <View style={styles.activeTimerCard}>
-            <View style={styles.timerHeaderRow}>
-              <View style={styles.timerBadgePill}>
-                <Ionicons name="time" size={13} color="#D97706" />
-                <Text style={styles.timerBadgePillText}>90-Day Cooldown Active</Text>
-              </View>
-              <Text style={styles.timerNextDateText}>
-                Eligible: {formattedNextEligibleDate}
-              </Text>
-            </View>
 
-            <Text style={styles.timerCardTitle}>Recovery Cooldown in Progress</Text>
-            <Text style={styles.timerCardSubtitle}>
-              To protect donor health and adhere to medical protocols, your next donation window opens in:
+          <View style={styles.eligibleCardBody}>
+            <Text style={styles.eligibleCardTitle}>Ready to Save a Life Today?</Text>
+            <Text style={styles.eligibleCardSubtitle}>
+              Record your voluntary blood donation to keep your lifesaver history updated.
             </Text>
-
-            {/* 4-PART DIGITAL COUNTDOWN TIMER (Days, Hours, Minutes, Seconds) */}
-            <View style={styles.countdownBoxesContainer}>
-              <View style={styles.countdownBox}>
-                <Text style={styles.countdownDigitText}>
-                  {String(countdown.days).padStart(2, '0')}
-                </Text>
-                <Text style={styles.countdownUnitText}>DAYS</Text>
-              </View>
-              <Text style={styles.countdownSeparatorText}>:</Text>
-
-              <View style={styles.countdownBox}>
-                <Text style={styles.countdownDigitText}>
-                  {String(countdown.hours).padStart(2, '0')}
-                </Text>
-                <Text style={styles.countdownUnitText}>HOURS</Text>
-              </View>
-              <Text style={styles.countdownSeparatorText}>:</Text>
-
-              <View style={styles.countdownBox}>
-                <Text style={styles.countdownDigitText}>
-                  {String(countdown.minutes).padStart(2, '0')}
-                </Text>
-                <Text style={styles.countdownUnitText}>MINS</Text>
-              </View>
-              <Text style={styles.countdownSeparatorText}>:</Text>
-
-              <View style={styles.countdownBox}>
-                <Text style={styles.countdownDigitText}>
-                  {String(countdown.seconds).padStart(2, '0')}
-                </Text>
-                <Text style={styles.countdownUnitText}>SECS</Text>
-              </View>
-            </View>
-
-            <View style={styles.timerFooterRow}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, marginRight: 8 }}>
-                <Ionicons name="shield-checkmark" size={14} color="#059669" />
-                <Text style={styles.timerFooterText} numberOfLines={1}>
-                  Last: {formattedLastDonation}
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={styles.resetCooldownPill}
-                onPress={handleResetCooldown}
-                disabled={isResettingCooldown}
-                activeOpacity={0.7}
-              >
-                <Feather name="refresh-cw" size={11} color="#DC2626" />
-                <Text style={styles.resetCooldownPillText}>
-                  {isResettingCooldown ? 'Resetting...' : 'Reset Cooldown'}
-                </Text>
-              </TouchableOpacity>
-            </View>
           </View>
-        )}
+
+          <TouchableOpacity
+            style={styles.recordDonationPrimaryBtn}
+            onPress={() => setRecordModalVisible(true)}
+            activeOpacity={0.85}
+          >
+            <View style={styles.recordDonationIconCircle}>
+              <Ionicons name="add" size={18} color="#FFFFFF" />
+            </View>
+            <Text style={styles.recordDonationPrimaryBtnText}>Record Blood Donation</Text>
+            <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 'auto' }} />
+          </TouchableOpacity>
+        </View>
 
         {/* QUICK ACTIONS */}
         <Text style={styles.quickActionsTitle}>Quick Actions</Text>
@@ -607,16 +549,7 @@ export const HomeScreen = () => {
           {/* 2. Donate */}
           <TouchableOpacity 
             style={styles.quickActionItem} 
-            onPress={() => {
-              if (isEligibleToDonate) {
-                setRecordModalVisible(true);
-              } else {
-                Alert.alert(
-                  'Cooldown Active ⏳',
-                  `You are currently on a 90-day medical recovery cooldown until ${formattedNextEligibleDate} (${countdown.days}d ${countdown.hours}h remaining). During cooldown, new donation entries are locked.`
-                );
-              }
-            }}
+            onPress={() => setRecordModalVisible(true)}
             activeOpacity={0.7}
           >
             <View style={styles.quickActionCircle}>
@@ -703,35 +636,10 @@ export const HomeScreen = () => {
           </View>
         )}
 
-        {/* ACTIVE VOLUNTARY DONORS INFO CARD */}
-        <View style={styles.volunteersBox}>
-          <Text style={styles.volunteersTitle}>Active Voluntary Donors in Birgunj & Parsa</Text>
-          <View style={styles.volunteersGrid}>
-             {[
-               { bg: 'A+', count: 11 },
-               { bg: 'B+', count: 15 },
-               { bg: 'AB+', count: 19 },
-               { bg: 'O-', count: 7 },
-             ].map((grp) => (
-               <View key={grp.bg} style={styles.volunteerItem}>
-                  <View style={styles.volunteerPill}>
-                     <Ionicons name="water" size={10} color="#FFF" style={{marginRight: 2}}/>
-                     <Text style={styles.volunteerPillText}>{grp.bg}</Text>
-                  </View>
-                  <Text style={styles.volunteerCount}>{grp.count}</Text>
-                  <Text style={styles.volunteerSub}>Donors</Text>
-               </View>
-             ))}
-          </View>
-          <View style={[styles.volunteerItem, { alignSelf: 'center', marginTop: 12, paddingHorizontal: 40, paddingVertical: 12, backgroundColor: '#F8FAFC', borderRadius: 12 }]}>
-             <View style={styles.volunteerPill}>
-                 <Ionicons name="water" size={10} color="#FFF" style={{marginRight: 2}}/>
-                 <Text style={styles.volunteerPillText}>O+</Text>
-             </View>
-             <Text style={styles.volunteerCount}>4</Text>
-             <Text style={styles.volunteerSub}>Donors</Text>
-          </View>
-        </View>
+        {/* BLOOD GROUPS REGISTERED - INTERACTIVE STATS GRID */}
+        <BloodGroupsRegisteredGrid
+          onSelectBloodGroup={(bg) => navigation.navigate('DonorList', { selectedGroup: bg })}
+        />
 
         {/* FEATURED DONATION DRIVES */}
         <Text style={[styles.sectionTitle, { marginTop: 24, fontSize: 11 }]}>FEATURED DONATION DRIVES</Text>
@@ -798,18 +706,15 @@ export const HomeScreen = () => {
         <View style={{height: 40}} />
       </ScrollView>
 
-      {/* RECORD DONATION MODAL (Strictly accessible ONLY when isEligibleToDonate is true) */}
-      {isEligibleToDonate && (
-        <RecordDonationModal
-          visible={recordModalVisible}
-          onClose={() => setRecordModalVisible(false)}
-          onSuccess={() => {
-            setRecordModalVisible(false);
-            refetchDonor();
-            refetchMe();
-          }}
-        />
-      )}
+      {/* RECORD DONATION MODAL */}
+      <RecordDonationModal
+        visible={recordModalVisible}
+        onClose={() => setRecordModalVisible(false)}
+        onSuccess={() => {
+          refetchDonor();
+          refetchMe();
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -1064,7 +969,8 @@ const styles = StyleSheet.create({
   timerFooterRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    justifyContent: 'space-between',
+    minHeight: 32,
     paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',

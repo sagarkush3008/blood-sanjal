@@ -254,7 +254,7 @@ export const DonorAvailabilityScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="dark-content" />
 
       {/* 1. Header */}
       <View style={styles.header}>

@@ -3,6 +3,7 @@ import { apiClient } from './client';
 export const PaymentsAPI = {
   initiate: (data: any) => apiClient.post('/payments/initiate', data),
   initiateSearchFee: (data?: any) => apiClient.post('/payments/search-fee/initiate', data),
+  resetSearchFee: () => apiClient.post('/payments/search-fee/reset'),
   getHistory: () => apiClient.get('/payments/history'),
   getById: (id: string) => apiClient.get(`/payments/${id}`),
   webhookCallback: (data: any) => apiClient.post('/payments/webhook', data),

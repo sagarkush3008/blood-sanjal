@@ -14,13 +14,13 @@ export const InputField = forwardRef<TextInput, InputFieldProps>(
   ({ label, error, leftIcon, isPassword, style, onFocus, onBlur, ...props }, ref) => {
     const [isFocused, setIsFocused] = useState(false);
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-    const internalInputRef = useRef<TextInput>(null);
+    const internalInputRef = useRef<any>(null);
 
-    useImperativeHandle(ref, () => internalInputRef.current as TextInput);
+    useImperativeHandle(ref, () => internalInputRef.current);
 
     const handleContainerPress = () => {
       if (internalInputRef.current) {
-        internalInputRef.current.focus();
+        internalInputRef.current.focus?.();
       }
     };
 

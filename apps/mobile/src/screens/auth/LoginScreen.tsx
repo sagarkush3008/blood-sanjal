@@ -9,6 +9,7 @@ import {
   ScrollView,
   StatusBar,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
@@ -91,11 +92,23 @@ export const LoginScreen = () => {
       // Successfully authenticated: global state is now updated with verified token in storage.
     } catch (error: any) {
       console.warn('[LoginScreen] Error:', error?.response?.data || error?.message);
-      const message =
-        error.response?.data?.error?.message ||
-        error.response?.data?.message ||
-        (error.message?.includes('Network Error') ? 'Network Error: Cannot connect to server. Check your connection.' : error.message) ||
-        'Invalid credentials. Please verify your email/phone and password.';
+
+      const status = error.response?.status || error.status;
+      const errorCode = error.response?.data?.error?.code;
+      const isRateLimited = status === 429 || errorCode === 'RATE_LIMIT_EXCEEDED';
+
+      let message: string;
+      if (isRateLimited) {
+        message = 'Too many login attempts. Please try again in a few minutes.';
+        Alert.alert('Too Many Attempts', message);
+      } else {
+        message =
+          error.response?.data?.error?.message ||
+          error.response?.data?.message ||
+          (error.message?.includes('Network Error') ? 'Network Error: Cannot connect to server. Check your connection.' : error.message) ||
+          'Invalid credentials. Please verify your email/phone and password.';
+      }
+
       setApiError(message);
     } finally {
       setIsLoading(false);
@@ -132,7 +145,7 @@ export const LoginScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+      <StatusBar barStyle="dark-content" />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

@@ -169,7 +169,7 @@ export const DualCalendarDatePicker: React.FC<DualCalendarDatePickerProps> = ({
   const focusAnim = useRef(new Animated.Value(0)).current;
   const errorAnim = useRef(new Animated.Value(0)).current;
 
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<any>(null);
 
   // Synchronize when external value prop changes
   useEffect(() => {

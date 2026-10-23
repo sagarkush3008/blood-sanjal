@@ -52,7 +52,7 @@ const PRESET_LOCATIONS: LandmarkPreset[] = [
 export const LocationPickerScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const webViewRef = useRef<WebView>(null);
+  const webViewRef = useRef<any>(null);
 
   // Initial coords from route params if provided, otherwise default to Kathmandu
   const initialLat = typeof route.params?.latitude === 'number' ? route.params.latitude : 27.7172;

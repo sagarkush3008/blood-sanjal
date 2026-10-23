@@ -60,7 +60,7 @@ export const CertificateDetailScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="dark-content" />
 
       {/* Top Nav */}
       <View style={styles.navBar}>

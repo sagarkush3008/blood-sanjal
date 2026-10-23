@@ -1,11 +1,12 @@
 import axios, { AxiosError } from 'axios';
 import { NativeModules, Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { storage } from '../utils/storage';
 
 // Laptop Wi-Fi IPv4 address on the local network
-const LOCAL_DEV_API_URL = 'http://192.168.1.71:5000/api/v1';
+const LOCAL_DEV_API_URL = 'http://192.168.1.12:5000/api/v1';
 
-const ACTIVE_TUNNEL_URL = 'https://surprising-eva-requesting-updating.trycloudflare.com/api/v1';
+const ACTIVE_TUNNEL_URL = 'https://vatican-hostel-meets-besides.trycloudflare.com/api/v1';
 
 // Dynamic Backend Host Detection
 export const getApiBaseUrl = (): string => {
@@ -18,7 +19,20 @@ export const getApiBaseUrl = (): string => {
     return 'http://localhost:5000/api/v1';
   }
 
-  // 2. Automatic Local Wi-Fi Detection for physical phones (Extract host IP from Metro Bundler)
+  // 2. Dynamic host detection from Expo Metro bundler (Works across any dynamic Wi-Fi IP)
+  try {
+    const hostUri = Constants.expoConfig?.hostUri || (Constants as any).manifest?.debuggerHost || (Constants as any).manifest2?.extra?.expoClient?.hostUri;
+    if (hostUri) {
+      const host = hostUri.split(':')[0];
+      if (host && host !== 'localhost' && host !== '127.0.0.1') {
+        return `http://${host}:5000/api/v1`;
+      }
+    }
+  } catch (e) {
+    // fallback
+  }
+
+  // 3. Fallback host detection via SourceCode scriptURL
   try {
     const scriptURL = NativeModules?.SourceCode?.scriptURL;
     if (scriptURL) {
@@ -31,7 +45,7 @@ export const getApiBaseUrl = (): string => {
     // fallback
   }
 
-  // 3. If explicit env URL is provided and not an expired temporary tunnel
+  // 4. If explicit env URL is provided and not an expired temporary tunnel
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
   if (
     envUrl &&
@@ -40,7 +54,7 @@ export const getApiBaseUrl = (): string => {
     return envUrl;
   }
 
-  // 4. Fallback for physical devices
+  // 5. Fallback for physical devices
   return LOCAL_DEV_API_URL || ACTIVE_TUNNEL_URL;
 };
 

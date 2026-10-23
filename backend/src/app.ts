@@ -55,11 +55,13 @@ try {
 }
 
 // Security Headers
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 
 // CORS Configuration
 app.use(cors({
-  origin: env.CORS_ORIGINS === '*' ? '*' : env.CORS_ORIGINS.split(','),
+  origin: env.CORS_ORIGINS === '*' ? true : env.CORS_ORIGINS.split(',').map(s => s.trim()),
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   credentials: true,
 }));

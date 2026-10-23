@@ -12,6 +12,18 @@ export class PaymentController {
     } catch (error) { next(error); }
   }
 
+  static async resetSearchFee(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) throw new AppError(401, 'UNAUTHENTICATED', 'Missing user');
+      const { PaymentTransaction } = await import('./payment.model');
+      await PaymentTransaction.updateMany(
+        { userId: req.user.userId, purpose: 'SEARCH_PLATFORM_FEE' },
+        { $set: { status: 'EXPIRED', updatedAt: new Date(Date.now() - 48 * 3600 * 1000) } }
+      );
+      res.status(200).json(SuccessResponse({ message: 'Search fee access has been reset to inactive.' }, req.id));
+    } catch (error) { next(error); }
+  }
+
   static async webhook(req: Request, res: Response, next: NextFunction) {
     try {
       const { gatewayTxId } = req.body;

@@ -8,6 +8,7 @@ const router = Router();
 router.use(paymentLimiter);
 
 router.post('/search-fee/initiate', requireAuth, PaymentController.initiateSearchFee);
+router.post('/search-fee/reset', requireAuth, PaymentController.resetSearchFee);
 router.post('/initiate', requireAuth, PaymentController.initiate);
 router.post('/webhook', PaymentController.webhook);
 router.post('/webhook/:provider', PaymentController.webhook);

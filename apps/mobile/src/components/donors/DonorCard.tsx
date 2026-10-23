@@ -1,8 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../theme';
-import { StatusBadge } from '../common/StatusBadge';
+import { fonts, colors } from '../../theme';
 import { cleanLocationName } from '../../utils/locationHelper';
 
 export interface LocationObject {
@@ -18,22 +17,15 @@ export interface LocationObject {
 export type LocationProp = string | LocationObject | null | undefined;
 
 /**
- * Strict local helper function ("The Shield"):
- * Guarantees that raw database IDs (MongoDB ObjectIds, UUIDs, alphanumeric hashes)
- * and malformed objects are NEVER displayed on the UI.
- *
- * Fallback: Returns 'Location Not Set' (or extracts location.name if an object is passed).
+ * Strict helper to sanitize and format readable location.
+ * Guarantees database hashes or raw IDs are never leaked to UI.
  */
 export const formatLocation = (loc?: LocationProp): string => {
-  if (!loc) {
-    return 'Location Not Set';
-  }
+  if (!loc) return 'Location Not Set';
 
-  let textCandidate: string = '';
-
-  // 1. If location is an object, safely extract readable name property
+  let candidate: string = '';
   if (typeof loc === 'object') {
-    textCandidate =
+    candidate =
       loc.name ||
       loc.cityName ||
       loc.city ||
@@ -42,32 +34,30 @@ export const formatLocation = (loc?: LocationProp): string => {
       loc.address ||
       '';
   } else if (typeof loc === 'string') {
-    textCandidate = loc;
+    candidate = loc;
   }
 
-  const trimmed = textCandidate.trim();
+  const trimmed = candidate.trim();
+  if (!trimmed) return 'Location Not Set';
 
-  // If empty after extraction
-  if (!trimmed) {
-    return 'Location Not Set';
+  // Defensive check for raw DB IDs or UUIDs
+  const isMongoId = /^[0-9a-fA-F]{24}$/.test(trimmed);
+  const isUuid = /^[0-9a-fA-F-]{36}$/.test(trimmed);
+  const isLongHash = trimmed.length > 20 && !trimmed.includes(' ');
+  if (isMongoId || isUuid || isLongHash) {
+    return 'Nepal';
   }
 
-  // 2. Defensive Check: Is this a raw database ID or hash?
-  // - Length > 20 without spaces (clearly an ID like MongoDB ObjectId [24] or UUID [36])
-  // - 24-character hexadecimal ObjectId: /^[0-9a-fA-F]{24}$/
-  // - Standard UUID pattern: /^[0-9a-fA-F-]{36}$/
-  // - Hex string with trailing country suffix: e.g. "6ad3af55bd8804867daeda76, Nepal"
-  const isTooLongAlphaNumeric = trimmed.length > 20 && !trimmed.includes(' ');
-  const isMongoObjectId = /^[0-9a-fA-F]{24}$/.test(trimmed);
-  const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i.test(trimmed);
-  const isIdWithSuffix = /^[0-9a-fA-F]{20,}(?:,\s*.*)?$/i.test(trimmed);
-
-  if (isTooLongAlphaNumeric || isMongoObjectId || isUuid || isIdWithSuffix) {
-    return 'Location Not Set';
-  }
-
-  // 3. Return clean, sanitized human-readable place name
   return cleanLocationName ? cleanLocationName(trimmed) : trimmed;
+};
+
+const getInitials = (fullName?: string): string => {
+  if (!fullName) return 'VD';
+  const cleaned = fullName.replace(/\(.*?\)/g, '').trim(); // Remove suffixes like (Donor 1)
+  const parts = cleaned.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'VD';
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
 
 export interface DonorCardProps {
@@ -82,6 +72,8 @@ export interface DonorCardProps {
   inactiveUntil?: string | Date | null;
   inactiveReason?: string | null;
   reminderDate?: string | Date | null;
+  distance?: number | string;
+  verified?: boolean;
 }
 
 export const DonorCard: React.FC<DonorCardProps> = ({
@@ -96,159 +88,109 @@ export const DonorCard: React.FC<DonorCardProps> = ({
   inactiveUntil,
   inactiveReason,
   reminderDate,
+  distance,
+  verified = true,
 }) => {
   const isAvailable = donorStatus === 'ACTIVE';
 
+  // Check if donor is in recovery phase
   let isRecovering = false;
-  let recoveryDateStr = null;
-  let recoveryRelativeText = null;
-
+  let recoveryDaysText = '';
   if (reminderDate) {
     const rd = new Date(reminderDate);
     const now = new Date();
     if (rd > now) {
       isRecovering = true;
-      recoveryDateStr = rd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
       const diffDays = Math.ceil((rd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      recoveryRelativeText = `${diffDays} day${diffDays > 1 ? 's' : ''}`;
+      recoveryDaysText = `${diffDays}d recovery`;
     }
   }
 
-  let relativeText = null;
-  
-  if (!isAvailable && inactiveUntil) {
-    const untilDate = new Date(inactiveUntil);
-    const now = new Date();
-    const diffMs = untilDate.getTime() - now.getTime();
-    
-    if (diffMs > 0) {
-      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-      const diffDays = Math.floor(diffHours / 24);
-      
-      if (diffDays > 0) {
-        relativeText = `${diffDays} day${diffDays > 1 ? 's' : ''}`;
-      } else if (diffHours > 0) {
-        relativeText = `${diffHours} hr${diffHours > 1 ? 's' : ''}`;
-      } else {
-        relativeText = `< 1 hr`;
-      }
-    } else {
-      relativeText = 'Shortly';
-    }
-  }
-
-  const formatLastDonation = (dateStr: any) => {
-    if (!dateStr) return 'First-time Donor';
-    try {
-      const d = new Date(dateStr);
-      return `Last donated: ${d.toLocaleDateString()}`;
-    } catch {
-      return 'Regular Donor';
-    }
-  };
+  const initials = getInitials(name);
+  const displayLocation = formatLocation(location);
+  const locationWithDistance = distance
+    ? `${displayLocation} • ${typeof distance === 'number' ? `${(distance / 1000).toFixed(1)} km` : distance}`
+    : displayLocation;
 
   return (
     <View style={styles.card}>
-      <View style={styles.topRow}>
-        {/* Blood Group Badge */}
-        <View style={styles.bloodBadge}>
-          <Text style={styles.bloodText}>{bloodGroup}</Text>
+      {/* 1. Header Row (Avatar, Details, Verified Badge) */}
+      <View style={styles.headerRow}>
+        {/* Left: Circular Avatar with Initials & Subtle Blood Tag */}
+        <View style={styles.avatarContainer}>
+          <View style={styles.avatarCircle}>
+            <Text style={styles.avatarInitials}>{initials}</Text>
+          </View>
+          {bloodGroup ? (
+            <View style={styles.avatarBloodTag}>
+              <Text style={styles.avatarBloodText}>{bloodGroup}</Text>
+            </View>
+          ) : null}
         </View>
 
-        {/* Core Info */}
-        <View style={styles.infoCol}>
-          <View style={styles.nameRow}>
-            <Text style={styles.name} numberOfLines={1}>
-              {name}
-            </Text>
-            <StatusBadge status={isAvailable ? 'ACTIVE' : 'SUSPENDED'} />
-          </View>
-
+        {/* Middle: Donor's Name & Location */}
+        <View style={styles.detailsCol}>
+          <Text style={styles.donorName} numberOfLines={1}>
+            {name}
+          </Text>
           <View style={styles.locationRow}>
-            <Ionicons name="location-outline" size={14} color="#64748B" />
+            <Ionicons name="location-sharp" size={12} color="#94A3B8" style={styles.pinIcon} />
             <Text style={styles.locationText} numberOfLines={1}>
-              {formatLocation(location)}
+              {locationWithDistance}
             </Text>
           </View>
+        </View>
+
+        {/* Right: Pill-shaped Badge */}
+        <View style={styles.badgeContainer}>
+          {isRecovering ? (
+            <View style={styles.recoveringBadge}>
+              <Text style={styles.recoveringBadgeText}>{recoveryDaysText}</Text>
+            </View>
+          ) : isAvailable ? (
+            <View style={styles.verifiedBadge}>
+              <Ionicons name="checkmark-circle" size={12} color="#16A34A" style={{ marginRight: 3 }} />
+              <Text style={styles.verifiedBadgeText}>Verified</Text>
+            </View>
+          ) : (
+            <View style={styles.inactiveBadge}>
+              <Text style={styles.inactiveBadgeText}>Inactive</Text>
+            </View>
+          )}
         </View>
       </View>
 
-      {/* Meta Stats Row / Inactive Box */}
-      {isAvailable || !inactiveUntil ? (
-        <View style={styles.statsRow}>
-          <View style={styles.statItem}>
-            <Ionicons name="heart-circle-outline" size={14} color={colors.primary} />
-            <Text style={styles.statText}>
-              {totalDonations > 0 ? `${totalDonations} Donations` : 'New Donor'}
-            </Text>
-          </View>
+      {/* Subtle Horizontal Divider */}
+      <View style={styles.divider} />
 
-          <View style={styles.statItem}>
-            <Ionicons name="calendar-outline" size={14} color="#64748B" />
-            <Text style={styles.statText}>{formatLastDonation(lastDonationDate)}</Text>
-          </View>
-        </View>
-      ) : (
-        <View style={styles.inactivePremiumBox}>
-           <View style={styles.inactivePremiumHeader}>
-             <Ionicons name="moon" size={12} color="#FCA5A5" style={{ marginRight: 4 }} />
-             <Text style={styles.inactivePremiumTitle}>Temporarily Unavailable</Text>
-           </View>
-           
-           {inactiveReason && (
-             <Text style={styles.inactivePremiumReason}>"{inactiveReason}"</Text>
-           )}
-
-           {relativeText && (
-             <View style={styles.returnTimeCenteredBox}>
-               <Text style={styles.returnTimeLabel}>RETURNING IN</Text>
-               <Text style={styles.returnTimeValueLarge}>{relativeText}</Text>
-             </View>
-           )}
-        </View>
-      )}
-
-      {/* Action and Privacy Note */}
-      <View style={styles.actionRow}>
-        <View style={styles.privacyNoteBox}>
-          <Ionicons name="shield-checkmark" size={13} color="#10B981" />
-          <Text style={styles.privacyNote}>
-            Contact details visible only after donor consent
-          </Text>
-        </View>
-
-        {isRecovering ? (
-          <View style={styles.recoveryBadge}>
-            <Ionicons name="medical-outline" size={14} color="#D97706" style={{ marginRight: 4 }} />
-            <Text style={styles.recoveryBadgeText}>Recovering ({recoveryRelativeText})</Text>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={[styles.contactButton, (isRequested || !isAvailable) && styles.contactButtonDisabled]}
-            onPress={onRequestContact}
-            disabled={isRequested || !isAvailable}
-            activeOpacity={0.85}
-          >
-            <Ionicons
-              name={isRequested ? 'checkmark' : 'paper-plane-outline'}
-              size={14}
-              color="#FFFFFF"
-              style={{ marginRight: 6 }}
-            />
-            <Text style={styles.contactButtonText}>
-              {isRequested ? 'Requested' : (!isAvailable ? 'Unavailable' : 'Request Contact')}
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-      
-      {isRecovering && (
-        <View style={styles.recoveryNoticeBox}>
-          <Text style={styles.recoveryNoticeText}>
-            This donor recently donated blood and is in a medically required recovery phase. They will be eligible to donate again on <Text style={{ fontFamily: 'Inter_700Bold' }}>{recoveryDateStr}</Text>.
-          </Text>
-        </View>
-      )}
+      {/* 2. Professional Contact Action Button */}
+      <TouchableOpacity
+        style={[
+          styles.contactButton,
+          isRequested && styles.contactButtonRequested,
+          (!isAvailable && !isRecovering) && styles.contactButtonDisabled,
+        ]}
+        onPress={onRequestContact}
+        disabled={isRequested || (!isAvailable && !isRecovering)}
+        activeOpacity={0.82}
+        accessibilityRole="button"
+        accessibilityLabel={`Contact donor ${name}`}
+      >
+        <Ionicons
+          name={isRequested ? 'checkmark' : 'call-outline'}
+          size={15}
+          color={isRequested ? '#16A34A' : '#DC2626'}
+          style={styles.contactBtnIcon}
+        />
+        <Text
+          style={[
+            styles.contactButtonText,
+            isRequested && styles.contactButtonTextRequested,
+          ]}
+        >
+          {isRequested ? 'Contact Requested' : 'Contact Donor'}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -258,151 +200,151 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#0F172A',
+    borderWidth: 0, // Absolutely no harsh borders
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOpacity: 0.03, // Very faint, elegant drop shadow
+    shadowRadius: 10,
+    elevation: 1,
   },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  bloodBadge: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: '#FECACA',
-  },
-  bloodText: {
-    fontSize: 18,
-    fontFamily: 'Inter_800ExtraBold',
-    color: colors.primary,
-  },
-  infoCol: {
-    flex: 1,
-  },
-  nameRow: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
   },
-  name: {
-    fontSize: 16,
-    fontFamily: 'Inter_700Bold',
-    color: '#0F172A',
+  avatarContainer: {
+    position: 'relative',
+    marginRight: 12,
+  },
+  avatarCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F3F4F6', // Soft light gray
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitials: {
+    fontSize: 15,
+    fontFamily: fonts.bold,
+    color: '#374151', // Dark gray
+    letterSpacing: -0.3,
+  },
+  avatarBloodTag: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    backgroundColor: '#DC2626',
+    borderRadius: 8,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+  },
+  avatarBloodText: {
+    fontSize: 8.5,
+    fontFamily: fonts.bold,
+    color: '#FFFFFF',
+  },
+  detailsCol: {
     flex: 1,
-    marginRight: 8,
+    justifyContent: 'center',
+    paddingRight: 8,
+  },
+  donorName: {
+    fontSize: 16,
+    fontFamily: fonts.bold,
+    color: '#111827', // Dark charcoal
+    letterSpacing: -0.2,
+    marginBottom: 3,
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+  },
+  pinIcon: {
+    marginRight: 3,
   },
   locationText: {
-    fontSize: 13,
-    color: '#64748B',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginBottom: 12,
-    gap: 16,
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  statText: {
     fontSize: 12,
-    color: '#475569',
-    fontFamily: 'Inter_500Medium',
+    fontFamily: fonts.regular,
+    color: '#6B7280', // Soft gray
+    letterSpacing: -0.1,
   },
-  
-  inactivePremiumBox: { backgroundColor: '#FFF1F2', borderRadius: 10, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: '#FFE4E6' },
-  inactivePremiumHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  inactivePremiumTitle: { fontSize: 11, fontFamily: 'Inter_800ExtraBold', color: '#E11D48', letterSpacing: 0.5 },
-  inactivePremiumReason: { fontSize: 12, color: '#BE123C', fontStyle: 'italic', marginBottom: 10 },
-  returnTimeCenteredBox: { backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#FECACA' },
-  returnTimeLabel: { fontSize: 9, fontFamily: 'Inter_800ExtraBold', color: '#F43F5E', marginBottom: 3, letterSpacing: 0.6 },
-  returnTimeValueLarge: { fontSize: 16, fontFamily: 'Inter_800ExtraBold', color: '#881337', textAlign: 'center' },
-
-  actionRow: {
+  badgeContainer: {
+    alignItems: 'flex-end',
+  },
+  verifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
+    backgroundColor: '#F0FDF4', // Ultra-light green background
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  privacyNoteBox: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  privacyNote: {
+  verifiedBadgeText: {
     fontSize: 11,
-    color: '#64748B',
-    lineHeight: 14,
-    flex: 1,
+    fontFamily: fonts.semiBold,
+    color: '#16A34A', // Emerald text
+    letterSpacing: -0.1,
+  },
+  recoveringBadge: {
+    backgroundColor: '#FFFBEB',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  recoveringBadgeText: {
+    fontSize: 11,
+    fontFamily: fonts.medium,
+    color: '#D97706',
+  },
+  inactiveBadge: {
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  inactiveBadgeText: {
+    fontSize: 11,
+    fontFamily: fonts.medium,
+    color: '#94A3B8',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F3F4F6', // Subtle horizontal divider
+    marginTop: 14,
+    marginBottom: 12,
   },
   contactButton: {
-    backgroundColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    backgroundColor: '#FEF2F2', // Very light red background
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+    borderRadius: 12,
     paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 10,
-    minHeight: 40,
+    paddingHorizontal: 16,
+  },
+  contactButtonRequested: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#DCFCE7',
   },
   contactButtonDisabled: {
-    backgroundColor: '#94A3B8',
+    opacity: 0.5,
+  },
+  contactBtnIcon: {
+    marginRight: 7,
   },
   contactButtonText: {
-    color: '#FFFFFF',
     fontSize: 13,
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: fonts.bold,
+    color: '#DC2626', // Brand Red text
+    letterSpacing: -0.1,
   },
-  recoveryBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#FDE68A',
+  contactButtonTextRequested: {
+    color: '#16A34A',
   },
-  recoveryBadgeText: {
-    fontSize: 12,
-    fontFamily: 'Inter_700Bold',
-    color: '#B45309',
-  },
-  recoveryNoticeBox: {
-    marginTop: 12,
-    padding: 10,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#F59E0B',
-  },
-  recoveryNoticeText: {
-    fontSize: 11,
-    color: '#475569',
-    lineHeight: 16,
-  }
 });
